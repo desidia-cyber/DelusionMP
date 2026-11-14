@@ -42,7 +42,21 @@ namespace DelusionMP.Net
 
         private ushort _nextSeq;
         private ushort _lastSeenSeq;
+        private bool _seenAny;
         private uint _ackBits;
+
+        // Reliable-ordered channel: exactly-once, in-order delivery on top of the
+        // ack/retransmit layer. Without it a retransmitted packet is applied once per copy
+        // (forwarded damage would multiply) and an old copy can overwrite a newer state.
+        private ushort _relOut;
+        private ushort _relIn;
+        private readonly Dictionary<ushort, (PacketKind kind, byte[] payload)> _relBuffer =
+            new Dictionary<ushort, (PacketKind, byte[])>();
+
+        // Session epoch: a random id the client picks per process. The host resets the
+        // reliable channel only when it changes (a new or restarted client).
+        private readonly uint _localNonce = (uint)new Random().Next() | 1u;
+        private uint _peerNonce;
 
         private readonly Dictionary<ushort, (byte[] data, float lastSent, int tries)> _pending =
             new Dictionary<ushort, (byte[], float, int)>();
@@ -79,20 +93,33 @@ namespace DelusionMP.Net
             Transport?.Close();
             Role = SessionRole.None;
             _handshakeComplete = false;
-            _pending.Clear();
+            ResetReliable();
             PlayerSync.DestroyPuppet();
         }
 
         // ---------------- handshake ----------------
 
-        private void SendHello()
+        /// <summary>Client: announce ourselves. Unreliable - Bootstrap repeats it each
+        /// second until a Welcome arrives, so queuing reliable copies would replay stale
+        /// handshakes after the connection is up.</summary>
+        public void SendHello()
         {
             var w = new Writer();
             w.U16(Proto.Version);
             w.Str(PluginInfo.Version);
             w.Str(BuildInfo.GameAssemblyHash);
             w.Str(ObjectRegistry.Instance.TableHash());
-            SendRaw(PacketKind.Hello, w.ToArray(), reliable: true);
+            w.I32((int)_localNonce);
+            SendRaw(PacketKind.Hello, w.ToArray(), reliable: false);
+        }
+
+        private void ResetReliable()
+        {
+            _pending.Clear();
+            _relBuffer.Clear();
+            _reassembly.Clear();
+            _relOut = 0;
+            _relIn = 0;
         }
 
         private void OnHello(byte[] payload)
@@ -102,6 +129,7 @@ namespace DelusionMP.Net
             string modVer = r.Str();
             string build = r.Str();
             string table = r.Str();
+            uint nonce = r.Remaining >= 4 ? (uint)r.I32() : 0u;
 
             if (ver != Proto.Version)
             {
@@ -121,15 +149,25 @@ namespace DelusionMP.Net
             if (Role == SessionRole.Host)
             {
                 _peerTableHash = table;
+                bool fresh = !_handshakeComplete || nonce != _peerNonce;
                 var w = new Writer();
                 w.U16(Proto.Version);
                 w.Str(PluginInfo.Version);
                 w.Str(build);
                 w.Str(ObjectRegistry.Instance.TableHash());
                 w.U8(1); // accepted
-                SendRaw(PacketKind.Welcome, w.ToArray(), reliable: true);
+                w.I32((int)nonce);
+                SendRaw(PacketKind.Welcome, w.ToArray(), reliable: false);
+                if (!fresh) return;   // a repeated Hello from the same client process
+
+                // New (or restarted) client: start a clean reliable channel and give it the
+                // whole world.
+                _peerNonce = nonce;
+                ResetReliable();
                 _handshakeComplete = true;
+                Log.Info($"client joined (epoch {nonce:X8})");
                 SendWorldSnapshot();
+                WorldMirror.ForceSnapshot();
             }
         }
 
@@ -138,8 +176,13 @@ namespace DelusionMP.Net
             var r = new Reader(payload);
             r.U16(); r.Str(); r.Str(); r.Str();
             byte accepted = r.U8();
+            uint echo = r.Remaining >= 4 ? (uint)r.I32() : 0u;
             if (accepted == 0) { Fail("host refused the connection"); return; }
+            if (_handshakeComplete) return;               // repeated Welcome
+            if (echo != 0 && echo != _localNonce) return; // meant for a previous process
+            ResetReliable();
             _handshakeComplete = true;
+            WorldMirror.OnClientConnected();
             Log.Info("connected to host");
         }
 
@@ -164,6 +207,17 @@ namespace DelusionMP.Net
             {
                 Log.Warn($"dropping oversized {kind} ({payload.Length} B)");
                 return;
+            }
+            if (reliable)
+            {
+                // Nothing reliable flows before the handshake: there is no peer channel
+                // yet, and queued packets would replay into the next session.
+                if (!_handshakeComplete) return;
+                var framed = new byte[payload.Length + 2];
+                framed[0] = (byte)_relOut; framed[1] = (byte)(_relOut >> 8);
+                _relOut++;
+                Buffer.BlockCopy(payload, 0, framed, 2, payload.Length);
+                payload = framed;
             }
 
             ushort seq = _nextSeq++;
@@ -210,30 +264,60 @@ namespace DelusionMP.Net
             }
             if (h.Version != Proto.Version) return;
 
-            // ack bookkeeping
-            if (h.Seq > _lastSeenSeq)
+            // ack bookkeeping (16-bit sequence, wrap-aware)
+            short d = (short)(h.Seq - _lastSeenSeq);
+            if (!_seenAny || d > 0)
             {
-                uint shift = (uint)(h.Seq - _lastSeenSeq);
-                _ackBits = shift >= 32 ? 1u : (_ackBits << (int)shift) | 1u;
+                int shift = _seenAny ? d : 32;
+                _ackBits = shift >= 32 ? 1u : (_ackBits << shift) | 1u;
                 _lastSeenSeq = h.Seq;
+                _seenAny = true;
             }
             else
             {
-                int back = _lastSeenSeq - h.Seq;
+                int back = -d;
                 if (back < 32) _ackBits |= 1u << back;
             }
-            _pending.Remove(h.Ack); // coarse: ack of the most recent makes older moot
+            // The peer acks its newest sequence plus a 32-packet history bitfield.
+            if (h.AckBits != 0)
+                for (int i = 0; i < 32; i++)
+                    if ((h.AckBits & (1u << i)) != 0) _pending.Remove((ushort)(h.Ack - i));
 
             var payload = new byte[h.PayloadLen];
             Buffer.BlockCopy(datagram, Proto.HeaderLen, payload, 0, h.PayloadLen);
 
-            if (h.Kind == PacketKind.Fragment)
+            if (!h.HasFlag(Proto.FlagReliable))
             {
-                OnFragment(payload);
+                Deliver(h.Kind, payload);
                 return;
             }
 
-            Dispatch(h.Kind, payload);
+            if (!_handshakeComplete || payload.Length < 2) return;
+            ushort rs = (ushort)(payload[0] | (payload[1] << 8));
+            var body = new byte[payload.Length - 2];
+            Buffer.BlockCopy(payload, 2, body, 0, body.Length);
+
+            short ahead = (short)(rs - _relIn);
+            if (ahead < 0) return;                       // duplicate of something delivered
+            if (ahead > 0)
+            {
+                if (ahead < 4096 && !_relBuffer.ContainsKey(rs)) _relBuffer[rs] = (h.Kind, body);
+                return;                                  // wait for the gap to fill
+            }
+            _relIn++;
+            Deliver(h.Kind, body);
+            while (_relBuffer.TryGetValue(_relIn, out var next))
+            {
+                _relBuffer.Remove(_relIn);
+                _relIn++;
+                Deliver(next.kind, next.payload);
+            }
+        }
+
+        private void Deliver(PacketKind kind, byte[] payload)
+        {
+            if (kind == PacketKind.Fragment) { OnFragment(payload); return; }
+            Dispatch(kind, payload);
         }
 
         private void Dispatch(PacketKind kind, byte[] payload)
@@ -249,6 +333,12 @@ namespace DelusionMP.Net
                 case PacketKind.QuestState: QuestSync.Apply(payload); break;
                 case PacketKind.ObjectState: WorldMirror.Apply(payload); break;
                 case PacketKind.WorldEvent: WorldMirror.ApplyTyped(payload); break;
+                // Client-originated: the host applies (making it canonical). Only a host
+                // accepts these - a client never takes world authority from its peer.
+                case PacketKind.ObjectRequest: if (Role == SessionRole.Host) WorldMirror.Apply(payload); break;
+                case PacketKind.WorldEventRequest: if (Role == SessionRole.Host) WorldMirror.ApplyTyped(payload); break;
+                case PacketKind.FactRequest: if (Role == SessionRole.Host) FactSync.ApplyRequest(payload); break;
+                case PacketKind.CombatEvent: EnemySync.ApplyCombat(payload); break;
                 case PacketKind.EnemyState: EnemySync.Apply(payload); break;
                 case PacketKind.PlayerState: PlayerSync.Apply(payload); break;
                 case PacketKind.ClockState: ClockSync.Apply(payload); break;
@@ -278,6 +368,8 @@ namespace DelusionMP.Net
         private readonly Dictionary<ushort, Reassembly> _reassembly =
             new Dictionary<ushort, Reassembly>();
         private ushort _nextFragId = 1;
+
+        public void SendReliableLarge(PacketKind kind, byte[] payload) => SendFragmented(kind, payload);
 
         private void SendFragmented(PacketKind kind, byte[] payload)
         {
@@ -371,7 +463,7 @@ namespace DelusionMP.Net
 
         private void SendWorldSnapshot()
         {
-            var (bools, ints) = FactSync.Capture();
+            var (bools, ints) = FactSync.CaptureShared();
             var w = new Writer();
             w.U8(0); // snapshot section: facts
             w.U16((ushort)Math.Min(bools.Count, ushort.MaxValue));
@@ -401,6 +493,11 @@ namespace DelusionMP.Net
         private void OnResyncRequest(byte[] payload)
         {
             if (Role != SessionRole.Host) return;
+            if (payload.Length > 0 && payload[0] == 1)
+            {
+                WorldMirror.OnMirrorResyncRequest();   // objects only (region streamed in)
+                return;
+            }
             SendWorldSnapshot();
         }
 
@@ -430,16 +527,18 @@ namespace DelusionMP.Net
             foreach (var kv in _pending)
             {
                 var e = kv.Value;
-                if (now - e.lastSent < 0.1f) continue;
-                if (e.tries > 20)
-                {
-                    (drop ??= new List<ushort>()).Add(kv.Key);
-                    continue;
-                }
-                Transport.Send(e.data);
-                _pending[kv.Key] = (e.data, now, e.tries + 1);
+                // Back off to 1 s, but never give up while the session lives: the ordered
+                // channel stalls behind a lost packet, so dropping one would freeze sync.
+                if (now - e.lastSent < Math.Min(1f, 0.1f * e.tries)) continue;
+                (drop ??= new List<ushort>()).Add(kv.Key);
             }
-            if (drop != null) foreach (var k in drop) _pending.Remove(k);
+            if (drop == null) return;
+            foreach (var k in drop)
+            {
+                var e = _pending[k];
+                Transport.Send(e.data);
+                _pending[k] = (e.data, now, e.tries + 1);
+            }
         }
 
         public void PingTick()

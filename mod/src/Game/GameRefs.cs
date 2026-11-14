@@ -191,10 +191,29 @@ namespace DelusionMP.Game
     internal static class Log
     {
         private static BepInEx.Logging.ManualLogSource _src;
-        internal static void Bind(BepInEx.Logging.ManualLogSource src) => _src = src;
-        internal static void Info(string m) => _src?.LogInfo(m);
-        internal static void Warn(string m) => _src?.LogWarning(m);
-        internal static void Error(string m) => _src?.LogError(m);
+        private static System.IO.StreamWriter _file;
+
+        /// <summary>Also writes BepInEx/ddmp_log.txt: the mod's own log survives a
+        /// BepInEx config with disk logging off (the rig's default).</summary>
+        internal static void Bind(BepInEx.Logging.ManualLogSource src)
+        {
+            _src = src;
+            try
+            {
+                var path = System.IO.Path.Combine(BepInEx.Paths.BepInExRootPath, "ddmp_log.txt");
+                _file = new System.IO.StreamWriter(path, false) { AutoFlush = true };
+            }
+            catch { _file = null; }
+        }
+
+        private static void File(string level, string m)
+        {
+            try { _file?.WriteLine($"{DateTime.Now:HH:mm:ss.fff} {level} {m}"); } catch { }
+        }
+
+        internal static void Info(string m) { _src?.LogInfo(m); File("INF", m); }
+        internal static void Warn(string m) { _src?.LogWarning(m); File("WRN", m); }
+        internal static void Error(string m) { _src?.LogError(m); File("ERR", m); }
         internal static void Debug(string m) => _src?.LogDebug(m);
     }
 }

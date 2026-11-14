@@ -94,10 +94,17 @@ namespace DelusionMP
                     ObjectRegistry.Instance.Rebuild(CurrentSceneName());
                 }
 
-                if (GameRefs.InWorld)
+                // The avatar is streamed whenever a player object exists - also while the
+                // partner sits in a menu, a loot window or a dialogue (those leave RUNNING).
+                if (session.Connected && GameRefs.Player != null)
                 {
                     PlayerSync.TickSend();
                     PlayerSync.TickRender();
+                }
+
+                if (GameRefs.InWorld)
+                {
+                    QuestSync.Tick();
 
                     if (session.Role == SessionRole.Host)
                     {
@@ -114,10 +121,10 @@ namespace DelusionMP
                 // World objects are replicated whenever a session is live. They do not need
                 // a spawned player: region scenes carry doors, lifts and pickups before the
                 // avatar exists, and a late joiner needs those too.
-                if (session.Role == SessionRole.Host && session.Connected)
+                if (session.Connected)
                 {
                     FactSync.Flush();
-                    WorldMirror.TickHost();
+                    WorldMirror.Tick();
                 }
 
                 if (now >= _nextPing)

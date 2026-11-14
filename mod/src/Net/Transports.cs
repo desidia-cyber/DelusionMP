@@ -43,6 +43,9 @@ namespace DelusionMP.Net
             _sock = new UdpClient(_localPort);
             _sock.Client.Blocking = false;
             _sock.Client.ReceiveBufferSize = 1 << 20;
+            // Windows reports ICMP "port unreachable" from a previous send as a reset on the
+            // next receive; with the peer restarting that would stall the socket.
+            try { _sock.Client.IOControl(-1744830452 /* SIO_UDP_CONNRESET */, new byte[] { 0 }, null); } catch { }
             _remote = new IPEndPoint(IPAddress.Parse(_remoteHost), _remotePort);
             _open = true;
 

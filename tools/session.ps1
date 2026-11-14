@@ -48,10 +48,18 @@ function Invoke-InstanceMenu([int]$i) {
 
 if (-not $NoRelaunch) {
     & (Join-Path $PSScriptRoot 'rig.ps1') -Action stop | Out-Null
-    Start-Sleep -Seconds 3
+    # The plugin DLL stays locked until the killed process has fully exited.
+    for ($t = 0; $t -lt 30 -and (Get-Process 'Dread Delusion' -ErrorAction SilentlyContinue); $t++) {
+        Start-Sleep -Milliseconds 500
+    }
+    Start-Sleep -Seconds 1
     & (Join-Path $PSScriptRoot 'deploy.ps1') -NoBuild | Out-Null
     & (Join-Path $PSScriptRoot 'rig.ps1') -Action launch -Count $Count | Out-Null
     Start-Sleep -Seconds $WaitSeconds
+    # An instance occasionally dies during start-up when both boot at once; the launcher
+    # skips live instances, so a second pass only restarts the missing one.
+    & (Join-Path $PSScriptRoot 'rig.ps1') -Action launch -Count $Count | Out-Null
+    Start-Sleep -Seconds 5
 }
 
 Write-Host "`n=== load save on both instances ===" -ForegroundColor Cyan

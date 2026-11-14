@@ -124,9 +124,9 @@ namespace DelusionMP.Sync
         {
             if (!_hasLatest || _puppet == null) return;
 
-            // Freeze rather than extrapolate if the peer went quiet (region change,
-            // death, loading). Extrapolating here is what makes puppets slide into walls.
-            if (Time.realtimeSinceStartup - _latest.ReceivedAt > 0.5f)
+            // Hide (rather than extrapolate) if the peer went quiet for a while - loading,
+            // quitting. Short gaps just hold the last pose. Extrapolating here is what makes puppets slide into walls.
+            if (Time.realtimeSinceStartup - _latest.ReceivedAt > 3f)
             {
                 _puppet.SetActive(false);
                 return;
@@ -137,6 +137,16 @@ namespace DelusionMP.Sync
             t.position = Vector3.Lerp(t.position, _latest.Pos, 0.4f);
             var e = t.eulerAngles;
             t.rotation = Quaternion.Euler(e.x, Mathf.LerpAngle(e.y, _latest.Yaw, 0.4f), e.z);
+
+            if (_tag != null)
+            {
+                try
+                {
+                    var cam = GameRefs.PlayerCamera ?? Camera.main;
+                    _tag.Rotate(0f, 90f * Time.deltaTime, 0f, Space.World);   // slow spin
+                }
+                catch { }
+            }
 
             if (_puppetAnim != null)
             {
@@ -152,29 +162,64 @@ namespace DelusionMP.Sync
 
         // ---------------- puppet construction ----------------
 
+        /// <summary>
+        /// Builds a stand-alone visual avatar for the remote player.
+        ///
+        /// Dread Delusion is first-person: the local player object has no body mesh (only a
+        /// camera rig and hands), and its components are MonoSingletons whose Awake would
+        /// re-point DelusionPlayerActions.Instance &amp; co. at a clone. So the puppet is not
+        /// a copy of the player - it is a small mannequin (body, head, visor showing facing,
+        /// floating name tag) with no colliders and no game scripts.
+        /// </summary>
         private static void CreatePuppet()
         {
-            var player = GameRefs.Player;
-            if (player == null) return;
             try
             {
-                _puppet = UnityEngine.Object.Instantiate(player);
-                _puppet.name = "DelusionMP_RemotePuppet";
+                float height = 1.8f, centerY = 0f;
+                try
+                {
+                    var cc = GameRefs.Player?.GetComponent<UnityEngine.CharacterController>();
+                    if (cc != null) { height = Mathf.Clamp(cc.height, 1.2f, 2.6f); centerY = cc.center.y; }
+                }
+                catch { }
+                float feet = centerY - height * 0.5f;
 
-                // Remove everything that simulates, controls or damages.
-                Strip<global::PlayerMove>(_puppet);
-                Strip<global::PlayerLook>(_puppet);
-                Strip<global::DelusionPlayerActions>(_puppet);
-                Strip<UnityEngine.CharacterController>(_puppet);
-                Strip<global::PlayerColliderTrigger>(_puppet);
-                Strip<AudioListener>(_puppet);
+                _puppet = new GameObject("DelusionMP_RemotePuppet");
+                UnityEngine.Object.DontDestroyOnLoad(_puppet);
+                var color = new Color(0.95f, 0.55f, 0.1f);   // ember orange - reads in fog and dark
+                var mat = MakeMaterial(color);
+                var dark = MakeMaterial(new Color(0.08f, 0.08f, 0.1f));
 
-                // The local player carries a first-person camera rig; the puppet must not.
-                foreach (var cam in _puppet.GetComponentsInChildren<Camera>(true))
-                    UnityEngine.Object.Destroy(cam.gameObject);
+                float bodyH = height * 0.72f;
+                Part(PrimitiveType.Capsule, "Body", new Vector3(0, feet + bodyH * 0.5f, 0),
+                     new Vector3(0.6f, bodyH * 0.5f, 0.45f), mat);
+                float headY = feet + bodyH + 0.22f;
+                Part(PrimitiveType.Sphere, "Head", new Vector3(0, headY, 0), Vector3.one * 0.4f, mat);
+                Part(PrimitiveType.Cube, "Visor", new Vector3(0, headY + 0.03f, 0.17f),
+                     new Vector3(0.3f, 0.09f, 0.1f), dark);
+                Part(PrimitiveType.Cube, "Pack", new Vector3(0, feet + bodyH * 0.65f, -0.25f),
+                     new Vector3(0.4f, 0.45f, 0.15f), dark);
 
-                _puppetAnim = _puppet.GetComponentInChildren<Animator>(true);
-                Log.Info("remote puppet created");
+                try
+                {
+                    // Floating marker so the partner is findable at a distance. (TextMesh is
+                    // stripped from this build and adding TextMeshPro at runtime faults
+                    // natively, so no text label.)
+                    var tag = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    tag.name = "Marker";
+                    var col = tag.GetComponent<Collider>();
+                    if (col != null) UnityEngine.Object.Destroy(col);
+                    tag.transform.SetParent(_puppet.transform, false);
+                    tag.transform.localPosition = new Vector3(0, headY + 0.55f, 0);
+                    tag.transform.localRotation = Quaternion.Euler(45f, 0f, 45f);
+                    tag.transform.localScale = Vector3.one * 0.18f;
+                    var mk = MakeMaterial(new Color(0.3f, 0.95f, 1f));
+                    if (mk != null) tag.GetComponent<Renderer>().sharedMaterial = mk;
+                    _tag = tag.transform;
+                }
+                catch (Exception e) { Log.Warn("name tag: " + e); }
+
+                Log.Info($"remote puppet created (h={height:F2} feet={feet:F2})");
             }
             catch (Exception e)
             {
@@ -183,10 +228,56 @@ namespace DelusionMP.Sync
             }
         }
 
-        private static void Strip<T>(GameObject root) where T : Component
+        public static Transform PuppetTransform => _puppet != null ? _puppet.transform : null;
+
+        private static Transform _tag;
+        private static string _peerName = "";
+        public static void SetPeerName(string n) { _peerName = n ?? ""; }
+
+        private static void Part(PrimitiveType type, string name, Vector3 pos, Vector3 scale, Material mat)
         {
-            foreach (var c in root.GetComponentsInChildren<T>(true))
-                UnityEngine.Object.Destroy(c);
+            var go = GameObject.CreatePrimitive(type);
+            go.name = name;
+            var col = go.GetComponent<Collider>();
+            if (col != null) UnityEngine.Object.Destroy(col);   // purely visual, never blocks
+            go.transform.SetParent(_puppet.transform, false);
+            go.transform.localPosition = pos;
+            go.transform.localScale = scale;
+            if (mat != null) go.GetComponent<Renderer>().sharedMaterial = mat;
+        }
+
+        /// <summary>The game is URP; the built-in default material renders magenta there.</summary>
+        private static Material MakeMaterial(Color c)
+        {
+            Shader sh = null;
+            foreach (var n in new[] { "Universal Render Pipeline/Unlit", "Universal Render Pipeline/Lit",
+                                      "Unlit/Color", "Sprites/Default" })
+            {
+                try { sh = Shader.Find(n); } catch { }
+                if (sh != null) break;
+            }
+            if (sh == null) return null;
+            var m = new Material(sh);
+            try { m.SetColor("_BaseColor", c); } catch { }
+            try { m.SetColor("_Color", c); } catch { }
+            return m;
+        }
+
+        /// <summary>Last received peer pose (world position, body yaw).</summary>
+        public static bool TryPeerPose(out Vector3 pos, out float yaw)
+        {
+            pos = _latest.Pos; yaw = _latest.Yaw;
+            return _hasLatest;
+        }
+
+        /// <summary>Puppet head position, for aiming a camera at the partner.</summary>
+        public static bool TryPuppetHead(out Vector3 head)
+        {
+            head = default;
+            if (_puppet == null) return false;
+            var h = _puppet.transform.Find("Head");
+            head = h != null ? h.position : _puppet.transform.position;
+            return true;
         }
 
         public static string PuppetInfo
@@ -208,6 +299,7 @@ namespace DelusionMP.Sync
             if (_puppet != null) UnityEngine.Object.Destroy(_puppet);
             _puppet = null;
             _puppetAnim = null;
+            _tag = null;
         }
     }
 

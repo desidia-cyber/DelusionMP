@@ -15,12 +15,15 @@ namespace DelusionMP.Sync
     /// It returns bool - true when the stage actually advanced - which makes it a clean
     /// postfix hook.
     ///
-    /// CRITICAL: do NOT replay the task pipeline on the peer. TaskStageTrigger fans out
-    /// into StartTask -> SetTaskFacts, CheckKeyItems, StoreItem, RemoveItem,
-    /// CalculateItemsAndRewards, ChangeFactions. Re-running it would grant glimmers,
-    /// coins and items to both players. The client instead applies the facts (they arrive
-    /// through FactSync) and restores the journal from the host's PersistentTaskData,
-    /// which is exactly { string id; int stage; }.
+    /// Either player can advance a quest. A stage advanced on one side is replayed on the
+    /// other through the game's own TaskStageTrigger, so each player's journal, popups and
+    /// rewards follow (inventories are per player, so each gets the reward once - the
+    /// replay runs inside LoopGuard and is never forwarded again). If the replay refuses
+    /// (the peer's preconditions differ), the journal entry is restored directly from
+    /// { id, stage } so the log still matches.
+    ///
+    /// Client-originated stages go to the host first as a request; the host runs the
+    /// trigger, which makes it canonical and re-broadcasts it.
     /// </summary>
     public static class QuestSync
     {
@@ -28,16 +31,42 @@ namespace DelusionMP.Sync
         private const byte KindQuestStart = 1;
         private const byte KindQuestFinish = 2;
         private const byte KindJournalSnapshot = 3;
+        private const byte KindClientStage = 4;
+        private const byte KindClientQuestStart = 5;
+
+        private static int _replayed, _restored, _forwarded;
+        public static string Stats => $"replayed={_replayed} restored={_restored} forwarded={_forwarded}";
+
+        private static bool ClientConnected()
+        {
+            var s = Session.Instance;
+            return s != null && s.Role == SessionRole.Client && s.Connected;
+        }
 
         public static void Init() { }
+
+        /// <summary>The interop constructor does not run the field initialiser, so the
+        /// backing list is null until we give it one.</summary>
+        private static DelusionTasks.PersistentTaskDataList NewTaskList()
+        {
+            var l = new DelusionTasks.PersistentTaskDataList();
+            if (l.list == null) l.list = new Il2CppSystem.Collections.Generic.List<DelusionTasks.PersistentTaskData>();
+            return l;
+        }
 
         internal static void OnTaskStageTrigger(string taskID, int stageID, bool hasPopup, bool result)
         {
             if (!result) return;                        // the stage did not advance
             if (LoopGuard.ApplyingRemote) return;
-            if (Session.Instance?.Role != SessionRole.Host) return;
-
             var w = new Writer();
+            if (ClientConnected())
+            {
+                w.U8(KindClientStage).Str(taskID).I32(stageID).Bool(hasPopup);
+                Session.Instance.SendReliable(PacketKind.QuestState, w.ToArray());
+                _forwarded++;
+                return;
+            }
+            if (Session.Instance?.Role != SessionRole.Host) return;
             w.U8(KindStage).Str(taskID).I32(stageID).Bool(hasPopup);
             Session.Instance.SendReliable(PacketKind.QuestState, w.ToArray());
         }
@@ -45,8 +74,15 @@ namespace DelusionMP.Sync
         internal static void OnQuestStarted(string questID)
         {
             if (LoopGuard.ApplyingRemote) return;
-            if (Session.Instance?.Role != SessionRole.Host) return;
             var w = new Writer();
+            if (ClientConnected())
+            {
+                w.U8(KindClientQuestStart).Str(questID);
+                Session.Instance.SendReliable(PacketKind.QuestState, w.ToArray());
+                _forwarded++;
+                return;
+            }
+            if (Session.Instance?.Role != SessionRole.Host) return;
             w.U8(KindQuestStart).Str(questID);
             Session.Instance.SendReliable(PacketKind.QuestState, w.ToArray());
         }
@@ -71,7 +107,31 @@ namespace DelusionMP.Sync
                     string taskID = r.Str();
                     int stage = r.I32();
                     bool popup = r.Bool();
-                    ApplyStage(taskID, stage, popup);
+                    ReplayStage(taskID, stage, popup);
+                    break;
+                }
+                case KindClientStage:
+                {
+                    // Host: the client advanced a quest. Run the real trigger here (outside
+                    // LoopGuard) so the host's journal/facts/rewards follow and the postfix
+                    // re-broadcasts it as canonical.
+                    string taskID = r.Str();
+                    int stage = r.I32();
+                    bool popup = r.Bool();
+                    if (Session.Instance?.Role != SessionRole.Host) break;
+                    bool ok = false;
+                    try { ok = GameRefs.Tasks?.TaskStageTrigger(taskID, stage, popup) ?? false; }
+                    catch (Exception e) { Log.Warn($"client stage {taskID}/{stage} failed: {e.Message}"); }
+                    if (!ok) ApplyStage(taskID, stage, popup);
+                    Log.Info($"client advanced {taskID} -> {stage} (trigger={ok})");
+                    break;
+                }
+                case KindClientQuestStart:
+                {
+                    string id = r.Str();
+                    if (Session.Instance?.Role != SessionRole.Host) break;
+                    try { GameRefs.Quest?.ActivateQuest(id); }
+                    catch (Exception e) { Log.Warn($"client ActivateQuest({id}) failed: {e.Message}"); }
                     break;
                 }
                 case KindQuestStart:
@@ -103,45 +163,63 @@ namespace DelusionMP.Sync
             }
         }
 
-        /// <summary>
-        /// Advances the local journal WITHOUT running reward code.
-        ///
-        /// The stage's own side effects are already arriving as facts. What we need here is
-        /// only the journal entry, so the player's quest log matches. We therefore call the
-        /// journal data layer directly and skip TaskStageTrigger.
-        /// </summary>
-        private static void ApplyStage(string taskID, int stage, bool popup)
+        /// <summary>Peer advanced a stage: replay it through the game, fall back to the
+        /// journal data layer if the trigger refuses.</summary>
+        private static void ReplayStage(string taskID, int stage, bool popup)
         {
             var tasks = GameRefs.Tasks;
             if (tasks == null) return;
-            LoopGuard.Apply(() =>
+            bool ok = LoopGuard.Apply(() =>
             {
-                try
-                {
-                    var data = tasks.GetPersistentTaskData();
-                    if (data == null) return;
-                    var merged = new DelusionTasks.PersistentTaskDataList();
-                    bool found = false;
-                    // Preserve every other entry; override only this task's stage.
-                    if (data.list != null)
-                    {
-                        foreach (var entry in data.list)
-                        {
-                            merged.list.Add(entry.id == taskID
-                                ? new DelusionTasks.PersistentTaskData { id = taskID, stage = stage }
-                                : entry);
-                            if (entry.id == taskID) found = true;
-                        }
-                    }
-                    if (!found)
-                        merged.list.Add(new DelusionTasks.PersistentTaskData { id = taskID, stage = stage });
-
-                    if (merged.list == null || merged.list.Count == 0) return;
-                    tasks.RestoreFromPersistentTaskData(merged);
-                    Log.Debug($"journal {taskID} -> stage {stage}");
-                }
-                catch (Exception e) { Log.Warn($"ApplyStage({taskID},{stage}) failed: {e.Message}"); }
+                try { return tasks.TaskStageTrigger(taskID, stage, popup); }
+                catch (Exception e) { Log.Warn($"replay {taskID}/{stage} failed: {e.Message}"); return false; }
             });
+            if (ok) { _replayed++; Log.Info($"quest {taskID} -> {stage} (replayed)"); return; }
+            ApplyStage(taskID, stage, popup);
+            _restored++;
+        }
+
+        /// <summary>
+        /// Brings one journal entry to the peer's stage without the reward pipeline being
+        /// re-entered from the network: replay TaskStageTrigger (inside LoopGuard) for the
+        /// target stage. RestoreFromPersistentTaskData is deliberately not used - replacing
+        /// the live task list faults natively while a save is loading.
+        /// </summary>
+        private static void ApplyStage(string taskID, int stage, bool popup)
+        {
+            if (!GameRefs.InWorld) { _pendingJournal[taskID] = stage; return; }
+            var tasks = GameRefs.Tasks;
+            if (tasks == null) return;
+            int local = LocalStage(tasks, taskID);
+            if (local == stage) return;
+            bool ok = LoopGuard.Apply(() =>
+            {
+                try { return tasks.TaskStageTrigger(taskID, stage, false); }
+                catch (Exception e) { Log.Warn($"journal {taskID}->{stage} failed: {e.Message}"); return false; }
+            });
+            Log.Info($"journal {taskID}: {local} -> {stage} ({(ok ? "ok" : "refused")})");
+        }
+
+        private static readonly Dictionary<string, int> _pendingJournal = new Dictionary<string, int>();
+
+        /// <summary>Apply journal entries that arrived while the world was loading.</summary>
+        public static void Tick()
+        {
+            if (_pendingJournal.Count == 0 || !GameRefs.InWorld) return;
+            var copy = new List<KeyValuePair<string, int>>(_pendingJournal);
+            _pendingJournal.Clear();
+            foreach (var kv in copy) ApplyStage(kv.Key, kv.Value, false);
+        }
+
+        private static int LocalStage(global::DelusionTasks tasks, string taskID)
+        {
+            try
+            {
+                var list = tasks.GetPersistentTaskData()?.list;
+                if (list != null) foreach (var e in list) if (e.id == taskID) return e.stage;
+            }
+            catch { }
+            return -1;
         }
 
         /// <summary>Full journal state, used at handshake and to repair drift.</summary>
@@ -168,27 +246,13 @@ namespace DelusionMP.Sync
         {
             var r = new Reader(payload);
             r.U8(); // kind
-            var tasks = GameRefs.Tasks;
-            if (tasks == null) return;
             int n = r.U16();
-            if (n == 0) return;   // an empty journal is the main-menu state; restoring it
-                                  // replaces the live list and makes the game NRE
-            var entries = new List<DelusionTasks.PersistentTaskData>(n);
             for (int i = 0; i < n; i++)
-                entries.Add(new DelusionTasks.PersistentTaskData { id = r.Str(), stage = r.I32() });
-
-            LoopGuard.Apply(() =>
             {
-                try
-                {
-                    var merged = new DelusionTasks.PersistentTaskDataList();
-                    if (merged.list == null) { Log.Warn("journal: data list has no backing list"); return; }
-                    foreach (var e in entries) merged.list.Add(e);
-                    tasks.RestoreFromPersistentTaskData(merged);
-                    Log.Info($"journal snapshot applied: {entries.Count} tasks");
-                }
-                catch (Exception ex) { Log.Warn($"RestoreFromPersistentTaskData failed: {ex.Message}"); }
-            });
+                string id = r.Str(); int stage = r.I32();
+                ApplyStage(id, stage, false);
+            }
+            Log.Info($"journal snapshot: {n} tasks ({_pendingJournal.Count} deferred until in world)");
         }
     }
 

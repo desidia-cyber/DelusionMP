@@ -141,12 +141,7 @@ namespace DelusionMP
             if (now < _nextJoinAttempt) return;
             _nextJoinAttempt = now + 1f;
 
-            var w = new Writer();
-            w.U16(Proto.Version);
-            w.Str(PluginInfo.Version);
-            w.Str(BuildInfo.GameAssemblyHash);
-            w.Str(ObjectRegistry.Instance.TableHash());
-            session.SendReliable(PacketKind.Hello, w.ToArray());
+            session.SendHello();
         }
     }
 }

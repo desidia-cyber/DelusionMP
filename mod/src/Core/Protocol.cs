@@ -23,6 +23,8 @@ namespace DelusionMP.Core
 
         /// Maximum payload accepted from a peer.
         public const int MaxPayload = 1200;
+        /// <summary>Reliable packets carry a 2-byte ordered-channel sequence before the payload.</summary>
+        public const int ReliableOverhead = 2;
 
         /// Maximum length of any string field on the wire.
         public const int MaxString = 256;
@@ -64,6 +66,11 @@ namespace DelusionMP.Core
         Cutscene = 44,
         Snapshot = 45,
         Fragment = 46,
+
+        // Client -> host requests (the client acted; the host applies and re-broadcasts).
+        FactRequest = 47,
+        ObjectRequest = 48,
+        WorldEventRequest = 49,
     }
 
     public struct Header
@@ -106,7 +113,7 @@ namespace DelusionMP.Core
             header.Ack = BinaryPrimitives.ReadUInt16LittleEndian(src.Slice(10));
             header.AckBits = BinaryPrimitives.ReadUInt32LittleEndian(src.Slice(12));
             header.PayloadLen = BinaryPrimitives.ReadUInt16LittleEndian(src.Slice(16));
-            return header.PayloadLen <= Proto.MaxPayload;
+            return header.PayloadLen <= Proto.MaxPayload + Proto.ReliableOverhead;
         }
     }
 
