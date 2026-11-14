@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Typecheck harness for the game-independent core (wire protocol + loop guard +
+    event journal). The game-glue files require the BepInEx interop assemblies, which
+    only exist after the game has been launched with the loader installed, so they
+    cannot be compiled here.
+
+    Run:  dotnet build mod/typecheck/CoreTypecheck.csproj
+  -->
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>DelusionMP.CoreTypecheck</AssemblyName>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Stubs.cs" />
+    <Compile Include="../src/Core/Protocol.cs" />
+    <Compile Include="../src/Core/LoopGuard.cs" />
+  </ItemGroup>
+</Project>

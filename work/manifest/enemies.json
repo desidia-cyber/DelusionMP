@@ -1,0 +1,9182 @@
+[
+ {
+  "scene": "sharedassets1.assets",
+  "file": "sharedassets1.assets",
+  "path_id": 5821,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 0,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "sharedassets1.assets",
+  "file": "sharedassets1.assets",
+  "path_id": 5822,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 0,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "sharedassets1.assets",
+  "file": "sharedassets1.assets",
+  "path_id": 5823,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 0,
+  "myLevel": 2,
+  "canRespawn": 0
+ },
+ {
+  "scene": "sharedassets1.assets",
+  "file": "sharedassets1.assets",
+  "path_id": 5824,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 0,
+  "myLevel": 2,
+  "canRespawn": 0
+ },
+ {
+  "scene": "sharedassets1.assets",
+  "file": "sharedassets1.assets",
+  "path_id": 5825,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 0,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "sharedassets22.assets",
+  "file": "sharedassets22.assets",
+  "path_id": 868,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "sharedassets24.assets",
+  "file": "sharedassets24.assets",
+  "path_id": 870,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "sharedassets6.assets",
+  "file": "sharedassets6.assets",
+  "path_id": 8210,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "sharedassets7.assets",
+  "file": "sharedassets7.assets",
+  "path_id": 2172,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "sharedassets8.assets",
+  "file": "sharedassets8.assets",
+  "path_id": 1883,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255711,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255712,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255713,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255714,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255715,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255716,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255717,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255718,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255719,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255720,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255721,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255722,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255723,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255724,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255725,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255726,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255727,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255728,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255729,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255730,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255731,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255732,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255733,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255734,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255735,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255736,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255737,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255738,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255739,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255740,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255741,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255742,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255743,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255744,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255745,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255746,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255747,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255748,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255749,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255750,
+  "optionalEnemyID": "cwk_PackageKillerDead",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255751,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255752,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255753,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255754,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255755,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255756,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255757,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255758,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255759,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255760,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255761,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255762,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255763,
+  "optionalEnemyID": "cwk_CrateRaiderBDead",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255764,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255765,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255766,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255767,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255768,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255769,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255770,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255771,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255772,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255773,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255774,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255775,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255776,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255777,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255778,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255779,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255780,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255781,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255782,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255783,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255784,
+  "optionalEnemyID": "cwk_CrateRaiderCDead",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255785,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255786,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255787,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255788,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255789,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255790,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255791,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255792,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255793,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255794,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255795,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255796,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255797,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255798,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255799,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255800,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255801,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255802,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255803,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255804,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255805,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255806,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255807,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255808,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255809,
+  "optionalEnemyID": "cwk_CrateRaiderADead",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255810,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255811,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 256465,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 256466,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260532,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260533,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260534,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260535,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260536,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260537,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260538,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260539,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260540,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260541,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260542,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260543,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260544,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260545,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260546,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260547,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260548,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260549,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260550,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260551,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 29975,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 29976,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 29977,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 29978,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30024,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30175,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30179,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30209,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30290,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30302,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30424,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30425,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30427,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30428,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30794,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30795,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30796,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30829,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30830,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 149517,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 149518,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 149519,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 149520,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 149521,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 149522,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 149523,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150145,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150146,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150147,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150148,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150149,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150150,
+  "optionalEnemyID": "RibsCastleElite",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150151,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150152,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150153,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150154,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150155,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150156,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150157,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150158,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150159,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150160,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150161,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150162,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150163,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150164,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150165,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150166,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150167,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150168,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150169,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150170,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150171,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150172,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150173,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150174,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150175,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150176,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150177,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150178,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150179,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150180,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150181,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150182,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150183,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150184,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150185,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150186,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150187,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150188,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150189,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150190,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150191,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150192,
+  "optionalEnemyID": "EndlessElite1",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150193,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150194,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150195,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150196,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150205,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150206,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150207,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150692,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150693,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150709,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150861,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150862,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 150863,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 151129,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 151295,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 151296,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 151297,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 151989,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 152208,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 152681,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 152772,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 152773,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 152774,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153091,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153092,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153093,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153584,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153585,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153586,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153587,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153588,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153616,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153617,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153618,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153619,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153620,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153621,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153622,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153623,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153624,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 153625,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_WikkanIsle",
+  "file": "level14",
+  "path_id": 8341,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_WikkanIsle",
+  "file": "level14",
+  "path_id": 8342,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_WikkanIsle",
+  "file": "level14",
+  "path_id": 8343,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_WikkanIsle",
+  "file": "level14",
+  "path_id": 8344,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_WikkanIsle",
+  "file": "level14",
+  "path_id": 8345,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_WikkanIsle",
+  "file": "level14",
+  "path_id": 8346,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_WikkanIsle",
+  "file": "level14",
+  "path_id": 8347,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_WikkanIsle",
+  "file": "level14",
+  "path_id": 8348,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_WikkanIsle",
+  "file": "level14",
+  "path_id": 8349,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_WikkanIsle",
+  "file": "level14",
+  "path_id": 8350,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37221,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37499,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37583,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37584,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37740,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37741,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37742,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37743,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37744,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37745,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37746,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37747,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37748,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37749,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37750,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37751,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37752,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37753,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37968,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 37969,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 38148,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 38149,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 38150,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 38433,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 38434,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 38435,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 38436,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 38437,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesEndless",
+  "file": "level15",
+  "path_id": 38438,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33831,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33832,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33853,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33854,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33855,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33856,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33857,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33858,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33859,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33860,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33861,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33862,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33863,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33864,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33865,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33866,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33867,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33929,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33930,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 34084,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 34182,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 34500,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 34501,
+  "optionalEnemyID": "",
+  "setNormalFact": "CadaverKeepDungeonOpen",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 34502,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 34503,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 34504,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 34505,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 34506,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_PlayerHouse",
+  "file": "level17",
+  "path_id": 32384,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_PlayerHouse",
+  "file": "level17",
+  "path_id": 32385,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_PlayerHouse",
+  "file": "level17",
+  "path_id": 32503,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_PlayerHouse",
+  "file": "level17",
+  "path_id": 32993,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_PlayerHouse",
+  "file": "level17",
+  "path_id": 32994,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90078,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90079,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90080,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90081,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90082,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90083,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90426,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90427,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90428,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90429,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90430,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90431,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90432,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90433,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90434,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90435,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90436,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90437,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90438,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90439,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90440,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90441,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90442,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90443,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90444,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90445,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90446,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90447,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90448,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90449,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90450,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90451,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90452,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 91102,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 91103,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 91104,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 91105,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 91106,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 91965,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 91966,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 91967,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 91968,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92414,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92415,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92416,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92417,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92418,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92419,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92954,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 93231,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 93232,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 93233,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 93234,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 93235,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 35305,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 35306,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 35307,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 35308,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 35309,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 35310,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 35311,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 35312,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 35313,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 35314,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 35315,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36043,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36044,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36045,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36046,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36047,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36048,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36049,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36050,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36051,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36052,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36364,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36365,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36366,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36367,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36368,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36369,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36370,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36371,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36372,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36373,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36374,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36375,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36376,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36377,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36378,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36379,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36380,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36381,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36652,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50693,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50694,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50695,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50696,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50697,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50698,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50699,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50700,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50701,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50702,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50703,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50704,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50705,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50706,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50707,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50708,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50999,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51000,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51001,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51002,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51003,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51004,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51005,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51006,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51007,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51008,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51009,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51010,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51011,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51012,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51013,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51014,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51015,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51016,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51017,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51018,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51019,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51020,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51021,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51022,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51023,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51470,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51471,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51472,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51473,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51474,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51475,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51476,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51477,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51478,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51479,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51480,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51481,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51482,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51483,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51484,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51485,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51486,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51916,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 51917,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76314,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76315,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76316,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76317,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76318,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76319,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76320,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76321,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76322,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76323,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76324,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76742,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76743,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76744,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76745,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76746,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76747,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76748,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76749,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76750,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76856,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76857,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76858,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76859,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76860,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76861,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76862,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76863,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77041,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77042,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77043,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77044,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77045,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77046,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77047,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77048,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77049,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77050,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77051,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77052,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77053,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77054,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77055,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 78432,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 78433,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 78434,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 78435,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51082,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51083,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51084,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51293,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51341,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51342,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51343,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51344,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51345,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51447,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51448,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51449,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51450,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51451,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51802,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51803,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51841,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51842,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51843,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51844,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51845,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51846,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51999,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52000,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52001,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52002,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52003,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52004,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52236,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52380,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52381,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52382,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52383,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52384,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52385,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52386,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52640,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52641,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52642,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52643,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_DemoIsle",
+  "file": "level25",
+  "path_id": 12647,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283763,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283764,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283765,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283766,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 285871,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288606,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 289039,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 289662,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 289663,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 289664,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 289665,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 289666,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 289667,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 291876,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 291877,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 291878,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 291879,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117168,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117504,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117570,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117571,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117572,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117580,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117581,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117582,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117583,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117584,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117585,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117586,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117587,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117588,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117589,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117590,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117591,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117592,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117593,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117594,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117595,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117596,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117597,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117598,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117599,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117600,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117601,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117602,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117603,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117604,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117605,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117606,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117607,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117608,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117609,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117610,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117611,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117612,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117613,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117614,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117620,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117982,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117983,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117984,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117985,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 118200,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 118201,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 118340,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 118341,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 118544,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 118599,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 118600,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 118611,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 118623,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 118624,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 118625,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 118626,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119699,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119700,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119709,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119710,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119711,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 120357,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 120617,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 120720,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 120732,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121058,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121089,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121090,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121091,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121092,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121093,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121094,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121095,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121146,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121147,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121148,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121169,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121170,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121171,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121172,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121173,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121312,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121313,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121361,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 121362,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 122094,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 122098,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147658,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147659,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147660,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147661,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147662,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147663,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147664,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147665,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147666,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147667,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147668,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147669,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147670,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147671,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147672,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147673,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147674,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147675,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147676,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147677,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147678,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147679,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147680,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147681,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147682,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147683,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147684,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147685,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147686,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147687,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147688,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147689,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147690,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147691,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147692,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147693,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147694,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147695,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147696,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147697,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147698,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147699,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147700,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147701,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147702,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147703,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147704,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147705,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147706,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147707,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147708,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147709,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147710,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147711,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147712,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147713,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147714,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147715,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147716,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147717,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147718,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147719,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147720,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147721,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147722,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147723,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147724,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147725,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147739,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147856,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147953,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147954,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147955,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148226,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148429,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148441,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148597,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148598,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148599,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148600,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148601,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148623,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148686,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148793,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 149128,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 149129,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 149130,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 149131,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 149503,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 149504,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 149856,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 149857,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 150899,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 150900,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 151185,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 151186,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 151187,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 151188,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 151189,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 151190,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 151683,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 151688,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 151849,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194191,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194192,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194193,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194194,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194195,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194196,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194197,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194198,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194199,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194200,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194201,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194202,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194203,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194204,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194205,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194206,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194207,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194208,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194209,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194210,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194211,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194212,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194213,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194214,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194215,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194216,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194217,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194218,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194219,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194220,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194221,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194222,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194223,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194224,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194225,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194226,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194227,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194228,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194229,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194230,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194231,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194232,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194233,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194234,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194235,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194236,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194237,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194238,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194239,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194240,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194241,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194242,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194243,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194244,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194245,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194246,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194247,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194248,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194249,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194250,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194251,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194252,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194253,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194254,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194255,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194256,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194257,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194258,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194259,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194260,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194261,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194262,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194263,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194264,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194265,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194266,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194393,
+  "optionalEnemyID": "BrigTowerWizard",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 0
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194858,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194859,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194860,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194931,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194978,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194979,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194980,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194981,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194982,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194983,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194984,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194985,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194986,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 194987,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 195341,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 195342,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 195343,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 195702,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 195703,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 195704,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 195705,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 195706,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 196263,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 196264,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 196432,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 198032,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 198033,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 198034,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 198035,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 198081,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 198082,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 198083,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 198523,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 199090,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 199091,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 199092,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_Hallowshire",
+  "file": "level8",
+  "path_id": 199208,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28677,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28678,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28679,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28680,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28681,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28682,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28683,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28684,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28685,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28686,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28687,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28688,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28689,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28690,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28691,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28692,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28693,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28694,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28695,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28696,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28697,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28698,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28699,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28700,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 0,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28838,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28841,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28842,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 2,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28936,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28937,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 28938,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 29099,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 29100,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 29101,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ },
+ {
+  "scene": "REGION_MinesHallow",
+  "file": "level9",
+  "path_id": 29491,
+  "optionalEnemyID": "",
+  "setNormalFact": "",
+  "setFactBool": 1,
+  "myLevel": 1,
+  "canRespawn": 1
+ }
+]

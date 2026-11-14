@@ -1,0 +1,1540 @@
+[
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255162,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255163,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "cwk_CityLift",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 256564,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 259983,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 259991,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 259998,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30769,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "rustburgKey",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30773,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 152750,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33986,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "cadaverKey",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90187,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "underlands_TramActive",
+  "keyItemNeeded": "tramKey",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92412,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92507,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92509,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92519,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92521,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92525,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92549,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36459,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36460,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36476,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50428,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50429,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 52012,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76060,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76069,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76120,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77962,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77967,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52079,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52195,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52198,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52199,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52204,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52209,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_DemoIsle",
+  "file": "level25",
+  "path_id": 12630,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283100,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283468,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283478,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283486,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283490,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283505,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283506,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 284747,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 286207,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288931,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288943,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288953,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288954,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 290764,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117350,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119161,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "rustburgKey",
+  "liftPosition": 1
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119165,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147326,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147337,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147341,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147342,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148011,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148259,
+  "liftDisabled": 0,
+  "recallLocked": 1,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 150794,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 150797,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "TutorialChallengesComplete",
+  "keyItemNeeded": "",
+  "liftPosition": 1
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 152075,
+  "liftDisabled": 0,
+  "recallLocked": 0,
+  "factToSetWhenUsed": "",
+  "keyItemNeeded": "",
+  "liftPosition": 0
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255158
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255161
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255167
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255168
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255170
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 255173
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 256566
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 256568
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 256570
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 259981
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 259986
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 259988
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 259989
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 259992
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 259994
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 259997
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260000
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 260002
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30759
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30761
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30762
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30764
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30767
+ },
+ {
+  "scene": "REGION_DungeonEmberian",
+  "file": "level11",
+  "path_id": 30772
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 152748
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 152752
+ },
+ {
+  "scene": "REGION_Endless",
+  "file": "level12",
+  "path_id": 152754
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33987
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33989
+ },
+ {
+  "scene": "REGION_DungeonEndless",
+  "file": "level16",
+  "path_id": 33991
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90183
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90185
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 90820
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 91964
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92409
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92411
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92504
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92506
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92512
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92514
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92515
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92517
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92524
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92527
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92529
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92531
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92534
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92535
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92537
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92540
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92542
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92544
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92546
+ },
+ {
+  "scene": "REGION_Underlands",
+  "file": "level19",
+  "path_id": 92548
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36456
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36458
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36462
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36463
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36468
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36471
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36472
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36475
+ },
+ {
+  "scene": "REGION_DesertIsland",
+  "file": "level20",
+  "path_id": 36478
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50427
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50430
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50434
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50437
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50438
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 50441
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 52007
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 52009
+ },
+ {
+  "scene": "REGION_GodWarIsland",
+  "file": "level21",
+  "path_id": 52013
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76059
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76061
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76064
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76067
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76071
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76072
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76119
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76122
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 76124
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77956
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77958
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77960
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77963
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77965
+ },
+ {
+  "scene": "REGION_CreatureIsland",
+  "file": "level22",
+  "path_id": 77968
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 51793
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52078
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52081
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52173
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52174
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52176
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52179
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52180
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52183
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52185
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52187
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52188
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52191
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52194
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52196
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52202
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52207
+ },
+ {
+  "scene": "REGION_Cradle",
+  "file": "level24",
+  "path_id": 52210
+ },
+ {
+  "scene": "REGION_DemoIsle",
+  "file": "level25",
+  "path_id": 12623
+ },
+ {
+  "scene": "REGION_DemoIsle",
+  "file": "level25",
+  "path_id": 12625
+ },
+ {
+  "scene": "REGION_DemoIsle",
+  "file": "level25",
+  "path_id": 12628
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283094
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283096
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283099
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283466
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283469
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283472
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283475
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283476
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283479
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283481
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283484
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283488
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283491
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283493
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283497
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283500
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283502
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283503
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283507
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283511
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 283513
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 284748
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 284750
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 284752
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 286205
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 286209
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 286211
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288925
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288928
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288929
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288933
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288934
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288937
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288940
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288945
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288946
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288949
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288952
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 288955
+ },
+ {
+  "scene": "DelusionMain",
+  "file": "level3",
+  "path_id": 290766
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117343
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117345
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 117348
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119163
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119168
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119170
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119172
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119173
+ },
+ {
+  "scene": "DelusionCombatTest",
+  "file": "level6",
+  "path_id": 119175
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147314
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147316
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147318
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147321
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147322
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147324
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147327
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147330
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147333
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147335
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147340
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 147344
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148012
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148015
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148017
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148261
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148263
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 148265
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 150123
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 150788
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 150790
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 150792
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 150795
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 150798
+ },
+ {
+  "scene": "REGION_Starting",
+  "file": "level7",
+  "path_id": 150800
+ },
+ {
+  "scene": "REGION_Clockwork",
+  "file": "level10",
+  "path_id": 254259,
+  "moveTime": 40.0,
+  "rotateTime": 10.0,
+  "pauseTime": 3.0
+ }
+]

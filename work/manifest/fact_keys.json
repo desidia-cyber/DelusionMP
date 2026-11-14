@@ -1,0 +1,385 @@
+{
+ "AcademyDoorOpen": {
+  "DoorsDelusionVert": 1,
+  "TriggerByFactOrTask": 1
+ },
+ "AngelSpawnDefeated": {
+  "DoorsUltimate": 1
+ },
+ "CadaverKeepDungeonOpen": {
+  "EnemySpawner": 1,
+  "DoorsDelusionVert": 1
+ },
+ "CharmedBarterGuild": {
+  "DoorsDelusionVert": 1
+ },
+ "CharmedDarkStarDrunk": {
+  "DoorsDelusionVert": 1
+ },
+ "CharmedMaskTroll": {
+  "DoorsDelusionVert": 1
+ },
+ "CharmedMushroomMan": {
+  "DoorsDelusionVert": 4
+ },
+ "CharmedMyghar": {
+  "DoorsDelusionVert": 1,
+  "TriggerByFactOrTask": 1
+ },
+ "CrashShip_Doorman": {
+  "DoorsUltimate": 1
+ },
+ "CwkDoormanBelowCity": {
+  "DoorsUltimate": 2
+ },
+ "DIsland_Doorman": {
+  "DoorsUltimate": 2
+ },
+ "DIsland_Doorman2": {
+  "DoorsUltimate": 1
+ },
+ "DIsland_Doorman3": {
+  "DoorsUltimate": 1
+ },
+ "DoorManCreatureGuts": {
+  "DoorsUltimate": 1
+ },
+ "EndgameMirrorUsed": {
+  "TriggerOnPlayerEnter": 2
+ },
+ "EndlessCityDoorman": {
+  "DoorsUltimate": 2
+ },
+ "EndlessDungeonCharm1": {
+  "DoorsDelusionVert": 1
+ },
+ "EndlessElite1Killed": {
+  "DoorsDelusionVert": 1
+ },
+ "EndlessVerdantDoorman": {
+  "DoorsUltimate": 2
+ },
+ "EntombedThinking": {
+  "TriggerByFactOrTask": 1
+ },
+ "FangedDoorOpen": {
+  "TriggerByFactOrTask": 1
+ },
+ "FarmCharmDoorman": {
+  "DoorsUltimate": 2
+ },
+ "FleshDead": {
+  "TriggerByFactOrTask": 1
+ },
+ "GhutridKnowName": {
+  "NPCBase": 1
+ },
+ "HallowMinesDoorman": {
+  "DoorsUltimate": 2
+ },
+ "KilledCaerGodlet": {
+  "TriggerByFactOrTask": 1
+ },
+ "KnowBasalt": {
+  "NPCBase": 1
+ },
+ "KnowChiasmaName": {
+  "NPCBase": 1
+ },
+ "KnowDuchess": {
+  "NPCBase": 15
+ },
+ "KnowFleshBroker": {
+  "NPCBase": 1
+ },
+ "KnowOrlaith": {
+  "NPCBase": 2
+ },
+ "MetVela": {
+  "DoorsDelusionVert": 2
+ },
+ "MygharName": {
+  "NPCBase": 2
+ },
+ "Pwyll_GodCaveOpen": {
+  "DoorsUltimate": 1
+ },
+ "QueenAccess": {
+  "TriggerByFactOrTask": 1
+ },
+ "RibsCastleEliteKilled": {
+  "DoorsDelusionVert": 1
+ },
+ "RottenOnionsKilled": {
+  "TriggerByFactOrTask": 1
+ },
+ "SecondTutorialSpawnActive": {
+  "TriggerOnPlayerEnter": 1
+ },
+ "SparedCaerGodlet": {
+  "TriggerByFactOrTask": 1
+ },
+ "SpokenToCaer01_Tut": {
+  "TriggerByFactOrTask": 1
+ },
+ "SpokenToCaer02_Fort": {
+  "TriggerByFactOrTask": 1
+ },
+ "SpokenToCaer03_Hallowshire": {
+  "TriggerByFactOrTask": 1
+ },
+ "SpokenToCaer04_Endless": {
+  "TriggerByFactOrTask": 1
+ },
+ "SpokenToCaer05_CWK": {
+  "TriggerByFactOrTask": 1
+ },
+ "SpokenToCaretakerFreed": {
+  "TriggerByFactOrTask": 1
+ },
+ "SpokenToHighC_AfterVela": {
+  "DoorsDelusionVert": 2,
+  "TriggerByFactOrTask": 1
+ },
+ "TutorialChallengesComplete": {
+  "DelusionLift": 1
+ },
+ "TutorialStarted": {
+  "DoorsDelusionVert": 2
+ },
+ "VelaBeaten": {
+  "TriggerByFactOrTask": 1
+ },
+ "VelaHostile": {
+  "TriggerByFactOrTask": 1
+ },
+ "WeighedByCulwych": {
+  "TriggerOnPlayerEnter": 1
+ },
+ "castleSurvivorDead": {
+  "TriggerOnPlayerEnter": 1,
+  "TriggerByFactOrTask": 1
+ },
+ "castleSurvivorMetSick": {
+  "TriggerByFactOrTask": 1
+ },
+ "creatureCastleDoorMan": {
+  "DoorsUltimate": 2
+ },
+ "creatureTownDoorMan": {
+  "DoorsUltimate": 2
+ },
+ "creatureTownDoorMan2": {
+  "DoorsUltimate": 3
+ },
+ "cwk_ActivateSage": {
+  "TriggerOnPlayerEnter": 3,
+  "TriggerByFactOrTask": 1
+ },
+ "cwk_AidedAphra": {
+  "TriggerByFactOrTask": 1
+ },
+ "cwk_AidedReza": {
+  "TriggerByFactOrTask": 1,
+  "EnemyCombatEncounter": 2
+ },
+ "cwk_AphraMet": {
+  "NPCBase": 3
+ },
+ "cwk_AphraMirrorWorldName": {
+  "NPCBase": 1
+ },
+ "cwk_ArmsMet": {
+  "NPCBase": 1
+ },
+ "cwk_AssayPrimed": {
+  "TriggerOnPlayerEnter": 1,
+  "TriggerByFactOrTask": 1
+ },
+ "cwk_BeaconName": {
+  "NPCBase": 1
+ },
+ "cwk_BetrayedAphra": {
+  "TriggerByFactOrTask": 4
+ },
+ "cwk_CampAssayPrimed": {
+  "TriggerOnPlayerEnter": 3,
+  "TriggerByFactOrTask": 1
+ },
+ "cwk_CityLift": {
+  "DelusionLift": 1,
+  "TriggerByFactOrTask": 1
+ },
+ "cwk_DigOpen": {
+  "DoorsDelusionVert": 1
+ },
+ "cwk_DoorManCorruptCityCage": {
+  "DoorsUltimate": 2
+ },
+ "cwk_DoorManCorruptCityGunTower": {
+  "DoorsUltimate": 1
+ },
+ "cwk_DoorManCorruptTallBldg": {
+  "DoorsUltimate": 2
+ },
+ "cwk_DoorManNorthTower": {
+  "DoorsUltimate": 2
+ },
+ "cwk_DoorManWaterPlant": {
+  "DoorsUltimate": 2
+ },
+ "cwk_FrostNameTitle": {
+  "NPCBase": 1
+ },
+ "cwk_HoraceMet": {
+  "NPCBase": 1,
+  "TriggerByFactOrTask": 1
+ },
+ "cwk_HuangMet": {
+  "NPCBase": 1
+ },
+ "cwk_KingMetA": {
+  "TriggerByFactOrTask": 1
+ },
+ "cwk_LascauxMet": {
+  "NPCBase": 1
+ },
+ "cwk_LibraryDoorOpen": {
+  "DoorsUltimate": 4
+ },
+ "cwk_MacName": {
+  "NPCBase": 1
+ },
+ "cwk_MachinariumKingDoors": {
+  "DoorsDelusionVert": 2,
+  "TriggerOnPlayerEnter": 1
+ },
+ "cwk_MachinariumOpen": {
+  "DoorsDelusionVert": 1
+ },
+ "cwk_MetOleg": {
+  "NPCBase": 1
+ },
+ "cwk_MorozovDoorOpen": {
+  "DoorsUltimate": 3
+ },
+ "cwk_MorzovTerminalUnlocked": {
+  "TriggerByFactOrTask": 1
+ },
+ "cwk_NadjaHasGone": {
+  "TriggerOnPlayerEnter": 2,
+  "TriggerByFactOrTask": 1
+ },
+ "cwk_OlegHouseOpen": {
+  "DoorsUltimate": 3,
+  "TriggerByFactOrTask": 1
+ },
+ "cwk_OlegName": {
+  "NPCBase": 3
+ },
+ "cwk_PrippMet": {
+  "NPCBase": 1
+ },
+ "cwk_ProgressGateUnlocked": {
+  "DoorsDelusionVert": 1
+ },
+ "cwk_RezaDoor": {
+  "DoorsDelusionVert": 1
+ },
+ "cwk_RezaMet": {
+  "NPCBase": 1
+ },
+ "cwk_RoyalSilkslugs": {
+  "TriggerByFactOrTask": 1
+ },
+ "cwk_SamName": {
+  "NPCBase": 1
+ },
+ "cwk_SunilMet": {
+  "NPCBase": 6
+ },
+ "cwk_Tailor_Met": {
+  "NPCBase": 1
+ },
+ "cwk_TeaPot": {
+  "TriggerByFactOrTask": 2
+ },
+ "cwk_VidalName": {
+  "NPCBase": 1
+ },
+ "cwk_VisionWorksOpen": {
+  "DoorsUltimate": 1
+ },
+ "cwk_Xenia_Met": {
+  "NPCBase": 1
+ },
+ "cwk_YasmeenMet": {
+  "NPCBase": 3
+ },
+ "cwk_cageOpened": {
+  "DoorsDelusionVert": 1
+ },
+ "cwk_crookedDoorOpen": {
+  "DoorsUltimate": 1
+ },
+ "doorman_endExIsle": {
+  "DoorsUltimate": 1
+ },
+ "doorman_godWarMech": {
+  "DoorsUltimate": 2
+ },
+ "doorman_godWarTower": {
+  "DoorsUltimate": 2
+ },
+ "endM_LordKill": {
+  "TriggerByFactOrTask": 1
+ },
+ "endM_beenToMine": {
+  "TriggerOnPlayerEnter": 2
+ },
+ "endM_doneLaw": {
+  "TriggerByFactOrTask": 2
+ },
+ "endM_keyGiven": {
+  "DoorsUltimate": 2
+ },
+ "endM_knowLordName": {
+  "NPCBase": 4
+ },
+ "endM_prisMet": {
+  "NPCBase": 1
+ },
+ "godHuntCult": {
+  "TriggerByFactOrTask": 1
+ },
+ "godHuntUnion": {
+  "TriggerByFactOrTask": 1
+ },
+ "innogenGuardActive": {
+  "TriggerByFactOrTask": 1
+ },
+ "isleDesert_shipUnlocked": {
+  "DoorsUltimate": 1
+ },
+ "mainQuest": {
+  "TriggerByFactOrTask": 1
+ },
+ "picksNotFull": {
+  "InitialFacts": 1
+ },
+ "playerCoin": {
+  "InitialFacts": 1
+ },
+ "playerPicks": {
+  "InitialFacts": 1
+ },
+ "pwyllShroom": {
+  "TriggerByFactOrTask": 2
+ },
+ "underlands_TramActive": {
+  "DelusionLift": 1
+ },
+ "underlands_VelaDoubtedSelf": {
+  "TriggerByFactOrTask": 1
+ }
+}

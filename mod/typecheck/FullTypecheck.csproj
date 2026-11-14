@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Full typecheck of the plugin source against compile-only stubs (GameStubs.cs).
+    This does NOT produce a usable plugin; it exists so CI catches syntax and signature
+    errors without the game or BepInEx installed.
+
+    Run:  dotnet build mod/typecheck/FullTypecheck.csproj
+  -->
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>DelusionMP.Typecheck</AssemblyName>
+    <OutputType>Library</OutputType>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>CS0169;CS0649;CS0414;CS8632</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="GameStubs.cs" />
+    <Compile Include="../src/Core/*.cs" />
+    <Compile Include="../src/Game/*.cs" />
+    <Compile Include="../src/Net/*.cs" />
+    <Compile Include="../src/Sync/*.cs" />
+    <Compile Include="../src/Plugin.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,22 @@
+# analysis output and tooling artefacts
+work/*
+!work/manifest/
+!work/manifest/**
+third_party/
+reference/
+
+# .NET
+bin/
+obj/
+*.user
+
+# shipped plugin output
+mod/bin/
+mod/obj/
+dist/
+
+# rig: two full copies of the game plus per-run state
+rig/
+
+# local scratch
+*.log
