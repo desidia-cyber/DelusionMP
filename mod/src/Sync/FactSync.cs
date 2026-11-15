@@ -33,6 +33,12 @@ namespace DelusionMP.Sync
 
         private const byte KindBool = 0;
         private const byte KindInt = 1;
+        /// <summary>Additive int change (ChangeOrCreateIntFact): merged on the host as
+        /// current + delta, so simultaneous increments from both players are never lost.</summary>
+        private const byte KindIntAdd = 2;
+        [ThreadStatic] private static int _addDepth;
+        internal static void EnterAdd() => _addDepth++;
+        internal static void ExitAdd() { if (_addDepth > 0) _addDepth--; }
 
         /// <summary>Last full snapshot from the host, used to rebuild after drift.</summary>
         private static Dictionary<string, bool> _lastBools = new Dictionary<string, bool>();
@@ -61,7 +67,7 @@ namespace DelusionMP.Sync
 
         private static readonly HashSet<string> _playerOwned = new HashSet<string>(StringComparer.Ordinal)
         {
-            "playerCoin", "playerPicks", "picksNotFull",
+            "playerCoin", "playerPicks", "picksNotFull", "totalPlayerDeaths",
         };
         private static bool _seededFromItems;
         [ThreadStatic] private static int _ownerDepth;
@@ -160,6 +166,7 @@ namespace DelusionMP.Sync
                 try
                 {
                     if (kind == KindBool) facts.SetFact(key, bv);
+                    else if (kind == KindIntAdd) facts.ChangeOrCreateIntFact(key, iv);
                     else facts.SetFact(key, iv);
                 }
                 catch (Exception e) { Log.Warn($"fact request {key} failed: {e.Message}"); }
@@ -177,10 +184,24 @@ namespace DelusionMP.Sync
             Queue(key, KindBool, value, 0);
         }
 
+        /// <summary>ChangeOrCreateIntFact landed: a client forwards the delta, a host
+        /// broadcasts the resulting absolute value.</summary>
+        internal static void OnFactAddInt(string key, int added, int now)
+        {
+            if (LocalOnly(key)) return;
+            if (ClientShouldForward()) { Request(key, KindIntAdd, false, added); return; }
+            OnFactSetInt(key, now);
+        }
+
         internal static void OnFactSetInt(string key, int value)
         {
             if (LocalOnly(key)) return;
-            if (ClientShouldForward()) { Request(key, KindInt, false, value); return; }
+            if (ClientShouldForward())
+            {
+                // Inside ChangeOrCreateIntFact the additive postfix forwards the delta.
+                if (_addDepth == 0) Request(key, KindInt, false, value);
+                return;
+            }
             if (LoopGuard.ApplyingRemote) return;
             if (Session.Instance?.Role != SessionRole.Host) return;
             if (!_shadow.ObserveInt(key, value)) return;
@@ -378,6 +399,9 @@ namespace DelusionMP.Sync
     [HarmonyPatch(typeof(global::FactDB), nameof(global::FactDB.ChangeOrCreateIntFact))]
     internal static class Patch_FactDB_ChangeOrCreateInt
     {
+        [HarmonyPrefix] static void Prefix() => FactSync.EnterAdd();
+        [HarmonyFinalizer] static void Finalizer() => FactSync.ExitAdd();
+
         [HarmonyPostfix]
         static void Postfix(string factKey, int addedValue, bool __result)
         {
@@ -386,7 +410,7 @@ namespace DelusionMP.Sync
             if (facts == null) return;
             try
             {
-                if (facts.GetFact(factKey, out int now)) FactSync.OnFactSetInt(factKey, now);
+                if (facts.GetFact(factKey, out int now)) FactSync.OnFactAddInt(factKey, addedValue, now);
             }
             catch (Exception e) { Log.Debug($"ChangeOrCreateIntFact readback failed: {e.Message}"); }
         }
@@ -409,6 +433,23 @@ namespace DelusionMP.Sync
 
     [HarmonyPatch(typeof(global::DelusionStats), nameof(global::DelusionStats.ChangeCoin))]
     internal static class Patch_Stats_ChangeCoin
+    {
+        [HarmonyPrefix] static void Prefix() => FactSync.EnterPlayerScope();
+        [HarmonyFinalizer] static void Finalizer() => FactSync.ExitPlayerScope();
+    }
+
+    // Death respawn writes per-player facts (totalPlayerDeaths and whatever else it touches):
+    // everything written inside it is learned as player-owned.
+    [HarmonyPatch(typeof(global::DelusionPlayerActions), nameof(global::DelusionPlayerActions.PlayerDeathRespawn))]
+    internal static class Patch_Actions_PlayerDeathRespawn
+    {
+        [HarmonyPrefix] static void Prefix() => FactSync.EnterPlayerScope();
+        [HarmonyFinalizer] static void Finalizer() => FactSync.ExitPlayerScope();
+    }
+
+    // Per-player stats: the death counter is each player's own.
+    [HarmonyPatch(typeof(global::DelusionStats), nameof(global::DelusionStats.IncreaseDeathCount))]
+    internal static class Patch_Stats_IncreaseDeathCount
     {
         [HarmonyPrefix] static void Prefix() => FactSync.EnterPlayerScope();
         [HarmonyFinalizer] static void Finalizer() => FactSync.ExitPlayerScope();

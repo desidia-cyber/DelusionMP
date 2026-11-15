@@ -102,6 +102,10 @@ namespace DelusionMP
                     PlayerSync.TickRender();
                 }
 
+                DialogueSync.Tick();
+                WorldEventsSync.Tick();
+                if (GameRefs.Player != null) AirshipSync.Tick();
+
                 if (GameRefs.InWorld)
                 {
                     QuestSync.Tick();
@@ -145,6 +149,14 @@ namespace DelusionMP
     public sealed class TickBehaviour : MonoBehaviour
     {
         private void Update() => DelusionMPBootstrap.Current?.OnUpdate();
+
+        // Camera overrides (shared-dialogue point of view) run after the game's own
+        // PlayerLook has written the camera for this frame.
+        private void LateUpdate()
+        {
+            try { DelusionMP.Sync.DialogueSync.LateTick(); }
+            catch (System.Exception e) { DelusionMP.Game.Log.Debug("late tick: " + e.Message); }
+        }
     }
 
     internal static class DelusionMPBootstrap

@@ -166,6 +166,7 @@ namespace DelusionMP.Net
                 ResetReliable();
                 _handshakeComplete = true;
                 Log.Info($"client joined (epoch {nonce:X8})");
+                WorldEventsSync.OnSessionStart();
                 SendWorldSnapshot();
                 WorldMirror.ForceSnapshot();
             }
@@ -183,6 +184,8 @@ namespace DelusionMP.Net
             ResetReliable();
             _handshakeComplete = true;
             WorldMirror.OnClientConnected();
+            WorldEventsSync.OnSessionStart();
+            WorldEventsSync.SendJoinState();
             Log.Info("connected to host");
         }
 
@@ -331,6 +334,11 @@ namespace DelusionMP.Net
 
                 case PacketKind.FactDelta: FactSync.ApplyDelta(payload); break;
                 case PacketKind.QuestState: QuestSync.Apply(payload); break;
+                case PacketKind.Dialogue: DialogueSync.Apply(payload); break;
+                case PacketKind.Airship: AirshipSync.Apply(payload); break;
+                case PacketKind.AirshipState: AirshipSync.ApplyState(payload); break;
+                case PacketKind.Cutscene: CutsceneSync.Apply(payload); break;
+                case PacketKind.WorldAction: WorldEventsSync.Apply(payload); break;
                 case PacketKind.ObjectState: WorldMirror.Apply(payload); break;
                 case PacketKind.WorldEvent: WorldMirror.ApplyTyped(payload); break;
                 // Client-originated: the host applies (making it canonical). Only a host
@@ -473,6 +481,7 @@ namespace DelusionMP.Net
             SendFragmented(PacketKind.Snapshot, w.ToArray());
 
             SendFragmented(PacketKind.QuestState, QuestSync.CaptureJournal());
+            WorldEventsSync.SendJoinState();
             Log.Info($"world snapshot sent: {bools.Count} bools, {ints.Count} ints ({w.Length} B)");
         }
 

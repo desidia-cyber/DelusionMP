@@ -237,7 +237,12 @@ namespace DelusionMP.Sync
         // the ones players notice, and both expose a small explicit state, so replicate
         // those directly as well. The generic mirror still covers everything else.
 
-        private enum TypedKind : byte { DoorUltimate = 0, Door = 1, Lift = 2, LiftMove = 3 }
+        // LiftMove (3) was the old motion replay; it is retired (ignored on receipt).
+        private enum TypedKind : byte { DoorUltimate = 0, Door = 1, Lift = 2, LiftMove = 3, LiftActivate = 4 }
+
+        // Lift typed value: liftPosition (0..3) | LiftMovingBit. liftPosition already uses 2/3
+        // for MovingDown/MovingUp, so the moving flag needs its own bit.
+        private const int LiftMovingBit = 4;
 
         private static readonly Dictionary<string, int> _typed = new Dictionary<string, int>(256, StringComparer.Ordinal);
 
@@ -252,7 +257,9 @@ namespace DelusionMP.Sync
             _typed[key] = value;
             if (session.Role == SessionRole.Host) return true;
             if (!known || IsQuiet(key)) return false;
-            return ShouldForward(key);
+            // Typed doors only ever change through a player (a peer write is quiet), so the
+            // volatile churn rule must not lock out a door that is used often.
+            return true;
         }
 
         private static void SendTyped(Session session, Writer w) =>
@@ -308,15 +315,25 @@ namespace DelusionMP.Sync
                     try { id = so != null ? so.GetUniqueIdentifier() : null; } catch { }
                     if (string.IsNullOrEmpty(id)) continue;
                     int packed;
-                    try { packed = ((int)l.liftPosition) | (Priv.GetField<bool>(l, "isMoving") ? 2 : 0); }
+                    try { packed = LiftValue(l); }
                     catch { continue; }
                     string key = scene + "|" + id;
-                    if (!TypedChanged(session, key, packed)) continue;
+                    // Lifts travel as transitions (LiftActivate, both roles) plus the host's
+                    // settled position. The scan only provides that settled value for late
+                    // joins / resyncs; a client never forwards scanned lift state.
+                    if (session.Role != SessionRole.Host) { _typed[key] = packed; continue; }
+                    bool known = _typed.TryGetValue(key, out var old);
+                    _typed[key] = packed;
+                    if (known && old == packed) continue;
+                    if ((packed & LiftMovingBit) != 0 || packed >= 2) continue;   // moving: wait for the settle
                     var w = new Writer();
                     w.U8((byte)TypedKind.Lift).Str(key).I32(packed);
                     SendTyped(session, w);
                 }
         }
+
+        private static int LiftValue(global::DelusionLift l) =>
+            ((int)l.liftPosition) | (Priv.GetField<bool>(l, "isMoving") ? LiftMovingBit : 0);
 
         /// <summary>Client: apply a typed door/lift transition.</summary>
         public static void ApplyTyped(byte[] payload)
@@ -367,22 +384,18 @@ namespace DelusionMP.Sync
                         }
                         case TypedKind.Lift:
                         {
-                            // Settled state only: movement itself arrives as LiftMove. If
-                            // the lift rests somewhere else here, snap it.
                             var l = go.GetComponent<global::DelusionLift>();
-                            if (l == null || (value & 2) != 0) break;
-                            var pos = (global::DelusionLift.LiftPosition)(value & 1);
-                            if (!Priv.GetField<bool>(l, "isMoving") && l.liftPosition != pos)
-                                l.PositionInstant(pos);
+                            if (l != null) ApplyLiftSettle(l, value);
+                            break;
+                        }
+                        case TypedKind.LiftActivate:
+                        {
+                            var l = go.GetComponent<global::DelusionLift>();
+                            if (l != null) ApplyLiftActivate(l, key, value);
                             break;
                         }
                         case TypedKind.LiftMove:
-                        {
-                            var l = go.GetComponent<global::DelusionLift>();
-                            if (l == null || Priv.GetField<bool>(l, "isMoving")) break;
-                            l.StartLiftMovement((global::DelusionLift.LiftPosition)value);
-                            break;
-                        }
+                            break;   // retired motion replay
                     }
                     _applied++;
                     _lastApply = "typed " + key;
@@ -404,20 +417,117 @@ namespace DelusionMP.Sync
             if (StateCodec.Trace) StateCodec.Crumb("key " + key);
         }
 
-        /// <summary>A lift started moving on this side because a player used it: replay
-        /// the same movement on the peer so it animates (and carries riders) there too.</summary>
-        internal static void OnLiftMove(global::DelusionLift l, global::DelusionLift.LiftPosition newPos)
+        // ------------------------------------------------------------------ lifts
+        //
+        // A lift ride is replicated as its transition: the peer runs the same private
+        // ActivateLift(newPos) - door close animation, doorClipping wall, Moving* position,
+        // audio - and its own carriage motion. The host's EndLiftMovement is the settled
+        // truth (PositionInstant on a peer that ended up elsewhere).
+
+        [ThreadStatic] private static int _leverCtx;   // 0 none, 1 top lever, 2 bottom lever
+        internal static void EnterLever(int lever) => _leverCtx = lever;
+        internal static void ExitLever() => _leverCtx = 0;
+
+        /// <summary>Lifts whose current ride was started by the peer: their journey-end
+        /// facts/tasks arrive through FactSync/QuestSync, not from this side.</summary>
+        private static readonly HashSet<int> _remoteRide = new HashSet<int>();
+        internal static bool IsRemoteRide(global::DelusionLift l) => l != null && _remoteRide.Contains(l.GetInstanceID());
+
+        private static string LiftKey(global::DelusionLift l)
         {
-            if (LoopGuard.ApplyingRemote) return;
-            var session = Session.Instance;
-            if (session == null || !session.Connected) return;
             var so = l.GetComponent<global::SaveableObject>();
             string id = null;
             try { id = so != null ? so.GetUniqueIdentifier() : null; } catch { }
-            if (string.IsNullOrEmpty(id)) return;
+            return string.IsNullOrEmpty(id) ? null : ObjectRegistry.Instance.CurrentScene + "|" + id;
+        }
+
+        /// <summary>ActivateLift succeeded locally because a player used the lift.</summary>
+        internal static void OnLiftActivated(global::DelusionLift l, global::DelusionLift.LiftPosition newPos)
+        {
+            if (LoopGuard.ApplyingRemote || l == null) return;
+            var session = Session.Instance;
+            if (session == null || !session.Connected) return;
+            var key = LiftKey(l);
+            if (key == null) return;
             var w = new Writer();
-            w.U8((byte)TypedKind.LiftMove).Str(ObjectRegistry.Instance.CurrentScene + "|" + id).I32((int)newPos);
+            w.U8((byte)TypedKind.LiftActivate).Str(key).I32((int)newPos | (_leverCtx << 4));
             SendTyped(session, w);
+        }
+
+        /// <summary>Host: a ride ended here - broadcast the settled position.</summary>
+        internal static void OnLiftEnded(global::DelusionLift l)
+        {
+            if (l == null) return;
+            _remoteRide.Remove(l.GetInstanceID());
+            var session = Session.Instance;
+            if (session == null || !session.Connected || session.Role != SessionRole.Host) return;
+            var key = LiftKey(l);
+            if (key == null) return;
+            int packed;
+            try { packed = LiftValue(l); } catch { return; }
+            if ((packed & LiftMovingBit) != 0 || packed >= 2) return;
+            _typed[key] = packed;
+            var w = new Writer();
+            w.U8((byte)TypedKind.Lift).Str(key).I32(packed);
+            SendTyped(session, w);
+        }
+
+        private static void ApplyLiftActivate(global::DelusionLift l, string key, int value)
+        {
+            var pos = (global::DelusionLift.LiftPosition)(value & 0xF);
+            int lever = (value >> 4) & 0xF;
+            if (pos != global::DelusionLift.LiftPosition.Top && pos != global::DelusionLift.LiftPosition.Bot) return;
+            // Runs inside LoopGuard: MissingKeyItem and TriggerFactsAndTasks are bypassed by
+            // their prefixes, and the ActivateLift postfix does not echo.
+            bool ok = l.ActivateLift(pos);
+            if (ok)
+            {
+                _remoteRide.Add(l.GetInstanceID());
+                try
+                {
+                    if (lever == 1 && l.leverTop != null) l.leverTop.PullLever();
+                    else if (lever == 2 && l.leverBot != null) l.leverBot.PullLever();
+                }
+                catch (Exception e) { Log.Debug("lift lever visual: " + e.Message); }
+                return;
+            }
+            // Refused (already moving / already there / disabled). The host tells the client
+            // where its lift really is, so the client's own ride gets corrected.
+            var session = Session.Instance;
+            if (session != null && session.Role == SessionRole.Host)
+            {
+                int packed;
+                try { packed = LiftValue(l); } catch { return; }
+                if ((packed & LiftMovingBit) == 0 && packed < 2)
+                {
+                    var w = new Writer();
+                    w.U8((byte)TypedKind.Lift).Str(key).I32(packed);
+                    SendTyped(session, w);
+                }
+            }
+        }
+
+        /// <summary>The host's settled lift position. A peer still riding toward the same
+        /// end is left to arrive by itself; anything else is snapped.</summary>
+        private static void ApplyLiftSettle(global::DelusionLift l, int value)
+        {
+            if ((value & LiftMovingBit) != 0) return;
+            var pos = (global::DelusionLift.LiftPosition)(value & 3);
+            if (pos != global::DelusionLift.LiftPosition.Top && pos != global::DelusionLift.LiftPosition.Bot) return;
+            bool moving = Priv.GetField<bool>(l, "isMoving");
+            var cur = l.liftPosition;
+            if (!moving && cur == pos) return;
+            if (cur == global::DelusionLift.LiftPosition.MovingUp && pos == global::DelusionLift.LiftPosition.Top) return;
+            if (cur == global::DelusionLift.LiftPosition.MovingDown && pos == global::DelusionLift.LiftPosition.Bot) return;
+            bool wasMid = moving || cur == global::DelusionLift.LiftPosition.MovingUp || cur == global::DelusionLift.LiftPosition.MovingDown;
+            l.PositionInstant(pos);
+            _remoteRide.Remove(l.GetInstanceID());
+            if (wasMid)
+            {
+                // PositionInstant skips EndLiftMovement's cleanup.
+                try { if (l.doorClipping != null) l.doorClipping.SetActive(false); } catch { }
+                try { if (l.liftAudio != null) l.liftAudio.Stop(); } catch { }
+            }
         }
 
         /// <summary>
@@ -619,11 +729,56 @@ namespace DelusionMP.Sync
         }
     }
 
-    [HarmonyLib.HarmonyPatch(typeof(global::DelusionLift), "StartLiftMovement")]
-    internal static class Patch_DelusionLift_StartLiftMovement
+    [HarmonyLib.HarmonyPatch(typeof(global::DelusionLift), "ActivateLift")]
+    internal static class Patch_DelusionLift_ActivateLift
     {
         [HarmonyLib.HarmonyPostfix]
-        static void Postfix(global::DelusionLift __instance, global::DelusionLift.LiftPosition newPos)
-            => WorldMirror.OnLiftMove(__instance, newPos);
+        static void Postfix(global::DelusionLift __instance, global::DelusionLift.LiftPosition newPos, bool __result)
+        {
+            if (__result) WorldMirror.OnLiftActivated(__instance, newPos);
+        }
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(global::DelusionLift), "EndLiftMovement")]
+    internal static class Patch_DelusionLift_EndLiftMovement
+    {
+        [HarmonyLib.HarmonyPostfix]
+        static void Postfix(global::DelusionLift __instance) => WorldMirror.OnLiftEnded(__instance);
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(global::DelusionLift), "MissingKeyItem")]
+    internal static class Patch_DelusionLift_MissingKeyItem
+    {
+        // A replayed ride: the partner had the key; no "need item" note here.
+        [HarmonyLib.HarmonyPrefix]
+        static bool Prefix(ref bool __result)
+        {
+            if (!LoopGuard.ApplyingRemote) return true;
+            __result = false;
+            return false;
+        }
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(global::DelusionLift), "TriggerFactsAndTasks")]
+    internal static class Patch_DelusionLift_TriggerFactsAndTasks
+    {
+        // Facts and tasks of a replayed ride arrive through FactSync/QuestSync.
+        [HarmonyLib.HarmonyPrefix]
+        static bool Prefix(global::DelusionLift __instance) =>
+            !LoopGuard.ApplyingRemote && !WorldMirror.IsRemoteRide(__instance);
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(global::DelusionLift), nameof(global::DelusionLift.TryRecallTop))]
+    internal static class Patch_DelusionLift_TryRecallTop
+    {
+        [HarmonyLib.HarmonyPrefix] static void Prefix() => WorldMirror.EnterLever(1);
+        [HarmonyLib.HarmonyFinalizer] static void Finalizer() => WorldMirror.ExitLever();
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(global::DelusionLift), nameof(global::DelusionLift.TryRecallBot))]
+    internal static class Patch_DelusionLift_TryRecallBot
+    {
+        [HarmonyLib.HarmonyPrefix] static void Prefix() => WorldMirror.EnterLever(2);
+        [HarmonyLib.HarmonyFinalizer] static void Finalizer() => WorldMirror.ExitLever();
     }
 }

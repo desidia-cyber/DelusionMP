@@ -57,10 +57,42 @@ namespace DelusionMP.Core
             }
         }
 
+        // "after <seconds> <command>": run later (frame-accurate captures of short actions).
+        private static readonly List<(float at, string line)> _delayed = new List<(float, string)>();
+
+        private static void Run(string line)
+        {
+            // Several commands on one line, separated by ';'.
+            foreach (var part in line.Split(';'))
+            {
+                var cmd = part.Trim();
+                if (cmd.Length == 0) continue;
+                if (cmd.StartsWith("after ", StringComparison.Ordinal))
+                {
+                    var bits = cmd.Split(new[] { ' ' }, 3);
+                    if (bits.Length == 3 && float.TryParse(bits[1], System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture, out var sec))
+                    {
+                        _delayed.Add((Time.realtimeSinceStartup + sec, bits[2]));
+                        continue;
+                    }
+                }
+                try { Execute(cmd); }
+                catch (Exception e) { Emit($"ERR {cmd}: {e.GetType().Name}: {e.Message}"); }
+            }
+        }
+
         public static void Tick()
         {
             if (!_ready) return;
             float now = Time.realtimeSinceStartup;
+            for (int i = _delayed.Count - 1; i >= 0; i--)
+            {
+                if (now < _delayed[i].at) continue;
+                var line = _delayed[i].line;
+                _delayed.RemoveAt(i);
+                Run(line);
+            }
             if (now < _nextPoll) return;
             _nextPoll = now + 0.5f;
 
@@ -78,8 +110,7 @@ namespace DelusionMP.Core
             {
                 var line = raw.Trim();
                 if (line.Length == 0) continue;
-                try { Execute(line); }
-                catch (Exception e) { Emit($"ERR {line}: {e.GetType().Name}: {e.Message}"); }
+                Run(line);
             }
         }
 
@@ -420,6 +451,225 @@ namespace DelusionMP.Core
                     }
                     break;
                 }
+                case "avatar":
+                {
+                    Emit("AVATAR " + RemoteAvatar.Info);
+                    if (parts.Length > 1 && parts[1] == "parts") Emit("  PARTS " + string.Join(",", RemoteAvatar.PartNames));
+                    break;
+                }
+                case "avplay":
+                {
+                    Emit("AVPLAY " + RemoteAvatar.DebugPlay(parts.Length > 1 ? parts[1] : ""));
+                    break;
+                }
+                case "outfit":
+                {
+                    if (parts.Length < 2) { Emit("ERR outfit a,b,c"); break; }
+                    RemoteAvatar.SetOutfit(parts[1].Split(','));
+                    Emit("OUTFIT " + parts[1]);
+                    break;
+                }
+                case "heldrot":
+                {
+                    var ci = System.Globalization.CultureInfo.InvariantCulture;
+                    RemoteAvatar.HeldEuler = new Vector3(float.Parse(parts[1], ci), float.Parse(parts[2], ci), float.Parse(parts[3], ci));
+                    if (parts.Length > 6) RemoteAvatar.HeldOffset = new Vector3(float.Parse(parts[4], ci), float.Parse(parts[5], ci), float.Parse(parts[6], ci));
+                    RemoteAvatar.RetuneHeld();
+                    Emit($"HELDROT {RemoteAvatar.HeldEuler} {RemoteAvatar.HeldOffset}");
+                    break;
+                }
+                case "avtest":
+                {
+                    // avtest off | avtest <weaponType> <rarity> <weaponState> <attack> <spellState> <spellType>
+                    if (parts.Length < 2 || parts[1] == "off") { RemoteAvatar.Override = null; Emit("AVTEST off"); break; }
+                    var o = new AvatarState
+                    {
+                        WeaponType = byte.Parse(parts[1]), Rarity = byte.Parse(parts[2]), WeaponState = byte.Parse(parts[3]),
+                        Attack = byte.Parse(parts[4]), SpellState = byte.Parse(parts[5]), SpellType = byte.Parse(parts[6]),
+                    };
+                    RemoteAvatar.Override = o;
+                    Emit("AVTEST " + string.Join(" ", parts, 1, parts.Length - 1));
+                    break;
+                }
+                case "ship":
+                {
+                    var ship = AirshipSync.Ship;
+                    if (ship == null) { Emit("SHIP none " + AirshipSync.Stats); break; }
+                    var sp = ship.transform.position;
+                    bool anch = false; try { anch = ship.anchor != null && ship.anchor.isAnchored; } catch { }
+                    var me = GameRefs.Player;
+                    string rel = me != null ? $" me-local={ship.transform.InverseTransformPoint(me.transform.position)} parented={me.transform.IsChildOf(ship.transform)}" : "";
+                    Emit($"SHIP active={ship.gameObject.activeInHierarchy} state={ship.state} pos={sp.x:F1},{sp.y:F1},{sp.z:F1} yaw={ship.transform.eulerAngles.y:F0} dock={ship.data?.dockId} anchored={anch}{rel} {AirshipSync.Stats}");
+                    break;
+                }
+                case "showship":
+                {
+                    var ship = AirshipSync.Ship;
+                    if (ship == null) { Emit("ERR no ship"); break; }
+                    for (var t = ship.transform; t != null; t = t.parent) if (!t.gameObject.activeSelf) t.gameObject.SetActive(true);
+                    Emit("SHOWSHIP active=" + ship.gameObject.activeInHierarchy);
+                    break;
+                }
+                case "giveitem":
+                {
+                    var inv = GameRefs.Inventory;
+                    if (inv == null || parts.Length < 2) { Emit("ERR giveitem <id>"); break; }
+                    var it = inv.CreateItem(parts[1], global::ItemRarity.Common, 1);
+                    bool ok = it != null && inv.StoreItem(it, global::ItemPopupMode.PopupIfNew, 1, false);
+                    Emit($"GIVEITEM {parts[1]} ok={ok}");
+                    break;
+                }
+                case "boardship":
+                {
+                    // Stand on the deck (next to the wheel).
+                    var ship = AirshipSync.Ship;
+                    var wheel = ship != null ? ship.GetComponentInChildren<global::AirshipWheel>(true) : null;
+                    if (wheel == null) { Emit("ERR no wheel"); break; }
+                    float off = parts.Length > 1 ? float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture) : 1.5f;
+                    Teleport(wheel.transform.position + ship.transform.right * off + Vector3.up * 0.6f);
+                    Emit("BOARDSHIP " + wheel.transform.position);
+                    break;
+                }
+                case "pilot":
+                {
+                    var ship = AirshipSync.Ship;
+                    var wheel = ship != null ? ship.GetComponentInChildren<global::AirshipWheel>(true) : null;
+                    if (wheel == null) { Emit("ERR no wheel"); break; }
+                    wheel.PlayerUse();
+                    Emit($"PILOT requested state={ship.state} {AirshipSync.Stats}");
+                    break;
+                }
+                case "shipmove":
+                {
+                    // Test flight without input: shove the flying ship (pilot side only).
+                    var ship = AirshipSync.Ship;
+                    if (ship == null || parts.Length < 4) { Emit("ERR shipmove dx dy dz [yaw]"); break; }
+                    var ci = System.Globalization.CultureInfo.InvariantCulture;
+                    var d = new Vector3(float.Parse(parts[1], ci), float.Parse(parts[2], ci), float.Parse(parts[3], ci));
+                    float yaw = parts.Length > 4 ? float.Parse(parts[4], ci) : 0f;
+                    var body = ship.body;
+                    if (body != null) { body.position = body.position + d; body.rotation = body.rotation * Quaternion.Euler(0, yaw, 0); }
+                    ship.transform.position += d;
+                    if (yaw != 0) ship.transform.rotation = ship.transform.rotation * Quaternion.Euler(0, yaw, 0);
+                    Emit("SHIPMOVE " + ship.transform.position);
+                    break;
+                }
+                case "land":
+                {
+                    var ship = AirshipSync.Ship;
+                    if (ship == null) { Emit("ERR no ship"); break; }
+                    ship.StopUsing(true);
+                    Emit($"LAND state={ship.state}");
+                    break;
+                }
+                case "npcs":
+                {
+                    // Nearest dialogue NPCs: key, tree, distance.
+                    int n = parts.Length > 1 ? int.Parse(parts[1]) : 8;
+                    string want = parts.Length > 2 ? parts[2] : null;
+                    var me = GameRefs.Player;
+                    var all = Resources.FindObjectsOfTypeAll<global::NPCBase>();
+                    var list = new List<(float d, global::NPCBase npc)>();
+                    if (me != null && all != null)
+                        foreach (var npc in all)
+                        {
+                            if (npc == null || !npc.gameObject.activeInHierarchy) continue;
+                            if (npc.dialogueTree == null) continue;
+                            if (want != null && npc.name.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0
+                                && npc.dialogueTree.name.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                            list.Add((Vector3.Distance(npc.transform.position, me.transform.position), npc));
+                        }
+                    list.Sort((x, y) => x.d.CompareTo(y.d));
+                    for (int k = 0; k < list.Count && k < n; k++)
+                    {
+                        var (d, npc) = list[k];
+                        var pp = npc.transform.position;
+                        Emit($"NPC {npc.name} tree={npc.dialogueTree.name} tag={npc.NPCTag} d={d:F1} pos={pp.x:F1},{pp.y:F1},{pp.z:F1}");
+                    }
+                    break;
+                }
+                case "talk":
+                {
+                    // talk <name-or-tree substring>: walk up to the nearest match and start talking.
+                    string want = parts.Length > 1 ? parts[1] : "";
+                    var me = GameRefs.Player;
+                    var all = Resources.FindObjectsOfTypeAll<global::NPCBase>();
+                    global::NPCBase best = null; float bd = float.MaxValue;
+                    if (me != null && all != null)
+                        foreach (var npc in all)
+                        {
+                            if (npc == null || !npc.gameObject.activeInHierarchy || npc.dialogueTree == null) continue;
+                            if (npc.name.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0
+                                && npc.dialogueTree.name.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                            float d = Vector3.Distance(npc.transform.position, me.transform.position);
+                            if (d < bd) { bd = d; best = npc; }
+                        }
+                    if (best == null) { Emit("ERR no such npc"); break; }
+                    if (bd > 3f)
+                    {
+                        var np = best.transform.position;
+                        var fwd = best.transform.forward; fwd.y = 0;
+                        Teleport(np + (fwd.sqrMagnitude > 0.01f ? fwd.normalized : Vector3.forward) * 2f + Vector3.up * 0.3f);
+                    }
+                    bool ok = best.StartTalking();
+                    Emit($"TALK {best.name} tree={best.dialogueTree.name} started={ok}");
+                    break;
+                }
+                case "dlg":
+                {
+                    var c = global::DelusionDialogueNEW.Instance?.DialogueController;
+                    Emit($"DLG {DialogueSync.Stats} state={GameRefs.Manager?.CurrentGameState}");
+                    if (c != null && c.currentNode != null)
+                    {
+                        Emit($"  NODE {DialogueSync.NodeIndex(c.tree, c.currentNode)} name={c.GetNPCName()} text={c.GetCurrentNodeText()}");
+                        var ch = c.GetCurrentChoicesText();
+                        if (ch != null) for (int k = 0; k < ch.Count; k++) Emit($"  CHOICE {k}: {ch[k]}");
+                    }
+                    Emit($"  CUTSCENES {CutsceneSync.Stats}");
+                    break;
+                }
+                case "choose":
+                {
+                    var c = global::DelusionDialogueNEW.Instance?.DialogueController;
+                    if (c == null || c.currentNode == null) { Emit("ERR not talking"); break; }
+                    int k = int.Parse(parts[1]);
+                    c.TransitionToTreeChoice(k);
+                    Emit($"CHOSE {k}");
+                    break;
+                }
+                case "next":
+                {
+                    // Same as pressing Confirm: finish the typing, or advance.
+                    var c = global::DelusionDialogueNEW.Instance?.DialogueController;
+                    if (c == null || c.currentNode == null) { Emit("ERR not talking"); break; }
+                    c.SkipManually();
+                    Emit("NEXT");
+                    break;
+                }
+                case "enddlg":
+                {
+                    global::DelusionDialogueNEW.Instance?.DialogueController?.EndDialogue();
+                    Emit("ENDDLG");
+                    break;
+                }
+                case "worldevents":
+                case "worldstate":
+                case "rest":
+                case "clock":
+                case "travel":
+                case "trignear":
+                case "trapnear":
+                case "smashnear":
+                case "respawnnear":
+                case "liftup":
+                case "liftdown":
+                {
+                    // World events (WorldEventsSync): worldstate [n], rest <hour>, clock,
+                    // travel underlands|cradle|return, trignear/trapnear/smashnear/respawnnear
+                    // [name filter], liftup|liftdown [id substring], worldevents (stats).
+                    foreach (var l in WorldEventsSync.DebugCmd(cmd, parts)) Emit(l);
+                    break;
+                }
                 case "tasks":
                 {
                     var list = GameRefs.Tasks?.GetPersistentTaskData()?.list;
@@ -603,7 +853,7 @@ namespace DelusionMP.Core
                     Emit($"SYNC mirror sent={WorldMirror.SentCount} requests={WorldMirror.RequestCount} " +
                          $"applied={WorldMirror.AppliedCount} rejected={WorldMirror.RejectedCount} " +
                          $"volatile={WorldMirror.VolatileCount} facts-forwarded={FactSync.ForwardedCount} " +
-                         $"quests: {QuestSync.Stats} enemies: {EnemySync.Stats}");
+                         $"quests: {QuestSync.Stats} enemies: {EnemySync.Stats} dialogue: {DialogueSync.Stats} cutscenes: {CutsceneSync.Stats} airship: {AirshipSync.Stats}");
                     break;
                 }
                 case "load":

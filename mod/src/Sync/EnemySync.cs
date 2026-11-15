@@ -36,7 +36,11 @@ namespace DelusionMP.Sync
 
         private static readonly Dictionary<int, Puppet> _puppets = new Dictionary<int, Puppet>(256);
 
-        public static void Init() { _puppets.Clear(); _dead.Clear(); _index.Clear(); }
+        public static void Init()
+        {
+            _puppets.Clear(); _dead.Clear(); _index.Clear();
+            _owner.Clear(); _hostOwnedAt.Clear(); _clientStateAt.Clear(); _puppetMode.Clear();
+        }
 
         // Enemy keys are usually hierarchy paths (spawned enemies carry no saveable id), so
         // they are not in the saveable registry. Keep a per-peer index, rebuilt lazily.
@@ -76,15 +80,18 @@ namespace DelusionMP.Sync
         private static readonly HashSet<int> _dead = new HashSet<int>();
         private static int _hitsForwarded, _hitsApplied, _deathsSent, _deathsApplied;
         public static string Stats =>
-            $"hitsForwarded={_hitsForwarded} hitsApplied={_hitsApplied} deathsSent={_deathsSent} deathsApplied={_deathsApplied} puppets={_puppets.Count}";
+            $"hitsForwarded={_hitsForwarded} hitsApplied={_hitsApplied} deathsSent={_deathsSent} deathsApplied={_deathsApplied} puppets={_puppets.Count} puppetMode={_puppetMode.Count} hostAssignedToClient={_ownedByClient}";
 
         internal static void OnPlayerHit(global::EnemyDamageTrigger trig, int damage, float piercing, int poison,
                                          int burn, int charm, float slow, int stagger)
         {
             var s = Session.Instance;
-            if (s == null || s.Role != SessionRole.Client || !s.Connected || LoopGuard.ApplyingRemote) return;
+            if (s == null || !s.Connected || LoopGuard.ApplyingRemote) return;
             var c = trig != null ? trig.myController : null;
             if (c == null) return;
+            // The simulating peer owns health: hits on a local puppet go to it. The local
+            // hit still lands for instant feedback; the owner's stream corrects it.
+            if (!IsPuppet(c)) return;
             var key = KeyFor(ObjectRegistry.Instance, c);
             var w = new Writer();
             w.U8(CombatDamage).Str(key).I32(damage).F32(piercing).I32(poison).I32(burn).I32(charm).F32(slow).I32(stagger);
@@ -97,7 +104,7 @@ namespace DelusionMP.Sync
             if (c == null) return;
             _dead.Add(c.GetInstanceID());
             var s = Session.Instance;
-            if (s == null || s.Role != SessionRole.Host || !s.Connected || LoopGuard.ApplyingRemote) return;
+            if (s == null || !s.Connected || LoopGuard.ApplyingRemote) return;
             var w = new Writer();
             w.U8(CombatDeath).Str(KeyFor(ObjectRegistry.Instance, c)).Bool(killedByPlayer);
             s.SendReliable(PacketKind.CombatEvent, w.ToArray());
@@ -115,13 +122,12 @@ namespace DelusionMP.Sync
 
             if (kind == CombatDamage)
             {
-                if (Session.Instance?.Role != SessionRole.Host) return;
                 int dmg = r.I32(); float pierce = r.F32(); int poison = r.I32(); int burn = r.I32();
                 int charm = r.I32(); float slow = r.F32(); int stagger = r.I32();
                 if (_dead.Contains(c.GetInstanceID())) return;
                 var trig = go.GetComponentInChildren<global::EnemyDamageTrigger>(true);
                 if (trig == null) return;
-                // Outside LoopGuard: the host's resulting death must replicate normally.
+                // Outside LoopGuard: the resulting death must replicate normally.
                 try
                 {
                     trig.ApplyDamage(dmg, pierce, poison, burn, charm, slow, false, true, null, stagger);
@@ -145,6 +151,7 @@ namespace DelusionMP.Sync
                 });
                 _dead.Add(c.GetInstanceID());
                 _puppets.Remove(c.GetInstanceID());
+                _puppetMode.Remove(c.GetInstanceID());
             }
         }
 
@@ -168,50 +175,197 @@ namespace DelusionMP.Sync
 
         public static string PuppetInfo(global::EnemyController c)
         {
-            if (c == null || !_puppets.TryGetValue(c.GetInstanceID(), out var p)) return "";
+            if (c == null || !_puppets.TryGetValue(c.GetInstanceID(), out var p)) return $" puppet={IsPuppet(c)}";
             var d = Vector3.Distance(c.transform.position, p.TargetPos);
-            return $" target={p.TargetPos.x:F1},{p.TargetPos.y:F1},{p.TargetPos.z:F1} off={d:F2} age={Time.realtimeSinceStartup - p.LastUpdate:F2}s";
+            return $" puppet={IsPuppet(c)} target={p.TargetPos.x:F1},{p.TargetPos.y:F1},{p.TargetPos.z:F1} off={d:F2} age={Time.realtimeSinceStartup - p.LastUpdate:F2}s";
         }
 
         public static bool IsDead(global::EnemyController c) => c != null && _dead.Contains(c.GetInstanceID());
 
-        /// <summary>Host: broadcast engaged enemies at 10 Hz.</summary>
-        public static void TickHost()
+        /// <summary>The enemy's spawner respawned it: it is alive and replicates again.</summary>
+        internal static void ClearDead(global::EnemyController c)
         {
-            if (Session.Instance?.Role != SessionRole.Host) return;
-            if (Time.realtimeSinceStartup < _nextState) return;
-            _nextState = Time.realtimeSinceStartup + StateInterval;
+            if (c != null) _dead.Remove(c.GetInstanceID());
+        }
+
+        // ------------------------------------------------------------------ ownership
+        //
+        // Each enemy is simulated by the player nearest to it. The host decides ownership
+        // (it knows both positions) with hysteresis and tags every state entry with the
+        // owner. The owner runs the game's own AI (which targets its local player); the
+        // other peer turns its copy into a puppet. Enemies the host has not loaded (the
+        // client is in a region the host is not) receive no host state, so the client
+        // simulates them and streams them back.
+
+        private const byte OwnerHost = 0, OwnerClient = 1;
+        private const float Hysteresis = 4f;
+        private const float HostSilence = 1.5f;
+
+        // host: current owner per enemy instance (absent = host)
+        private static readonly Dictionary<int, byte> _owner = new Dictionary<int, byte>(256);
+        // client: last time the host said "host owns this"; enemies with no recent host
+        // ownership are simulated locally
+        private static readonly Dictionary<int, float> _hostOwnedAt = new Dictionary<int, float>(256);
+        // host: last time client state arrived for an enemy
+        private static readonly Dictionary<int, float> _clientStateAt = new Dictionary<int, float>(256);
+        private static int _ownedByClient;
+
+        private static bool IsClient => Session.Instance?.Role == SessionRole.Client;
+        private static bool IsHost => Session.Instance?.Role == SessionRole.Host;
+
+        /// <summary>True when the peer simulates this enemy and the local copy is a puppet.</summary>
+        public static bool IsPuppet(global::EnemyController c)
+        {
+            if (c == null) return false;
+            int id = c.GetInstanceID();
+            float now = Time.realtimeSinceStartup;
+            if (IsHost)
+                return _owner.TryGetValue(id, out var o) && o == OwnerClient
+                       && _clientStateAt.TryGetValue(id, out var t) && now - t < HostSilence;
+            if (IsClient)
+                return _hostOwnedAt.TryGetValue(id, out var h) && now - h < HostSilence;
+            return false;
+        }
+
+        private static byte DecideOwner(global::EnemyController e, bool havePeer, Vector3 peer, Vector3 self)
+        {
+            int id = e.GetInstanceID();
+            byte cur = _owner.TryGetValue(id, out var o) ? o : OwnerHost;
+            if (!havePeer) cur = OwnerHost;
+            else
+            {
+                var p = e.transform.position;
+                float dh = Vector3.Distance(p, self), dc = Vector3.Distance(p, peer);
+                if (cur == OwnerHost && dc + Hysteresis < dh) cur = OwnerClient;
+                else if (cur == OwnerClient && dh + Hysteresis < dc) cur = OwnerHost;
+            }
+            _owner[id] = cur;
+            return cur;
+        }
+
+        /// <summary>Both roles: puppets interpolate every frame; at 10 Hz stream the
+        /// enemies this peer simulates and switch local copies between AI and puppet.</summary>
+        public static void Tick()
+        {
+            var s = Session.Instance;
+            if (s == null || !s.Connected) return;
+            float now = Time.realtimeSinceStartup;
+
+            foreach (var pp in _puppets.Values)
+            {
+                if (pp.Controller == null) continue;
+                if (now - pp.LastUpdate > 0.5f) continue;   // owner went quiet: freeze, don't extrapolate
+                var t = pp.Controller.transform;
+                t.position = Vector3.Lerp(t.position, pp.TargetPos, 0.35f);
+                var ea = t.eulerAngles;
+                t.rotation = Quaternion.Euler(ea.x, Mathf.LerpAngle(ea.y, pp.TargetYaw, 0.35f), ea.z);
+            }
+
+            if (now < _nextState) return;
+            _nextState = now + StateInterval;
 
             var reg = ObjectRegistry.Instance;
             if (reg.NeedsRebuild) reg.Rebuild(CurrentScene());
-
             var enemies = Resources.FindObjectsOfTypeAll<global::EnemyController>();
             if (enemies == null) return;
 
-            var buffered = new List<(string key, global::EnemyController c)>(64);
+            var player = GameRefs.Player;
+            Vector3 self = player != null ? player.transform.position : Vector3.zero;
+            bool havePeer = PlayerSync.TryPeerPose(out var peer, out _) && player != null;
+
+            var outgoing = new List<(string key, global::EnemyController c, byte owner)>(64);
+            int clientOwned = 0;
             foreach (var e in enemies)
             {
                 if (e == null || !e.gameObject.activeInHierarchy) continue;
                 if (_dead.Contains(e.GetInstanceID())) continue;
                 string key = KeyFor(reg, e);
                 if (key == null) continue;
-                buffered.Add((key, e));
+
+                if (IsHost)
+                {
+                    byte owner = DecideOwner(e, havePeer, peer, self);
+                    if (owner == OwnerClient) clientOwned++;
+                    // Client-owned entries tell the client to simulate; their transform is
+                    // ignored there. The host's copy becomes a puppet once the client's
+                    // stream for it arrives.
+                    outgoing.Add((key, e, owner));
+                    SetSimulated(e, !IsPuppet(e));
+                }
+                else
+                {
+                    bool puppet = IsPuppet(e);
+                    SetSimulated(e, !puppet);
+                    if (!puppet) outgoing.Add((key, e, OwnerClient));
+                }
             }
-            if (buffered.Count > 0) FlushBatch(buffered);
+            _ownedByClient = clientOwned;
+            if (outgoing.Count > 0) FlushBatch(outgoing);
+        }
+
+        // Kept for older call sites.
+        public static void TickHost() => Tick();
+        public static void TickClient() => Tick();
+
+        private static readonly HashSet<int> _puppetMode = new HashSet<int>();
+
+        /// <summary>Switches a local enemy between running its own AI and being a puppet.</summary>
+        private static void SetSimulated(global::EnemyController c, bool simulate)
+        {
+            int id = c.GetInstanceID();
+            bool isPuppet = _puppetMode.Contains(id);
+            if (simulate == !isPuppet) return;
+            UnityEngine.AI.NavMeshAgent agent = null;
+            try { agent = Priv.GetField<UnityEngine.AI.NavMeshAgent>(c, "agent"); } catch { }
+            if (simulate)
+            {
+                _puppetMode.Remove(id);
+                _puppets.Remove(id);
+                try
+                {
+                    if (agent != null)
+                    {
+                        agent.enabled = true;
+                        agent.Warp(c.transform.position);
+                    }
+                    // OnEnable restarts the AI coroutines.
+                    c.enabled = true;
+                    var det = c.myDetector;
+                    if (det != null) { det.enabled = true; det.ResetDetectionLists(); }
+                }
+                catch (Exception e) { Log.Debug("enemy resume: " + e.Message); }
+            }
+            else
+            {
+                _puppetMode.Add(id);
+                // A puppet must not think: no navigation (it would fight the replicated
+                // transform), and no AI. AIUpdate/SlowUpdate are coroutines that survive a
+                // disabled component, so they are stopped explicitly; otherwise the puppet
+                // keeps attacking the local player.
+                try
+                {
+                    if (agent != null) agent.enabled = false;
+                    c.StopAllCoroutines();
+                    c.enabled = false;
+                    var det = c.myDetector;
+                    if (det != null) { det.StopAllCoroutines(); det.enabled = false; }
+                }
+                catch (Exception e) { Log.Debug("enemy puppet: " + e.Message); }
+            }
         }
 
         /// <summary>
         /// Packs enemy states into datagrams by size. Keys are hierarchy paths (~120 B), so
-        /// a fixed count per packet overflowed the 1200 B datagram and every batch was
-        /// dropped by the transport.
+        /// a fixed count per packet overflowed the 1200 B datagram.
         /// </summary>
-        private static void FlushBatch(List<(string key, global::EnemyController c)> batch)
+        private static void FlushBatch(List<(string key, global::EnemyController c, byte owner)> batch)
         {
             var entries = new List<byte[]>(batch.Count);
-            foreach (var (key, c) in batch)
+            foreach (var (key, c, owner) in batch)
             {
                 var e = new Writer();
                 e.Str(key);
+                e.U8(owner);
                 e.Position(c.transform.position);
                 e.Yaw(c.transform.eulerAngles.y);
                 int hp = 0;
@@ -243,11 +397,13 @@ namespace DelusionMP.Sync
         {
             var r = new Reader(payload);
             int n = r.U8();
-            var reg = ObjectRegistry.Instance;
+            float now = Time.realtimeSinceStartup;
+            bool host = IsHost;
 
             for (int i = 0; i < n; i++)
             {
                 string key = r.Str();
+                byte owner = r.U8();
                 Vector3 pos = r.Position();
                 float yaw = r.Yaw();
                 int hp = r.I32();
@@ -258,11 +414,28 @@ namespace DelusionMP.Sync
 
                 var c = Resolve(key);
                 if (c == null || _dead.Contains(c.GetInstanceID())) continue;
+                int id = c.GetInstanceID();
+
+                if (host)
+                {
+                    // The client streams only what it simulates. Remember it so the host
+                    // keeps its copy as a puppet (also for enemies the host has not loaded).
+                    _clientStateAt[id] = now;
+                    if (!_owner.ContainsKey(id) || !c.gameObject.activeInHierarchy) _owner[id] = OwnerClient;
+                    if (_owner[id] != OwnerClient) continue;   // host took it back: stale state
+                    SetSimulated(c, false);
+                }
+                else
+                {
+                    if (owner == OwnerClient) { _hostOwnedAt.Remove(id); continue; }   // ours to simulate
+                    _hostOwnedAt[id] = now;
+                    SetSimulated(c, false);
+                }
 
                 var p = PuppetFor(c);
                 p.TargetPos = pos;
                 p.TargetYaw = yaw;
-                p.LastUpdate = Time.realtimeSinceStartup;
+                p.LastUpdate = now;
 
                 LoopGuard.Apply(() =>
                 {
@@ -282,36 +455,9 @@ namespace DelusionMP.Sync
         {
             int id = c.GetInstanceID();
             if (_puppets.TryGetValue(id, out var p)) return p;
-            p = new Puppet { Controller = c };
-            // A puppeted enemy must not run its own AI: its NavMeshAgent would fight the
-            // replicated transforms and produce the classic rubber-banding enemy.
-            try
-            {
-                var agent = Priv.GetField<UnityEngine.AI.NavMeshAgent>(c, "agent");
-                if (agent != null) agent.enabled = false;
-            }
-            catch { }
+            p = new Puppet { Controller = c, TargetPos = c.transform.position, TargetYaw = c.transform.eulerAngles.y };
             _puppets[id] = p;
             return p;
-        }
-
-        /// <summary>Client: interpolate puppets toward their last replicated transform.</summary>
-        public static void TickClient()
-        {
-            if (Session.Instance?.Role == SessionRole.Host) return;
-            float now = Time.realtimeSinceStartup;
-            foreach (var p in _puppets.Values)
-            {
-                if (p.Controller == null) continue;
-                // Freeze if the host stopped talking about this enemy (out of range,
-                // dead, or peer travelling) rather than extrapolating into a wall.
-                if (now - p.LastUpdate > 0.5f) continue;
-
-                var t = p.Controller.transform;
-                t.position = Vector3.Lerp(t.position, p.TargetPos, 0.35f);
-                var e = t.eulerAngles;
-                t.rotation = Quaternion.Euler(e.x, Mathf.LerpAngle(e.y, p.TargetYaw, 0.35f), e.z);
-            }
         }
 
         private static string CurrentScene()
@@ -370,5 +516,23 @@ namespace DelusionMP.Sync
         [HarmonyPostfix]
         static void Postfix(global::EnemyController __instance, bool killedByPlayer)
             => EnemySync.OnDeath(__instance, killedByPlayer);
+    }
+}
+
+namespace DelusionMP.Sync
+{
+    // Trigger messages still reach a disabled detector; a puppet must not detect anyone.
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyDetector), "ProcessCollider")]
+    internal static class Patch_EnemyDetector_ProcessCollider
+    {
+        [HarmonyLib.HarmonyPrefix]
+        static bool Prefix(global::EnemyDetector __instance, ref bool __result)
+        {
+            global::EnemyController c = null;
+            try { c = __instance.GetComponentInParent<global::EnemyController>(); } catch { }
+            if (c == null || !EnemySync.IsPuppet(c)) return true;
+            __result = false;
+            return false;
+        }
     }
 }

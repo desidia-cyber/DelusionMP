@@ -1,4 +1,4 @@
-# DelusionMP — Verified Status (rig run, 2026-11-14)
+# DelusionMP — Verified Status (rig runs, 2026-11-14 / 15)
 
 What is recorded here was **observed in two running Dread Delusion processes** on the rig,
 driven through the mod's control channel. Each claim below says how it was checked.
@@ -40,7 +40,20 @@ Commands are written to `rig/instance<N>/game/BepInEx/ddmp_cmd.txt`, results app
 | Enemies, damage | client → host | client `hitenemy 20` | host HP 56 → 16 (same as client) |
 | Enemies, kills | both | kill from each side | enemy dead on both; no double death |
 | Player avatars | both | face-to-face at 4 m | screenshots 01/02 |
-| Whole world | — | `statedump` diff of all 725 saveables | 3 differences, all benign (see below) |
+| Whole world | — | `statedump` diff of all 725 saveables | 1 difference: the moving sky object (run 2; run 1 had 3) |
+| Enemy ownership | both | client next to goblins 110 m from the host | client simulates them (`puppet=False`), host shows puppets within 0.1–0.3 m |
+| Enemy hits/kills on the partner's enemies | host → client | host hits a client-owned goblin | hit forwarded and applied once (HP 36 on both); kill replicated once |
+| Shared dialogue | both | host `talk gatebridge`, `next`, `choose 1`, `enddlg` | client shows the same node, text and choices at every step; client's own `next`/`choose` ignored; client back to `RUNNING` at the end; screenshots 16/17 |
+| Dialogue point of view | host → client | client 34 m away from the talk | client camera moves to the host's eyes facing the NPC, restored afterwards; screenshot 20 |
+| Airship, pilot lock | both | both try the wheel | the second request is refused |
+| Airship, flight + passenger | both directions | host flies 55 m / +25 m with the client on deck, then the reverse | passenger parented and carried (ship-local offset unchanged); both see the same ship pose; screenshots 18/19 |
+| Airship, landing | both | `land` | anchor drop replicated, lock released, authority back to the host |
+| Partner body | both | face to face, forced weapon/spell states, walking | female body (game model) idles, walks, holds the steel/fine sword, thrusts, power-attacks, casts with the spellbook; screenshots 10–15 |
+| Story phase (`CharWorldState`) | both | `worldstate 4` on host, `5` on client, `3` on host | 4 and 5 replicate; 3 is refused (never goes backwards) |
+| Rest / day | both | `rest 9` on client, `rest 3` on host | both peers advance the day and time of day; the client's rest is not rewound |
+| Lifts | both | `liftdown`/`liftup` on 3 lifts from either side | partner's lift runs the same transition and settles at the same height |
+| Smashables | host → client | `smashnear` | applied on the client without re-rolling loot |
+| Story counter merge | — | code path (`ChangeOrCreateIntFact` deltas) | simultaneous increments are added, not overwritten |
 
 The three remaining `statedump` differences are a continuously moving sky object
 (`StarOrbit`, sampled a second apart) and two empty trophy stands (`Null_Item` on one side,
@@ -50,6 +63,10 @@ The three remaining `statedump` differences are a continuously moving sky object
 
 | File | What it shows |
 |---|---|
+| `proof_10_avatar_idle.png` … `proof_15_avatar_walking.png` | the partner's body: idle, sword drawn, thrust, power attack, casting, walking |
+| `proof_16_dialogue_spectator.png` / `proof_17_dialogue_driver.png` | the same line on both screens |
+| `proof_18_airship_passenger_view.png` / `proof_19_airship_pilot_view.png` | the host flying with the client on deck |
+| `proof_20_dialogue_partner_pov.png` | far-away partner watching the conversation from the speaker's eyes |
 | `proof_01_host_sees_client.png` | host's view: the client's avatar 4 m away |
 | `proof_02_client_sees_host.png` | client's view: the host's avatar |
 | `proof_03_host_before_client_pickup.png` | host's view: knife on the ground, client avatar behind |
@@ -92,23 +109,23 @@ The three remaining `statedump` differences are a continuously moving sky object
 
 ## Known gaps
 
-- **Enemy AI is host-driven and host-centred.** Enemies chase and fight the host's player; on
-  the client they follow the host's positions but still attack the client locally. An
-  encounter far from the host freezes on the client, because the host stops streaming
-  enemies it deactivated. The fix is per-encounter ownership (whoever is nearest simulates).
-- **Lifts:** movement replication (`StartLiftMovement` hook + `PositionInstant` settle) is
-  implemented but **not exercised**. `TryRecallTop/Bot` is refused from a distance, so a ride
-  test needs a player on the carriage.
-- **Not exercised end to end:** levers/`MovingFactory`, smashables, shops, NPC dialogue choices,
-  cutscenes, airship, region/scene transitions with both players in different regions,
-  and player death/respawn while the partner is nearby (both deaths were observed and
-  `totalPlayerDeaths` synced — that stat should become player-owned).
-- **Fact conflicts are last-writer-wins.** Additive counters written at the same moment by both
-  players can lose one increment. The 1 Hz fingerprint check repairs drift from the host
-  within ~5 s.
-- **Avatar is a mannequin** (body, visor, spinning marker), with no animation and no name text:
-  `TextMesh` is stripped from this build, and adding `TextMeshPro` at runtime crashes natively.
-- **Transport is UDP to a fixed peer address** (LAN/localhost). There is no Steam relay or NAT
-  traversal, and no host-loss detection.
-- `mod/typecheck/` (the stub compile harness) has not been updated for the new codec. The real
-  build against the interop assemblies is the authority.
+- **Not yet exercised on the rig** (implemented, compiled, partly unit-checked through commands):
+  world cutscenes (`CinematicsManager.PlayScene` replay), one-shot floor triggers, story travel
+  (Underlands/Cradle), the moving factory, traps (the event was sent; the disarm wasn't confirmed visually),
+  completable objects, shop stock arbitration, enemy respawns after a death, charm-roll toasts in dialogue.
+- **Partner body:** the game has no jump/fall clip for humans, so a jumping partner holds a
+  mid-stride pose. Daggers, greatswords and the special rarities use a clone of the trophy-wall
+  weapon attached to the hand; its grip rotation was not tuned visually (`heldrot` command).
+  The full combat controller (`a_UnionWomen`) is only in memory once a region with female guards
+  has been loaded; until then the body uses the idle-pose controller and swings fall back to it.
+- **Dialogue:** if the partner is already in their own conversation, they are not pulled in
+  (both talk independently; effects still sync). Gifts given in a conversation go to the
+  player who talked.
+- **Airship:** `AirshipController.Use()` saves the game (vanilla behaviour) on the pilot's machine.
+  A player without `deedAirship` cannot take the helm (vanilla rule, inventory is per player).
+- **Fact conflicts:** additive counters now merge; two absolute writes to the same key at the
+  same moment are still last-writer-wins (repaired by the 1 Hz fingerprint check).
+- **Transport is UDP to a fixed peer address** (LAN/localhost). No relay/NAT traversal and no
+  host-loss detection.
+- `mod/typecheck/` (the stub compile harness) is stale; the real build against the interop
+  assemblies is the authority.

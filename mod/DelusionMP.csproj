@@ -94,6 +94,14 @@
       <HintPath>$(BepInExDir)\interop\UnityEngine.ImageConversionModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="XNode">
+      <HintPath>$(BepInExDir)\interop\XNode.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.DirectorModule">
+      <HintPath>$(BepInExDir)\interop\UnityEngine.DirectorModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityEngine.UIModule">
       <HintPath>$(BepInExDir)\interop\UnityEngine.UIModule.dll</HintPath>
       <Private>false</Private>

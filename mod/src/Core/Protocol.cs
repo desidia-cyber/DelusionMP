@@ -71,6 +71,12 @@ namespace DelusionMP.Core
         FactRequest = 47,
         ObjectRequest = 48,
         WorldEventRequest = 49,
+
+        // Shared experiences.
+        Dialogue = 50,
+        Airship = 51,
+        AirshipState = 52,
+        WorldAction = 53,
     }
 
     public struct Header
