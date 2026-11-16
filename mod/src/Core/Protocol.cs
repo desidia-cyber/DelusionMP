@@ -79,6 +79,7 @@ namespace DelusionMP.Core
         WorldAction = 53,
         CoopDeath = 54,
         FactoryState = 55,
+        JoinTruth = 56,
     }
 
     public struct Header

@@ -73,6 +73,8 @@ Commands are written to `rig/instance<N>/game/BepInEx/ddmp_cmd.txt`, results app
 | Changes far from the host | client → host | host at Pwyll, client loots a potion in Hallowshire (not loaded on the host), host travels there | host keeps the change (save's loaded-state table + pending list) and applies it when the object loads: potion gone on arrival |
 | Clock (time of day) | both | `rest` | real clock values now flow (were read as 0 through reflection that cannot see IL2CPP fields) |
 | Performance | both | `perf` over 30 s, same spot | mod cost per second of play ≈ 450–590 ms → 230–290 ms; client factory 14.7 → 0.04 ms/frame, enemies 5–9 → ~1.5–2 ms/frame, no full-world capture in a single frame |
+| Far-apart changes across restarts | client → host | client loots in a region the host never loads; both games closed without saving; host relaunched and walks there | the change is in a per-save pending file next to the host's save and is applied on arrival (potion gone) |
+| Host-authoritative join | host → client | host killed; client alone opens a door, sets a fact, starts a quest, raises the story phase 3 → 5; host relaunched | client notices the loss (12 s), rejoins, and adopts the host's world: door back to unlocked, fact removed (identical fingerprint), quest removed from the journal, phase back to 3 |
 | Charm roll in dialogue | host → client | charm note during a shared talk | the same "Charm challenge succeeded. Needed 6." toast on both; screenshot 21 |
 
 The three remaining `statedump` differences are a continuously moving sky object
@@ -132,15 +134,19 @@ The three remaining `statedump` differences are a continuously moving sky object
 
 ## Known gaps
 
-- **Changes in a region the host has not loaded** are kept in memory for the session and in the
-  save's loaded-state table; if the host quits before ever loading that region, only the
-  loaded-state copy remains (the game may refill that table from disk on a region load).
+- **Changes in a region the host has not loaded** are kept in the save's loaded-state table and
+  in a pending file per save (`DelusionMP_pending_<save>_<slot>.bin` beside the game's saves),
+  applied the first time the object loads in any later session. If that save is reloaded from
+  an older point, the partner's pending changes still apply to it.
+- **Join is host-authoritative:** whatever the client did while not connected to the host
+  (story facts, quests, story phase, shared world objects) is replaced by the host's version on
+  connect. Player-owned data (inventory, coins, stats, position) is kept.
 - **Duplicate identifiers in the shipped data** (e.g. four doors sharing one id) make the
   `statedump` comparison show differences between instances that are not real desyncs.
 - **No in-game host/join UI:** a session is started with command-line options
   (`-ddmp-role=host|client -ddmp-host=<ip>`), over UDP to a fixed address: LAN, or a VPN such as
-  Tailscale/ZeroTier over the internet. No relay or NAT traversal, no host-loss detection or
-  reconnect.
+  Tailscale/ZeroTier over the internet. No relay or NAT traversal. A lost peer is detected after
+  12 s and the client rejoins automatically when the host is back.
 - **Never played end to end:** everything above was verified in an early-game save around Pwyll;
   late-game regions and story beats were exercised only by commands.
 - **Partner body:** the game has no jump/fall clip for humans, so a jumping partner holds a

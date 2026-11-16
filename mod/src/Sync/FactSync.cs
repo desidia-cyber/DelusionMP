@@ -319,11 +319,23 @@ namespace DelusionMP.Sync
 
             foreach (var k in new List<string>(bools.Keys)) if (IsPlayerOwned(k)) bools.Remove(k);
             foreach (var k in new List<string>(ints.Keys)) if (IsPlayerOwned(k)) ints.Remove(k);
+            // The host's story is the truth: shared facts only this side has are reset (so
+            // fact-driven triggers react) and removed, leaving both maps identical.
+            var (myB, myI) = CaptureShared();
+            int dropped = 0;
             LoopGuard.Apply(() =>
             {
                 foreach (var kv in bools) facts.SetFact(kv.Key, kv.Value);
                 foreach (var kv in ints) facts.SetFact(kv.Key, kv.Value);
+                Il2CppSystem.Collections.Generic.Dictionary<string, bool> bd = null;
+                Il2CppSystem.Collections.Generic.Dictionary<string, int> id = null;
+                try { bd = facts.GetBoolFacts(); id = facts.GetIntFacts(); } catch { }
+                foreach (var k in myB.Keys)
+                    if (!bools.ContainsKey(k)) { try { facts.SetFact(k, false); bd?.Remove(k); dropped++; } catch { } }
+                foreach (var k in myI.Keys)
+                    if (!ints.ContainsKey(k)) { try { facts.SetFact(k, 0); id?.Remove(k); dropped++; } catch { } }
             });
+            if (dropped > 0) Log.Info($"fact snapshot: {dropped} fact(s) the host does not have were reset (host's story wins)");
             _shadow.Seed(bools, ints);
             _lastBools = bools;
             _lastInts = ints;

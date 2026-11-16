@@ -133,7 +133,8 @@ namespace DelusionMP.Sync
             try
             {
                 var st = global::DelusionStats.Instance;
-                if (st != null && GameRefs.InWorld)
+                // Join: the host's story phase is the truth; a client does not announce its own.
+                if (IsHost && st != null && GameRefs.InWorld)
                 {
                     _worldStateAnnounced = true;
                     var w = new Writer();
@@ -226,7 +227,7 @@ namespace DelusionMP.Sync
         private static void TickWorldState()
         {
             // Connected from the menu: announce our phase once the save is up.
-            if (!_worldStateAnnounced && GameRefs.InWorld && global::DelusionStats.Instance != null)
+            if (IsHost && !_worldStateAnnounced && GameRefs.InWorld && global::DelusionStats.Instance != null)
             {
                 _worldStateAnnounced = true;
                 OnWorldStateChanged();

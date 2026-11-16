@@ -203,8 +203,40 @@ namespace DelusionMP.Sync
         private static readonly Dictionary<string, int> _pendingJournal = new Dictionary<string, int>();
 
         /// <summary>Apply journal entries that arrived while the world was loading.</summary>
+        private static Dictionary<string, int> _journalTruth;
+
+        private static void TrimToHost()
+        {
+            var truth = _journalTruth;
+            _journalTruth = null;
+            var tasks = GameRefs.Tasks;
+            // The live journal (GetPersistentTaskData returns a copy).
+            var list = tasks?.playerTasks?.taskDataList;
+            if (list == null) return;
+            int removed = 0, set = 0;
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                var t = list[i];
+                if (t == null) continue;
+                if (!truth.TryGetValue(t.taskID, out int want)) { list.RemoveAt(i); removed++; continue; }
+                int cur = t.activeStage != null ? t.activeStage.stageID : -1;
+                if (cur == want) continue;
+                try
+                {
+                    var st = tasks.GetStage(t, want);
+                    if (st != null) { t.activeStage = st; t.isComplete = st.completesQuest; set++; }
+                }
+                catch (Exception e) { Log.Debug($"journal set {t.taskID}: {e.Message}"); }
+            }
+            if (removed + set == 0) return;
+            try { tasks.RefreshTasksFromDataCore(); } catch { }
+            try { LoopGuard.Apply(() => tasks.OnTaskUpdated?.Invoke()); } catch { }
+            Log.Info($"journal: matched to the host ({removed} entr(ies) removed, {set} stage(s) set)");
+        }
+
         public static void Tick()
         {
+            if (_journalTruth != null && _pendingJournal.Count == 0 && GameRefs.InWorld) TrimToHost();
             if (_pendingJournal.Count == 0 || !GameRefs.InWorld) return;
             var copy = new List<KeyValuePair<string, int>>(_pendingJournal);
             _pendingJournal.Clear();
@@ -235,8 +267,7 @@ namespace DelusionMP.Sync
             {
                 foreach (var e in list)
                 {
-                    w.Str(e.id).I32(e.stage);
-                    if (w.Length > Proto.MaxPayload - 64) break;
+                    w.Str(e.id).I32(e.stage);   // sent fragmented: no size cap needed
                 }
             }
             return w.ToArray();
@@ -247,11 +278,16 @@ namespace DelusionMP.Sync
             var r = new Reader(payload);
             r.U8(); // kind
             int n = r.U16();
+            var truth = new Dictionary<string, int>(StringComparer.Ordinal);
             for (int i = 0; i < n; i++)
             {
                 string id = r.Str(); int stage = r.I32();
+                truth[id] = stage;
                 ApplyStage(id, stage, false);
             }
+            // After the replays: entries only this side has, and stages the trigger could
+            // not move (backwards), are brought to the host's journal.
+            if (Session.Instance?.Role == SessionRole.Client) _journalTruth = truth;
             Log.Info($"journal snapshot: {n} tasks ({_pendingJournal.Count} deferred until in world)");
         }
     }

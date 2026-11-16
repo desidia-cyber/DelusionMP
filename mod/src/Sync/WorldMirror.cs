@@ -158,7 +158,6 @@ namespace DelusionMP.Sync
             var session = Session.Instance;
             if (session == null || !session.Connected) return;
             bool host = session.Role == SessionRole.Host;
-            ApplyPending();
 
             if (_sweep == null || _cursor >= _sweep.Length)
             {
@@ -687,8 +686,8 @@ namespace DelusionMP.Sync
                 if (state == null) return false;
                 table[uid] = state;
                 _storedUnloaded++;
-                string localKey = ObjectRegistry.Instance.CurrentScene + "|" + uid;
-                _pendingUnloaded[localKey] = body;
+                _pendingUnloaded[uid] = body;
+                _pendingDirty = true;
                 _hashes[key] = Hash(body);      // our view of it now matches the peer's
                 _lastApply = "stored-for-unloaded " + key;
                 if (_storedUnloaded <= 5 || _storedUnloaded % 50 == 0)
@@ -823,11 +822,132 @@ namespace DelusionMP.Sync
             });
                 }
 
+        /// <summary>Join: this side now holds what the host holds for that object.</summary>
+        internal static void Rebaseline(string key, global::SaveableObject so)
+        {
+            try { var st = so.CaptureState(); _hashes[key] = st == null ? NullHash : Hash(StateCodec.Encode(st)); } catch { }
+            MarkQuiet(key);
+        }
+
+        /// <summary>Join: treat every object as first sight again (a baseline, never sent).</summary>
+        internal static void ForceRebaselineAll()
+        {
+            if (Session.Instance?.Role == SessionRole.Client) { _hashes.Clear(); _firstPass = true; }
+        }
+
+        /// <summary>Join: the host's world is the truth; our own pending changes are dropped.</summary>
+        internal static void DiscardPending()
+        {
+            if (_pendingUnloaded.Count == 0) return;
+            Log.Info($"join: {_pendingUnloaded.Count} pending change(s) discarded (the host's world wins)");
+            _pendingUnloaded.Clear();
+            _pendingDirty = true;
+        }
+
         // ---- changes for objects not loaded here, applied when they appear
         private static readonly Dictionary<string, byte[]> _pendingUnloaded = new Dictionary<string, byte[]>(StringComparer.Ordinal);
         private static float _nextPendingCheck;
         private static int _pendingApplied;
         public static string PendingInfo => $"pendingUnloaded={_pendingUnloaded.Count} appliedOnArrival={_pendingApplied} storedInSave={_storedUnloaded}";
+
+        // ---- persistence: the pending list survives quitting. It is stored next to the
+        // game's own saves, one file per save, keyed by object identifier (scene-agnostic),
+        // and reloaded whenever that save is loaded - so a change the partner made in a
+        // region this player never visited during the session is still applied the first time
+        // the region loads, in any later session, co-op or solo.
+        private static bool _pendingDirty;
+        private static float _nextPendingSave;
+        private static string _pendingFileLoaded;
+
+        private static string PendingFile()
+        {
+            var save = GameRefs.Save;
+            if (save == null) return null;
+            string name = "save";
+            int slot = 0;
+            try { name = string.IsNullOrEmpty(save.saveGameName) ? "save" : save.saveGameName; slot = (int)save.saveSlot; } catch { }
+            foreach (var c in System.IO.Path.GetInvalidFileNameChars()) name = name.Replace(c, '_');
+            return System.IO.Path.Combine(Application.persistentDataPath, $"DelusionMP_pending_{name}_{slot}.bin");
+        }
+
+        private static string Uid(string key)
+        {
+            int bar = key.IndexOf('|');
+            return bar >= 0 ? key.Substring(bar + 1) : key;
+        }
+
+        private static void LoadPendingFile(string path)
+        {
+            _pendingFileLoaded = path;
+            if (!System.IO.File.Exists(path)) return;
+            try
+            {
+                using (var br = new System.IO.BinaryReader(System.IO.File.OpenRead(path)))
+                {
+                    if (br.ReadInt32() != 0x444D5031) return;   // "DMP1"
+                    int n = br.ReadInt32();
+                    int added = 0;
+                    for (int i = 0; i < n; i++)
+                    {
+                        string uid = br.ReadString();
+                        int len = br.ReadInt32();
+                        var body = br.ReadBytes(len);
+                        if (!_pendingUnloaded.ContainsKey(uid)) { _pendingUnloaded[uid] = body; added++; }
+                    }
+                    if (added > 0) Log.Info($"mirror: {added} change(s) from earlier sessions waiting for their region ({path})");
+                }
+            }
+            catch (Exception e) { Log.Warn("mirror: pending file unreadable: " + e.Message); }
+        }
+
+        private static void SavePendingFile()
+        {
+            var path = _pendingFileLoaded ?? PendingFile();
+            if (path == null) return;
+            try
+            {
+                if (_pendingUnloaded.Count == 0)
+                {
+                    if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+                    return;
+                }
+                var tmp = path + ".tmp";
+                using (var bw = new System.IO.BinaryWriter(System.IO.File.Create(tmp)))
+                {
+                    bw.Write(0x444D5031);
+                    bw.Write(_pendingUnloaded.Count);
+                    foreach (var kv in _pendingUnloaded)
+                    {
+                        bw.Write(kv.Key);
+                        bw.Write(kv.Value.Length);
+                        bw.Write(kv.Value);
+                    }
+                }
+                if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+                System.IO.File.Move(tmp, path);
+            }
+            catch (Exception e) { Log.Warn("mirror: could not write pending file: " + e.Message); }
+        }
+
+        /// <summary>Every frame, connected or not (cheap; real work once a second).</summary>
+        public static void TickPending()
+        {
+            if (!GameRefs.InWorld) { return; }
+            float now = Time.realtimeSinceStartup;
+            if (now >= _nextPendingSave)
+            {
+                _nextPendingSave = now + 2f;
+                var path = PendingFile();
+                if (path != null && path != _pendingFileLoaded)
+                {
+                    // A (different) save was loaded: forget the previous save's entries.
+                    if (_pendingFileLoaded != null) _pendingUnloaded.Clear();
+                    LoadPendingFile(path);
+                }
+                if (_pendingDirty) { _pendingDirty = false; SavePendingFile(); }
+            }
+            ApplyPending();
+        }
 
         /// <summary>Once a second: objects whose region has streamed in get the change the
         /// peer made while they were not loaded here (the game's own loaded-state table can be
@@ -838,15 +958,19 @@ namespace DelusionMP.Sync
             _nextPendingCheck = Time.realtimeSinceStartup + 1f;
             var reg = ObjectRegistry.Instance;
             List<string> done = null;
+            string scene = reg.CurrentScene;
             foreach (var kv in _pendingUnloaded)
             {
-                if (!reg.TryResolve(kv.Key, out var go) || go == null) continue;
-                ApplyResolved(kv.Key, go, kv.Value);
+                // Keyed by identifier alone: the scene name is the one in play right now.
+                string key = scene + "|" + kv.Key;
+                if (!reg.TryResolve(key, out var go) || go == null) continue;
+                ApplyResolved(key, go, kv.Value);
                 (done ??= new List<string>()).Add(kv.Key);
             }
             if (done == null) return;
             foreach (var k in done) _pendingUnloaded.Remove(k);
             _pendingApplied += done.Count;
+            _pendingDirty = true;
             Log.Info($"mirror: applied {done.Count} change(s) the partner made while those objects were not loaded here");
         }
 

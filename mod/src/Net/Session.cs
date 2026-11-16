@@ -165,6 +165,7 @@ namespace DelusionMP.Net
                 _peerNonce = nonce;
                 ResetReliable();
                 _handshakeComplete = true;
+                _lastHeardAt = UnityEngine.Time.realtimeSinceStartup;
                 Log.Info($"client joined (epoch {nonce:X8})");
                 WorldEventsSync.OnSessionStart();
                 SendWorldSnapshot();
@@ -183,6 +184,7 @@ namespace DelusionMP.Net
             if (echo != 0 && echo != _localNonce) return; // meant for a previous process
             ResetReliable();
             _handshakeComplete = true;
+            _lastHeardAt = UnityEngine.Time.realtimeSinceStartup;
             WorldMirror.OnClientConnected();
             WorldEventsSync.OnSessionStart();
             WorldEventsSync.SendJoinState();
@@ -247,9 +249,36 @@ namespace DelusionMP.Net
         // ---------------- receiving ----------------
 
 
+        // Peer loss: nothing heard (pings run at 1 Hz) for this long means the other game is
+        // gone. The session drops back to "not connected": a client then re-announces itself
+        // every second (Bootstrap) and rejoins a restarted host with a full host-truth sync;
+        // a host accepts the returning client as a fresh join.
+        private const float PeerTimeout = 12f;
+        private float _lastHeardAt;
+
+        private void CheckPeerLost()
+        {
+            if (!_handshakeComplete) return;
+            if (UnityEngine.Time.realtimeSinceStartup - _lastHeardAt < PeerTimeout) return;
+            Log.Warn($"peer lost (nothing heard for {PeerTimeout:F0} s) - waiting for it to come back");
+            _handshakeComplete = false;
+            ResetReliable();
+        }
+
         public void Pump()
         {
             if (Transport == null || !Transport.IsOpen) return;
+            CheckPeerLost();
+            if (_deferredFacts != null && Role == SessionRole.Client && GameRefs.InWorld)
+            {
+                var f = _deferredFacts; _deferredFacts = null;
+                FactSync.ApplySnapshot(f);
+            }
+            if (_snapshotDeferred && _handshakeComplete && Role == SessionRole.Host && GameRefs.InWorld)
+            {
+                SendWorldSnapshot();
+                WorldMirror.ForceSnapshot();
+            }
             // Drain everything that arrived. A fixed per-frame cap (it was 64) falls behind at
             // low frame rates (background windows, slow machines) and the backlog turns into
             // seconds of latency for every stream.
@@ -270,6 +299,7 @@ namespace DelusionMP.Net
                 return;
             }
             if (h.Version != Proto.Version) return;
+            _lastHeardAt = UnityEngine.Time.realtimeSinceStartup;
 
             // ack bookkeeping (16-bit sequence, wrap-aware)
             short d = (short)(h.Seq - _lastSeenSeq);
@@ -342,6 +372,7 @@ namespace DelusionMP.Net
                 case PacketKind.PlayerLoadout: PlayerSync.ApplyLook(payload); break;
                 case PacketKind.CoopDeath: CoopDeath.Apply(payload); break;
                 case PacketKind.FactoryState: FactorySync.Apply(payload); break;
+                case PacketKind.JoinTruth: if (Role == SessionRole.Client) JoinSync.Apply(payload); break;
                 case PacketKind.Airship: AirshipSync.Apply(payload); break;
                 case PacketKind.AirshipState: AirshipSync.ApplyState(payload); break;
                 case PacketKind.Cutscene: CutsceneSync.Apply(payload); break;
@@ -476,8 +507,20 @@ namespace DelusionMP.Net
 
         // ---------------- snapshots ----------------
 
+        private bool _snapshotDeferred;
+        private byte[] _deferredFacts;
+
         private void SendWorldSnapshot()
         {
+            // The host's world is the truth only once it is loaded: a host still at the menu
+            // would otherwise send the menu's empty story and the client would adopt it.
+            if (!GameRefs.InWorld)
+            {
+                if (!_snapshotDeferred) Log.Info("world snapshot deferred until the host is in the world");
+                _snapshotDeferred = true;
+                return;
+            }
+            _snapshotDeferred = false;
             var (bools, ints) = FactSync.CaptureShared();
             var w = new Writer();
             w.U8(0); // snapshot section: facts
@@ -489,6 +532,7 @@ namespace DelusionMP.Net
 
             SendFragmented(PacketKind.QuestState, QuestSync.CaptureJournal());
             WorldEventsSync.SendJoinState();
+            JoinSync.SendHostTruth(this);
             Log.Info($"world snapshot sent: {bools.Count} bools, {ints.Count} ints ({w.Length} B)");
         }
 
@@ -502,6 +546,9 @@ namespace DelusionMP.Net
                 // re-frame for FactSync.ApplySnapshot (it expects the fact section only)
                 var body = new byte[payload.Length - 1];
                 Buffer.BlockCopy(payload, 1, body, 0, body.Length);
+                // Loading a save replaces the fact map: apply the host's story once we are in
+                // the world, not to the menu's map.
+                if (!GameRefs.InWorld) { _deferredFacts = body; return; }
                 FactSync.ApplySnapshot(body);
             }
         }

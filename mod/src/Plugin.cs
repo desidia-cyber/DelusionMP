@@ -125,6 +125,8 @@ namespace DelusionMP
                 Perf.Run("player.render", PlayerSync.TickRender);
             }
 
+            Perf.Run("mirror.pending", WorldMirror.TickPending);
+            Perf.Run("join", JoinSync.Tick);
             Perf.Run("dialogue", DialogueSync.Tick);
             Perf.Run("avatar.preload", () => RemoteAvatar.PreloadTick(inWorld));
             Perf.Run("coopdeath", CoopDeath.Tick);
