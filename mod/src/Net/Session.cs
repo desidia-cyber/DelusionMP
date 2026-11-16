@@ -246,10 +246,14 @@ namespace DelusionMP.Net
 
         // ---------------- receiving ----------------
 
+
         public void Pump()
         {
             if (Transport == null || !Transport.IsOpen) return;
-            for (int i = 0; i < 64; i++)
+            // Drain everything that arrived. A fixed per-frame cap (it was 64) falls behind at
+            // low frame rates (background windows, slow machines) and the backlog turns into
+            // seconds of latency for every stream.
+            for (int i = 0; i < 8192; i++)
             {
                 var dg = Transport.Poll();
                 if (dg == null) break;
@@ -337,6 +341,7 @@ namespace DelusionMP.Net
                 case PacketKind.Dialogue: DialogueSync.Apply(payload); break;
                 case PacketKind.PlayerLoadout: PlayerSync.ApplyLook(payload); break;
                 case PacketKind.CoopDeath: CoopDeath.Apply(payload); break;
+                case PacketKind.FactoryState: FactorySync.Apply(payload); break;
                 case PacketKind.Airship: AirshipSync.Apply(payload); break;
                 case PacketKind.AirshipState: AirshipSync.ApplyState(payload); break;
                 case PacketKind.Cutscene: CutsceneSync.Apply(payload); break;

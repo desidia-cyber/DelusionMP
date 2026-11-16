@@ -685,7 +685,22 @@ namespace DelusionMP.Sync
             {
                 if (s == null) continue;
                 try { if (s.shopInventory != null && s.shopInventory.Pointer == p) return s; } catch { }
+                try { if (s.savedShop != null && s.savedShop.itemList != null && s.savedShop.itemList.Pointer == p) return s; } catch { }
             }
+            // The open list may be a copy: find the shop that stocks the very item being traded.
+            global::ItemInstance trade = null;
+            try { trade = inv.itemToTrade; } catch { }
+            if (trade != null)
+                foreach (var s in all)
+                {
+                    if (s == null || !s.gameObject.scene.IsValid()) continue;
+                    try
+                    {
+                        var l = s.shopInventory;
+                        if (l != null) for (int i = 0; i < l.Count; i++) if (l[i] != null && l[i].Pointer == trade.Pointer) return s;
+                    }
+                    catch { }
+                }
             return null;
         }
 
@@ -701,8 +716,7 @@ namespace DelusionMP.Sync
                 if (m.CurrentGameState == global::DelusionManager.GameState.RUNNING) return false;
                 var mode = inv.activeSelectionMode;
                 if (mode != global::DelusionInventory.SelectionMode.Buy && mode != global::DelusionInventory.SelectionMode.Sell) return false;
-                var list = inv.actualShopList;
-                return list != null && shop.shopInventory != null && list.Pointer == shop.shopInventory.Pointer;
+                return OpenShop(inv) == shop;
             }
             catch { return false; }
         }
@@ -805,6 +819,11 @@ namespace DelusionMP.Sync
         }
 
         private static PendingBuy _pendingBuy;
+
+        /// <summary>Off by default: inventories are per player, so two players buying the
+        /// same one-of-a-kind item at the same moment each simply own a copy (stock still ends
+        /// the same on both). On: the host decides who gets it.</summary>
+        public static bool ExclusiveUniqueBuys = false;
         private static int _nextBuyId = 1;
         [ThreadStatic] private static bool _bypassBuy;
 
@@ -812,7 +831,7 @@ namespace DelusionMP.Sync
         /// host; the purchase completes when the host agrees.</summary>
         internal static bool OnFinishBuyPre(global::DelusionInventory inv, bool sellingMultiple)
         {
-            if (_bypassBuy || LoopGuard.ApplyingRemote || !Connected || !IsClient || inv == null) return true;
+            if (!ExclusiveUniqueBuys || _bypassBuy || LoopGuard.ApplyingRemote || !Connected || !IsClient || inv == null) return true;
             global::ItemInstance item = null;
             try { item = inv.itemToTrade; } catch { }
             if (item == null || item.item == null || item.item.isStackable) return true;

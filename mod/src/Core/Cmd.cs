@@ -82,10 +82,51 @@ namespace DelusionMP.Core
             }
         }
 
+        // ---- scanscenes: load each region briefly, list where interesting objects are, unload.
+        private static readonly Queue<int> _scanQueue = new Queue<int>();
+        private static AsyncOperation _scanOp;
+        private static int _scanIdx = -1;
+        private static bool _scanUnload;
+
+        private static void ScanTick()
+        {
+            if (_scanOp != null)
+            {
+                if (!_scanOp.isDone) return;
+                _scanOp = null;
+                if (_scanUnload) { _scanUnload = false; return; }
+                var sc = UnityEngine.SceneManagement.SceneManager.GetSceneByBuildIndex(_scanIdx);
+                ScanReport(sc);
+                _scanUnload = true;
+                try { _scanOp = UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(_scanIdx); } catch { _scanOp = null; _scanUnload = false; }
+                return;
+            }
+            if (_scanQueue.Count == 0) return;
+            _scanIdx = _scanQueue.Dequeue();
+            var existing = UnityEngine.SceneManagement.SceneManager.GetSceneByBuildIndex(_scanIdx);
+            if (existing.IsValid() && existing.isLoaded) { ScanReport(existing); return; }
+            try { _scanOp = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(_scanIdx, UnityEngine.SceneManagement.LoadSceneMode.Additive); }
+            catch (Exception e) { Emit($"SCAN {_scanIdx} load failed: {e.Message}"); }
+        }
+
+        private static void ScanReport(UnityEngine.SceneManagement.Scene sc)
+        {
+            int shops = 0, traps = 0, comps = 0, facs = 0;
+            foreach (var root in sc.GetRootGameObjects())
+            {
+                foreach (var x in root.GetComponentsInChildren<global::ShopSpeaker>(true)) { shops++; Emit($"SCAN {_scanIdx} {sc.name} SHOP {x.name} at {x.transform.position}"); }
+                foreach (var x in root.GetComponentsInChildren<global::Trap>(true)) { if (traps++ < 3) Emit($"SCAN {_scanIdx} {sc.name} TRAP {x.name} at {x.transform.position}"); }
+                foreach (var x in root.GetComponentsInChildren<global::CompletableObject>(true)) { comps++; Emit($"SCAN {_scanIdx} {sc.name} COMPLETABLE {x.name} at {x.transform.position}"); }
+                foreach (var x in root.GetComponentsInChildren<global::MovingFactory>(true)) { facs++; Emit($"SCAN {_scanIdx} {sc.name} FACTORY {x.name} at {x.transform.position}"); }
+            }
+            Emit($"SCAN {_scanIdx} {sc.name} shops={shops} traps={traps} completable={comps} factories={facs}");
+        }
+
         public static void Tick()
         {
             if (!_ready) return;
             float now = Time.realtimeSinceStartup;
+            ScanTick();
             for (int i = _delayed.Count - 1; i >= 0; i--)
             {
                 if (now < _delayed[i].at) continue;
@@ -595,9 +636,9 @@ namespace DelusionMP.Core
                         if (f == null || !f.gameObject.scene.IsValid()) continue;
                         var mt = f.moveObjectTransform;
                         var mp = mt != null ? mt.position : f.transform.position;
-                        Emit($"FACTORY active={f.gameObject.activeInHierarchy} state={f.currentMoveState} pos={mp.x:F1},{mp.y:F1},{mp.z:F1} rotY={(mt != null ? mt.eulerAngles.y : 0f):F0}");
+                        Emit($"FACTORY active={f.gameObject.activeInHierarchy} state={f.currentMoveState} pos={mp.x:F1},{mp.y:F1},{mp.z:F1} rotY={(mt != null ? mt.eulerAngles.y : 0f):F0}{FactorySync.DebugFor(f)}");
                     }
-                    Emit("FACTORY " + WorldEventsSync.Stats);
+                    Emit("FACTORY stream " + FactorySync.Stats);
                     break;
                 }
                 case "complete":
@@ -648,6 +689,36 @@ namespace DelusionMP.Core
                     pinv.StartBuyItem(item);
                     pinv.FinishBuyItem(false);
                     Emit($"BUY {item.itemInstanceID} from {shop.name} stockNow={shop.shopInventory.Count} {WorldEventsSync.Stats}");
+                    break;
+                }
+                case "traps":
+                {
+                    var me = GameRefs.Player;
+                    var list = new List<(float, global::Trap)>();
+                    foreach (var t in Resources.FindObjectsOfTypeAll<global::Trap>())
+                        if (t != null && t.gameObject.activeInHierarchy && me != null)
+                            list.Add((Vector3.Distance(t.transform.position, me.transform.position), t));
+                    list.Sort((x, y) => x.Item1.CompareTo(y.Item1));
+                    for (int k = 0; k < list.Count && k < 3; k++)
+                        Emit($"TRAPSTATE {list[k].Item2.transform.parent?.name}/{list[k].Item2.name} locked={list[k].Item2.lockStats?.isLocked} tag={list[k].Item2.tag} d={list[k].Item1:F1}");
+                    break;
+                }
+                case "statues":
+                {
+                    foreach (var co in Resources.FindObjectsOfTypeAll<global::CompletableObject>())
+                    {
+                        if (co == null || !co.gameObject.scene.IsValid()) continue;
+                        string anim = "";
+                        try { var a2 = co.animator; if (a2 != null) { var st = a2.GetCurrentAnimatorStateInfo(0); anim = $" animState={st.shortNameHash} t={st.normalizedTime:F2}"; } } catch { }
+                        Emit($"STATUE {co.name} active={co.gameObject.activeInHierarchy}{anim}");
+                    }
+                    break;
+                }
+                case "scanscenes":
+                {
+                    int a = int.Parse(parts[1]), b = int.Parse(parts[2]);
+                    for (int i = a; i <= b; i++) _scanQueue.Enqueue(i);
+                    Emit($"SCANSCENES {a}..{b} queued");
                     break;
                 }
                 case "die":

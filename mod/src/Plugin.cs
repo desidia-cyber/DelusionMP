@@ -45,6 +45,8 @@ namespace DelusionMP
 
             // Co-op death rules (one player down: respawn by the partner with a debuff until a
             // rest; both down: the game's own death and enemies return).
+            Sync.WorldEventsSync.ExclusiveUniqueBuys = Config.Bind("Rules", "ExclusiveUniqueShopItems", false,
+                "1 = only one player can buy a one-of-a-kind shop item (host decides); 0 = each player may buy their own copy.").Value;
             Sync.CoopDeath.Enabled = Config.Bind("Rules", "DeathDebuffs", true,
                 "Dying while the partner is alive adds a stack that lowers max health/mana/stamina until you rest in a bed.").Value;
             Sync.CoopDeath.MaxStacks = Config.Bind("Rules", "MaxStacks", 5, "Most death stacks a player can carry.").Value;
@@ -125,6 +127,7 @@ namespace DelusionMP
                 DialogueSync.Tick();
                 RemoteAvatar.PreloadTick(GameRefs.InWorld);
                 CoopDeath.Tick();
+                FactorySync.Tick();
                 WorldEventsSync.Tick();
                 if (GameRefs.Player != null) AirshipSync.Tick();
 

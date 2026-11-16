@@ -63,7 +63,7 @@ namespace DelusionMP.Sync
                         return c.transform;
                     }
                     var fac = c.GetComponentInParent<global::MovingFactory>();
-                    if (fac != null) return fac.transform;
+                    if (fac != null) return fac.moveObjectTransform != null ? fac.moveObjectTransform : fac.transform;
                 }
             }
             catch { }

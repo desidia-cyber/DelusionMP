@@ -65,6 +65,11 @@ Commands are written to `rig/instance<N>/game/BepInEx/ddmp_cmd.txt`, results app
 | Cutscene | host → client | `playcine cutterLiftoff`, client `skipcut` | played on the client (field-keyed director); the client's skip ended it on the host |
 | Floor triggers | host → client | host death respawn trigger | replayed on the client without moving its respawn point |
 | Story travel | host → client | `travel underlands` | both players arrive at the same spot (1568, -3333, -3905) |
+| Shops | both | both buy the single passport at the same moment | each owns a copy (allowed by default, `ExclusiveUniqueShopItems=false`); both shops end with identical stock |
+| Traps | host → client | both at a spike trap, host disarms | client's trap goes locked → unlocked and stops being usable (`RayTrigPick` → `Untagged`) |
+| Moving factory | host → client | both walk to it (natural region streaming) | client follows the host's 5 Hz pose stream; positions match within 2–4 m (query spacing) |
+| Network latency | — | host teleports in a busy region | client sees it within 0.7 s (was > 6 s: the receive loop read only 64 datagrams per frame) |
+| Completable statue | host → client | `complete` with its region loaded on both | event applied on the client; the statue object is inactive at this story stage, so no visible change |
 | Charm roll in dialogue | host → client | charm note during a shared talk | the same "Charm challenge succeeded. Needed 6." toast on both; screenshot 21 |
 
 The three remaining `statedump` differences are a continuously moving sky object
@@ -124,11 +129,14 @@ The three remaining `statedump` differences are a continuously moving sky object
 
 ## Known gaps
 
-- **Not conclusively exercised:** shop purchase arbitration (no merchant loaded around the test
-  save), the moving factory (the client follows the host's phase as designed, but the host's own
-  factory did not move after a forced additive load of its region, which is not how the game
-  streams it), completable objects and trap disarming (events sent/applied, effect not checked
-  visually).
+- **Changes in a region the host has not loaded** (players far apart) are rejected by the host
+  and can be reverted later when the host streams that region in. Not fixed yet.
+- **No in-game host/join UI:** a session is started with command-line options
+  (`-ddmp-role=host|client -ddmp-host=<ip>`), over UDP to a fixed address: LAN, or a VPN such as
+  Tailscale/ZeroTier over the internet. No relay or NAT traversal, no host-loss detection or
+  reconnect.
+- **Never played end to end:** everything above was verified in an early-game save around Pwyll;
+  late-game regions and story beats were exercised only by commands.
 - **Partner body:** the game has no jump/fall clip for humans, so a jumping partner holds a
   mid-stride pose. DarkStar/Pwyll women only load with their regions; until then the partner is
   shown as the main female model and switches when the chosen one appears.
