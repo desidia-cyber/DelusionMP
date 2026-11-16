@@ -118,14 +118,43 @@ namespace DelusionMP.Core
                 foreach (var x in root.GetComponentsInChildren<global::Trap>(true)) { if (traps++ < 3) Emit($"SCAN {_scanIdx} {sc.name} TRAP {x.name} at {x.transform.position}"); }
                 foreach (var x in root.GetComponentsInChildren<global::CompletableObject>(true)) { comps++; Emit($"SCAN {_scanIdx} {sc.name} COMPLETABLE {x.name} at {x.transform.position}"); }
                 foreach (var x in root.GetComponentsInChildren<global::MovingFactory>(true)) { facs++; Emit($"SCAN {_scanIdx} {sc.name} FACTORY {x.name} at {x.transform.position}"); }
+                foreach (var x in root.GetComponentsInChildren<global::EnemyStats>(true))
+                {
+                    int mh = 0; try { mh = x.maxHealth; } catch { }
+                    if (mh >= 250) { var p = x.transform.position; Emit($"SCAN {_scanIdx} {sc.name} BOSS {x.gameObject.name}|{mh}|{p.x:F1}|{p.y:F1}|{p.z:F1}|{ObjectRegistry.HierarchyPath(x.transform)}"); }
+                }
+                foreach (var x in root.GetComponentsInChildren<global::CutsceneTrigger>(true))
+                { var p = x.transform.position; Emit($"SCAN {_scanIdx} {sc.name} CUTSCENE {x.name}|{p.x:F1}|{p.y:F1}|{p.z:F1}"); }
+                foreach (var x in root.GetComponentsInChildren<global::NPCBase>(true))
+                {
+                    if (x.dialogueTree == null) continue;
+                    var p = x.transform.position; Emit($"SCAN {_scanIdx} {sc.name} NPC {x.dialogueTree.name}|{p.x:F1}|{p.y:F1}|{p.z:F1}");
+                }
             }
             Emit($"SCAN {_scanIdx} {sc.name} shops={shops} traps={traps} completable={comps} factories={facs}");
+        }
+
+        private static float _holdUntil = -1f;
+        private static Vector3 _holdPos;
+
+        private static void HoldTick(float now)
+        {
+            if (_holdUntil < 0f) return;
+            var p = GameRefs.Player;
+            if (p == null) return;
+            if (now < _holdUntil) { p.transform.position = _holdPos; return; }
+            _holdUntil = -1f;
+            var pm = p.GetComponent<global::PlayerMove>();
+            var cc = p.GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = true;
+            if (pm != null) pm.enabled = true;
         }
 
         public static void Tick()
         {
             if (!_ready) return;
             float now = Time.realtimeSinceStartup;
+            HoldTick(now);
             ScanTick();
             for (int i = _delayed.Count - 1; i >= 0; i--)
             {
@@ -730,6 +759,97 @@ namespace DelusionMP.Core
                 {
                     Emit("MIRROR " + WorldMirror.Slowest);
                     foreach (var pl in Perf.Report(parts.Length > 1 && parts[1] == "reset").Split((char)10)) Emit(pl);
+                    break;
+                }
+                case "taskdb":
+                {
+                    // Every quest the game defines, with its stage ids (in definition order).
+                    var tf = global::DelusionTextFiles.Instance;
+                    var db = tf != null ? tf.taskTextData : null;
+                    if (db == null) { Emit("ERR no task data"); break; }
+                    int n = 0;
+                    foreach (var kv in db)
+                    {
+                        var t = kv.Value;
+                        if (t == null || t.stages == null) continue;
+                        var ids = new List<string>();
+                        string done = "";
+                        foreach (var st in t.stages) { if (st == null) continue; ids.Add(st.stageID.ToString()); if (st.completesQuest) done += st.stageID + ","; }
+                        Emit($"TASKDEF {kv.Key} stages={string.Join(",", ids)} completes={done.TrimEnd(',')}");
+                        n++;
+                    }
+                    Emit($"TASKDB {n}");
+                    break;
+                }
+                case "spawnpoints":
+                {
+                    foreach (var sp in Resources.FindObjectsOfTypeAll<global::DeathRespawnPoint>())
+                    {
+                        if (sp == null || !sp.gameObject.scene.IsValid()) continue;
+                        var t = sp.spawnPointTransform != null ? sp.spawnPointTransform : sp.transform;
+                        var p = t.position;
+                        Emit($"SPAWN {sp.spawnPointName ?? sp.name}|{p.x:F1}|{p.y:F1}|{p.z:F1}|{sp.gameObject.scene.name}");
+                    }
+                    Emit("SPAWNPOINTS done");
+                    break;
+                }
+                case "spawnboss":
+                {
+                    // spawnboss <name substring>: bring a boss in as its encounter would - activate
+                    // its spawner/hierarchy (respawning it if it was killed). Prints its position.
+                    string want = parts.Length > 1 ? parts[1] : "";
+                    global::EnemyController best = null; int bestHp = -1;
+                    foreach (var e in Resources.FindObjectsOfTypeAll<global::EnemyController>())
+                    {
+                        if (e == null || !e.gameObject.scene.IsValid()) continue;
+                        if (e.gameObject.name.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                        int mh = 0; try { mh = e.myStats != null ? e.myStats.maxHealth : 0; } catch { }
+                        if (mh > bestHp) { bestHp = mh; best = e; }
+                    }
+                    if (best == null) { Emit("ERR no enemy " + want); break; }
+                    var sp = best.GetComponentInParent<global::EnemySpawner>(true);
+                    for (var t = best.transform; t != null; t = t.parent) if (!t.gameObject.activeSelf) t.gameObject.SetActive(true);
+                    try { if (sp != null) sp.ActivateSpawner(true); } catch (Exception e) { Emit("spawner: " + e.Message); }
+                    int hp = 0; try { hp = best.myStats.currentHealth; } catch { }
+                    if (hp <= 0 && sp != null) { try { sp.RespawnEnemy(true, null); } catch { } }
+                    var p = best.transform.position;
+                    Emit($"SPAWNBOSS {best.gameObject.name} hp={(best.myStats != null ? best.myStats.currentHealth : -1)}/{bestHp} active={best.gameObject.activeInHierarchy} at {p.x:F1}|{p.y:F1}|{p.z:F1}");
+                    break;
+                }
+                case "scenes":
+                {
+                    var names = new List<string>();
+                    for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+                    {
+                        var sc = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                        names.Add($"{sc.buildIndex}:{sc.name}{(sc.isLoaded ? "" : "(loading)")}");
+                    }
+                    Emit("SCENES " + string.Join(" ", names));
+                    var rm = GameRefs.Regions;
+                    if (rm != null && rm.regions != null)
+                    {
+                        var rs = new List<string>();
+                        foreach (var r in rm.regions)
+                            if (r != null) rs.Add($"{r.scene}:{r.state}{(r.needsLoading ? "+L" : "")}{(r.needsUnloading ? "-U" : "")}");
+                        Emit("REGIONS allowLoad=" + rm.allowLoading + " " + string.Join(" ", rs));
+                    }
+                    break;
+                }
+                case "tphold":
+                {
+                    // tphold x y z seconds: teleport and hold the player still (no falling)
+                    // while the destination region streams in.
+                    var ci = System.Globalization.CultureInfo.InvariantCulture;
+                    var dest = new Vector3(float.Parse(parts[1], ci), float.Parse(parts[2], ci), float.Parse(parts[3], ci));
+                    float secs = parts.Length > 4 ? float.Parse(parts[4], ci) : 10f;
+                    Teleport(dest);
+                    var pm = GameRefs.Player?.GetComponent<global::PlayerMove>();
+                    var cc = GameRefs.Player?.GetComponent<CharacterController>();
+                    if (pm != null) pm.enabled = false;
+                    if (cc != null) cc.enabled = false;
+                    _holdUntil = Time.realtimeSinceStartup + secs;
+                    _holdPos = dest;
+                    Emit($"TPHOLD {dest} for {secs}s");
                     break;
                 }
                 case "scanscenes":

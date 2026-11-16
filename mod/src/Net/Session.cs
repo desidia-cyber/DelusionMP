@@ -55,7 +55,12 @@ namespace DelusionMP.Net
 
         // Session epoch: a random id the client picks per process. The host resets the
         // reliable channel only when it changes (a new or restarted client).
-        private readonly uint _localNonce = (uint)new Random().Next() | 1u;
+        // A new value every time this client starts a fresh channel (process start or after a
+        // lost connection), so the host always treats a rejoin as a fresh join and both sides
+        // restart their reliable sequence numbers together.
+        private uint _localNonce = (uint)new Random().Next() | 1u;
+        private static readonly Random _rng = new Random();
+        private float _nextRejoinHint;
         private uint _peerNonce;
 
         private readonly Dictionary<ushort, (byte[] data, float lastSent, int tries)> _pending =
@@ -253,16 +258,24 @@ namespace DelusionMP.Net
         // gone. The session drops back to "not connected": a client then re-announces itself
         // every second (Bootstrap) and rejoins a restarted host with a full host-truth sync;
         // a host accepts the returning client as a fresh join.
-        private const float PeerTimeout = 12f;
+        private const float PeerTimeout = 20f;
         private float _lastHeardAt;
+
+        /// <summary>Forget the channel. A client also takes a new epoch so its next Hello is a
+        /// fresh join on the host.</summary>
+        private void DropChannel()
+        {
+            _handshakeComplete = false;
+            ResetReliable();
+            if (Role == SessionRole.Client) _localNonce = (uint)_rng.Next() | 1u;
+        }
 
         private void CheckPeerLost()
         {
             if (!_handshakeComplete) return;
             if (UnityEngine.Time.realtimeSinceStartup - _lastHeardAt < PeerTimeout) return;
             Log.Warn($"peer lost (nothing heard for {PeerTimeout:F0} s) - waiting for it to come back");
-            _handshakeComplete = false;
-            ResetReliable();
+            DropChannel();
         }
 
         public void Pump()
@@ -300,6 +313,25 @@ namespace DelusionMP.Net
             }
             if (h.Version != Proto.Version) return;
             _lastHeardAt = UnityEngine.Time.realtimeSinceStartup;
+
+            // One side dropped the channel but the other still sends on it: sequence numbers
+            // no longer line up and everything would be discarded silently. The host tells
+            // such a client to rejoin; the client drops its channel and says Hello again.
+            if (h.Kind == PacketKind.Rejoin)
+            {
+                if (Role == SessionRole.Client && _handshakeComplete)
+                {
+                    Log.Warn("host asked us to rejoin (it had dropped the session)");
+                    DropChannel();
+                }
+                return;
+            }
+            if (Role == SessionRole.Host && !_handshakeComplete && h.Kind != PacketKind.Hello
+                && UnityEngine.Time.realtimeSinceStartup >= _nextRejoinHint)
+            {
+                _nextRejoinHint = UnityEngine.Time.realtimeSinceStartup + 1f;
+                SendRaw(PacketKind.Rejoin, Array.Empty<byte>(), reliable: false);
+            }
 
             // ack bookkeeping (16-bit sequence, wrap-aware)
             short d = (short)(h.Seq - _lastSeenSeq);

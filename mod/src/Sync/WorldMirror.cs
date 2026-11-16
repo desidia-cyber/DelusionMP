@@ -626,9 +626,16 @@ namespace DelusionMP.Sync
             if (wantOpen)
             {
                 if (isOpen) return;
-                if (cur == global::DoorState.locked || cur == global::DoorState.midPick) { d.UnlockDoor(true, false); return; }
                 // Swing away from whoever opened it: the partner's avatar if we have one.
                 var user = PlayerSync.PuppetTransform ?? GameRefs.Player?.transform;
+                if (cur == global::DoorState.locked || cur == global::DoorState.midPick)
+                {
+                    d.UnlockDoor(true, false);
+                    // Some doors only unlock here; the partner's door ended up open.
+                    var after = d.GetSt8();
+                    if (after == global::DoorState.unlocked || after == global::DoorState.locked) d.OpenDoor(user, true);
+                    return;
+                }
                 d.OpenDoor(user, true);
                 return;
             }

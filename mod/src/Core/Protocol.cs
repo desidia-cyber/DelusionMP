@@ -80,6 +80,7 @@ namespace DelusionMP.Core
         CoopDeath = 54,
         FactoryState = 55,
         JoinTruth = 56,
+        Rejoin = 57,
     }
 
     public struct Header

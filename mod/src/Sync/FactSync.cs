@@ -364,8 +364,11 @@ namespace DelusionMP.Sync
         public static string Fingerprint()
         {
             var (bools, ints) = CaptureShared();
-            bool client = Session.Instance?.Role == SessionRole.Client;
-            var filter = client ? _syncedKeys : null;
+            // Both sides hash the same shared map. (The client used to hash only keys seen in
+            // the last snapshot, so a fact created since - a kill counter, say - made identical
+            // maps look different and triggered needless resyncs. Joins now copy the host's
+            // facts exactly, so no filter is needed.)
+            HashSet<string> filter = null;
 
             ulong h = 1469598103934665603UL;
             var keys = new List<string>(bools.Keys);
