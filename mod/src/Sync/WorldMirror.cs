@@ -139,32 +139,92 @@ namespace DelusionMP.Sync
 
         public static void TickHost() => Tick();
 
+        // The sweep is time-sliced: a slice of the saveables is captured each frame within
+        // a small budget, instead of all of them (~700+) in one frame twice a second, which
+        // produced 100+ ms hitches. A full sweep still starts at most every PollInterval.
+        private const double SliceBudgetMs = 1.5;
+        private const int SliceMaxObjects = 120;
+        private const float ShopPollInterval = 10f;   // shops are pushed on change; their capture logs
+        private static global::SaveableObject[] _sweep;
+        private static double _slowestMs;
+        private static string _slowestName = "";
+        public static string Slowest { get { var r = $"slowest object {_slowestMs:F2} ms: {_slowestName}"; _slowestMs = 0; return r; } }
+        private static int _cursor;
+        private static int _sentThisTick, _seen, _unnamed, _encodeFail;
+        private static readonly Dictionary<int, float> _shopNext = new Dictionary<int, float>();
+
         public static void Tick()
         {
             var session = Session.Instance;
             if (session == null || !session.Connected) return;
             bool host = session.Role == SessionRole.Host;
-            if (Time.realtimeSinceStartup < _nextPoll) return;
-            _nextPoll = Time.realtimeSinceStartup + PollInterval;
+            ApplyPending();
 
-            var all = Resources.FindObjectsOfTypeAll<global::SaveableObject>();
-            if (all == null || all.Length == 0)
+            if (_sweep == null || _cursor >= _sweep.Length)
             {
-                Log.Info("mirror: no saveables visible yet");
-                return;
+                if (_sweep != null) Perf.Run("mirror.finish", () => FinishSweep(session, host));
+                if (Time.realtimeSinceStartup < _nextPoll) return;
+                _nextPoll = Time.realtimeSinceStartup + PollInterval;
+                global::SaveableObject[] all = null;
+                Perf.Run("mirror.find", () => { all = ObjectRegistry.AllSaveables(); });
+                if (all == null || all.Length == 0)
+                {
+                    Log.Info("mirror: no saveables visible yet");
+                    _sweep = null;
+                    return;
+                }
+                _sweep = all;
+                _cursor = 0;
+                _sentThisTick = _seen = _unnamed = _encodeFail = 0;
             }
 
-            int sentThisTick = 0;
-            int seen = 0, unnamed = 0, encodeFail = 0;
-            foreach (var so in all)
+            long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+            double budgetTicks = SliceBudgetMs * System.Diagnostics.Stopwatch.Frequency / 1000.0;
+            int done = 0;
+            while (_cursor < _sweep.Length && done < SliceMaxObjects)
             {
+                var so = _sweep[_cursor++];
+                done++;
                 if (so == null) continue;
-                if (!TryGetKey(so, out var key)) { unnamed++; continue; }
+                long o0 = System.Diagnostics.Stopwatch.GetTimestamp();
+                try { ProcessOne(so, host, session); } catch (Exception e) { Log.Debug("mirror object: " + e.Message); }
+                double oms = (System.Diagnostics.Stopwatch.GetTimestamp() - o0) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+                if (oms > _slowestMs) { _slowestMs = oms; try { _slowestName = so.gameObject.name + "/" + so.GetUniqueIdentifier(); } catch { } }
+                if (System.Diagnostics.Stopwatch.GetTimestamp() - t0 > budgetTicks) break;
+            }
+            if (_cursor >= _sweep.Length) { Perf.Run("mirror.finish", () => FinishSweep(session, host)); _sweep = null; }
+        }
+
+        private static void ProcessOne(global::SaveableObject so, bool host, Session session)
+        {
+            int sentThisTick = 0, seen = 0, unnamed = 0, encodeFail = 0;
+            try
+            {
+                // Shops capture with a Debug.Log each time and are pushed on change anyway.
+                if (so.GetComponent<global::ShopSpeaker>() != null)
+                {
+                    int id = so.GetInstanceID();
+                    if (_shopNext.TryGetValue(id, out var due) && Time.realtimeSinceStartup < due) return;
+                    _shopNext[id] = Time.realtimeSinceStartup + ShopPollInterval;
+                }
+                ProcessBody(so, host, session, ref sentThisTick, ref seen, ref unnamed, ref encodeFail);
+            }
+            finally
+            {
+                _sentThisTick += sentThisTick; _seen += seen; _unnamed += unnamed; _encodeFail += encodeFail;
+            }
+        }
+
+        private static void ProcessBody(global::SaveableObject so, bool host, Session session,
+            ref int sentThisTick, ref int seen, ref int unnamed, ref int encodeFail)
+        {
+                if (so == null) return;
+                if (!TryGetKey(so, out var key)) { unnamed++; return; }
                 seen++;
 
                 object state;
                 try { state = so.CaptureState(); }
-                catch { continue; }
+                catch { return; }
                 // Untouched objects capture null (the save only stores changes). They are
                 // still tracked, so the moment one changes it is a change - not a first
                 // sight - and gets sent. Null itself is never sent.
@@ -173,7 +233,7 @@ namespace DelusionMP.Sync
                     unnamed++;
                     if (!_hashes.ContainsKey(key)) _hashes[key] = NullHash;
                     else if (_hashes[key] != NullHash) _hashes[key] = NullHash;
-                    continue;
+                    return;
                 }
 
                 byte[] body;
@@ -185,20 +245,20 @@ namespace DelusionMP.Sync
                 {
                     encodeFail++;
                     if (encodeFail <= 3) Log.Warn("mirror encode: " + e.GetType().Name + ": " + e.Message);
-                    continue;
+                    return;
                 }
 
                 ulong h = Hash(body);
                 bool known = _hashes.TryGetValue(key, out var old);
-                if (known && old == h) continue;
+                if (known && old == h) return;
                 _hashes[key] = h;
 
                 if (!host)
                 {
                     // Client: first sight is a baseline; a peer-written object settling is
                     // not a player action; only genuine local changes are forwarded.
-                    if (!known) { _newSightings++; continue; }
-                    if (IsQuiet(key) || !ShouldForward(key)) continue;
+                    if (!known) { _newSightings++; return; }
+                    if (IsQuiet(key) || !ShouldForward(key)) return;
                 }
 
                 var w = new Writer();
@@ -210,8 +270,11 @@ namespace DelusionMP.Sync
                 session.SendReliableLarge(host ? PacketKind.ObjectState : PacketKind.ObjectRequest, payload);
                 if (host) _sent++; else _requests++;
                 sentThisTick++;
-            }
+        }
 
+        private static void FinishSweep(Session session, bool host)
+        {
+            int sentThisTick = _sentThisTick, seen = _seen, unnamed = _unnamed, encodeFail = _encodeFail;
             // Client: objects appeared that the host may have sent before we had them
             // loaded (region streaming). Ask for a fresh pass, rate-limited.
             if (!host && _firstPass) { _firstPass = false; _newSightings = 0; }
@@ -266,58 +329,74 @@ namespace DelusionMP.Sync
             session.SendReliable(session.Role == SessionRole.Host ? PacketKind.WorldEvent : PacketKind.WorldEventRequest,
                                  w.ToArray());
 
-        private static void ScanTyped(Session session)
-        {
-            var scene = ObjectRegistry.Instance.CurrentScene;
+        // Doors and lifts only change with region streaming; their lists and keys are cached
+        // (refreshed every 3 s) instead of three full object searches per sweep.
+        private static (global::DoorsUltimate c, string key)[] _doorsU = new (global::DoorsUltimate, string)[0];
+        private static (global::DoorsDelusion c, string key)[] _doorsP = new (global::DoorsDelusion, string)[0];
+        private static (global::DelusionLift c, string key)[] _liftsC = new (global::DelusionLift, string)[0];
+        private static float _typedListsAt = -10f;
+        private static string _typedListsScene;
 
-            var doors = Resources.FindObjectsOfTypeAll<global::DoorsUltimate>();
-            if (doors != null)
-                foreach (var d in doors)
+        private static (T, string)[] KeyedList<T>(string scene) where T : Component
+        {
+            var all = Resources.FindObjectsOfTypeAll<T>();
+            var list = new List<(T, string)>(all != null ? all.Length : 0);
+            if (all != null)
+                foreach (var c in all)
                 {
-                    if (d == null) continue;
-                    var so = d.GetComponent<global::SaveableObject>();
+                    if (c == null || !c.gameObject.scene.IsValid()) continue;
+                    var so = c.GetComponent<global::SaveableObject>();
                     string id = null;
                     try { id = so != null ? so.GetUniqueIdentifier() : null; } catch { }
                     if (string.IsNullOrEmpty(id)) continue;
+                    list.Add((c, scene + "|" + id));
+                }
+            return list.ToArray();
+        }
+
+        private static void RefreshTypedLists(string scene)
+        {
+            if (Time.realtimeSinceStartup - _typedListsAt < 3f && scene == _typedListsScene) return;
+            _typedListsAt = Time.realtimeSinceStartup;
+            _typedListsScene = scene;
+            _doorsU = KeyedList<global::DoorsUltimate>(scene);
+            _doorsP = KeyedList<global::DoorsDelusion>(scene);
+            _liftsC = KeyedList<global::DelusionLift>(scene);
+        }
+
+        private static void ScanTyped(Session session)
+        {
+            var scene = ObjectRegistry.Instance.CurrentScene;
+            RefreshTypedLists(scene);
+
+            foreach (var (d, key) in _doorsU)
+                {
+                    if (d == null) continue;
                     int st;
                     try { st = (int)d.GetSt8(); } catch { continue; }
-                    string key = scene + "|" + id;
                     if (!TypedChanged(session, key, st)) continue;
                     var w = new Writer();
                     w.U8((byte)TypedKind.DoorUltimate).Str(key).I32(st);
                     SendTyped(session, w);
                 }
 
-            var plain = Resources.FindObjectsOfTypeAll<global::DoorsDelusion>();
-            if (plain != null)
-                foreach (var d in plain)
+            foreach (var (d, key) in _doorsP)
                 {
                     if (d == null) continue;
-                    var so = d.GetComponent<global::SaveableObject>();
-                    string id = null;
-                    try { id = so != null ? so.GetUniqueIdentifier() : null; } catch { }
-                    if (string.IsNullOrEmpty(id)) continue;
-                    int open = Priv.GetField<bool>(d, "isOpen") ? 1 : 0;
-                    string key = scene + "|" + id;
+                    int open;
+                    try { open = d.isOpen ? 1 : 0; } catch { continue; }
                     if (!TypedChanged(session, key, open)) continue;
                     var w = new Writer();
                     w.U8((byte)TypedKind.Door).Str(key).I32(open);
                     SendTyped(session, w);
                 }
 
-            var lifts = Resources.FindObjectsOfTypeAll<global::DelusionLift>();
-            if (lifts != null)
-                foreach (var l in lifts)
+            foreach (var (l, key) in _liftsC)
                 {
                     if (l == null) continue;
-                    var so = l.GetComponent<global::SaveableObject>();
-                    string id = null;
-                    try { id = so != null ? so.GetUniqueIdentifier() : null; } catch { }
-                    if (string.IsNullOrEmpty(id)) continue;
                     int packed;
                     try { packed = LiftValue(l); }
                     catch { continue; }
-                    string key = scene + "|" + id;
                     // Lifts travel as transitions (LiftActivate, both roles) plus the host's
                     // settled position. The scan only provides that settled value for late
                     // joins / resyncs; a client never forwards scanned lift state.
@@ -333,7 +412,7 @@ namespace DelusionMP.Sync
         }
 
         private static int LiftValue(global::DelusionLift l) =>
-            ((int)l.liftPosition) | (Priv.GetField<bool>(l, "isMoving") ? LiftMovingBit : 0);
+            ((int)l.liftPosition) | (l.isMoving ? LiftMovingBit : 0);
 
         /// <summary>Client: apply a typed door/lift transition.</summary>
         public static void ApplyTyped(byte[] payload)
@@ -413,7 +492,8 @@ namespace DelusionMP.Sync
         {
             // Trace the first few hundred first-sight encodes in detail; after that the codec
             // has seen every shape in play.
-            StateCodec.Trace = _crumbed++ < 400;
+            // File breadcrumbs cost tens of ms per encode; only when crash-hunting (-ddmp-trace).
+            StateCodec.Trace = Bootstrap.TraceCodec && _crumbed++ < 400;
             if (StateCodec.Trace) StateCodec.Crumb("key " + key);
         }
 
@@ -514,7 +594,7 @@ namespace DelusionMP.Sync
             if ((value & LiftMovingBit) != 0) return;
             var pos = (global::DelusionLift.LiftPosition)(value & 3);
             if (pos != global::DelusionLift.LiftPosition.Top && pos != global::DelusionLift.LiftPosition.Bot) return;
-            bool moving = Priv.GetField<bool>(l, "isMoving");
+            bool moving = l.isMoving;
             var cur = l.liftPosition;
             if (!moving && cur == pos) return;
             if (cur == global::DelusionLift.LiftPosition.MovingUp && pos == global::DelusionLift.LiftPosition.Top) return;
@@ -562,7 +642,7 @@ namespace DelusionMP.Sync
             if (target == global::DoorState.locked && cur != global::DoorState.locked)
             {
                 if (isOpen) d.CloseDoor();
-                Priv.SetField(d, "st8", target);
+                d.st8 = target;   // re-lock (Traverse cannot see IL2CPP fields)
             }
         }
 
@@ -582,6 +662,45 @@ namespace DelusionMP.Sync
         }
 
         // ------------------------------------------------------------------ client
+
+        private static int _storedUnloaded;
+        private static float _lastForcedRebuild;
+        public static int StoredUnloadedCount => _storedUnloaded;
+
+        /// <summary>Writes a peer's state for an object that is not loaded here into
+        /// DelusionSave.loadedState[uniqueId] (SaveableObject.OnEnable restores from exactly
+        /// that entry, and saving persists it).</summary>
+        private static bool StoreForUnloaded(string key, byte[] body)
+        {
+            int bar = key.IndexOf('|');
+            if (bar < 0 || key.IndexOf("|#path/", StringComparison.Ordinal) >= 0) return false;
+            string uid = key.Substring(bar + 1);
+            int hash = uid.IndexOf('#');
+            if (hash >= 0) return false;   // duplicate-id variants cannot be addressed by id
+            if (uid.Length == 0) return false;
+            try
+            {
+                var save = GameRefs.Save;
+                var table = save != null ? save.GetLoadedState() : null;
+                if (table == null) return false;
+                var state = StateCodec.Build(body);
+                if (state == null) return false;
+                table[uid] = state;
+                _storedUnloaded++;
+                string localKey = ObjectRegistry.Instance.CurrentScene + "|" + uid;
+                _pendingUnloaded[localKey] = body;
+                _hashes[key] = Hash(body);      // our view of it now matches the peer's
+                _lastApply = "stored-for-unloaded " + key;
+                if (_storedUnloaded <= 5 || _storedUnloaded % 50 == 0)
+                    Log.Info($"mirror: {key} is not loaded here - kept in the save's loaded state ({_storedUnloaded} so far)");
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Warn($"mirror: could not keep unloaded '{key}': {e.Message}");
+                return false;
+            }
+        }
 
         public static void Apply(byte[] payload)
         {
@@ -617,6 +736,29 @@ namespace DelusionMP.Sync
                     found = reg.TryResolve(key + "#" + n, out go) && go != null;
                 if (!found)
                 {
+                    // Keys made while a peer was still in the boot scene carry that scene's
+                    // name; and a region that has just streamed in may not be in the registry
+                    // yet. Retry with this scene's name and a fresh registry before deciding
+                    // the object is not loaded here.
+                    int bar0 = key.IndexOf('|');
+                    string local = bar0 >= 0 ? reg.CurrentScene + key.Substring(bar0) : key;
+                    found = reg.TryResolve(local, out go) && go != null;
+                    if (!found && Time.realtimeSinceStartup - _lastForcedRebuild > 0.25f)
+                    {
+                        _lastForcedRebuild = Time.realtimeSinceStartup;
+                        ObjectRegistry.InvalidateSaveables();
+                        reg.Rebuild(reg.CurrentScene);
+                        found = reg.TryResolve(local, out go) && go != null;
+                    }
+                    if (found) key = local;
+                }
+                if (!found)
+                {
+                    // The object lives in a region this machine has not loaded (the players
+                    // are apart). Keep the change where the game itself keeps the state of
+                    // unloaded objects: DelusionSave's loaded-state table, which a saveable
+                    // restores from when its region streams in, and which the next save writes.
+                    if (StoreForUnloaded(key, body)) return;
                     _rejected++;
                     _lastReject = $"unknown '{key}' registry={reg.Count} scene='{reg.CurrentScene}' plain={reg.TryResolve(key, out _)}";
                     if (_rejected <= 3) Log.Error(_lastReject);
@@ -624,6 +766,12 @@ namespace DelusionMP.Sync
                 }
             }
 
+            ApplyResolved(key, go, body);
+        }
+
+        /// <summary>Applies a peer's state to a resolved local object.</summary>
+        private static void ApplyResolved(string key, GameObject go, byte[] body)
+        {
             var so = go.GetComponent<global::SaveableObject>();
             if (so == null)
             {
@@ -673,6 +821,33 @@ namespace DelusionMP.Sync
                     if (_rejected <= 3) Log.Error(_lastReject);
                 }
             });
+                }
+
+        // ---- changes for objects not loaded here, applied when they appear
+        private static readonly Dictionary<string, byte[]> _pendingUnloaded = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        private static float _nextPendingCheck;
+        private static int _pendingApplied;
+        public static string PendingInfo => $"pendingUnloaded={_pendingUnloaded.Count} appliedOnArrival={_pendingApplied} storedInSave={_storedUnloaded}";
+
+        /// <summary>Once a second: objects whose region has streamed in get the change the
+        /// peer made while they were not loaded here (the game's own loaded-state table can be
+        /// refilled from disk when a region loads, so it is not relied on alone).</summary>
+        private static void ApplyPending()
+        {
+            if (_pendingUnloaded.Count == 0 || Time.realtimeSinceStartup < _nextPendingCheck) return;
+            _nextPendingCheck = Time.realtimeSinceStartup + 1f;
+            var reg = ObjectRegistry.Instance;
+            List<string> done = null;
+            foreach (var kv in _pendingUnloaded)
+            {
+                if (!reg.TryResolve(kv.Key, out var go) || go == null) continue;
+                ApplyResolved(kv.Key, go, kv.Value);
+                (done ??= new List<string>()).Add(kv.Key);
+            }
+            if (done == null) return;
+            foreach (var k in done) _pendingUnloaded.Remove(k);
+            _pendingApplied += done.Count;
+            Log.Info($"mirror: applied {done.Count} change(s) the partner made while those objects were not loaded here");
         }
 
         // ------------------------------------------------------------------ util

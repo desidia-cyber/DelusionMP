@@ -47,6 +47,22 @@ namespace DelusionMP.Sync
             return _follow.TryGetValue(f.Pointer, out var fl) && Time.realtimeSinceStartup - fl.At < StaleAfter;
         }
 
+        // The factory list only changes with region streaming: refresh it every 2 s instead
+        // of searching all objects every frame (was ~15 ms/frame on the client).
+        private static global::MovingFactory[] _factories = new global::MovingFactory[0];
+        private static float _factoriesAt = -10f;
+
+        private static global::MovingFactory[] Factories()
+        {
+            if (Time.realtimeSinceStartup - _factoriesAt < 2f) return _factories;
+            _factoriesAt = Time.realtimeSinceStartup;
+            var all = Resources.FindObjectsOfTypeAll<global::MovingFactory>();
+            var list = new List<global::MovingFactory>();
+            if (all != null) foreach (var f in all) if (f != null && f.gameObject.scene.IsValid()) list.Add(f);
+            _factories = list.ToArray();
+            return _factories;
+        }
+
         public static void Tick()
         {
             var s = Session.Instance;
@@ -57,7 +73,7 @@ namespace DelusionMP.Sync
             {
                 if (now < _nextSend) return;
                 _nextSend = now + SendInterval;
-                foreach (var f in Resources.FindObjectsOfTypeAll<global::MovingFactory>())
+                foreach (var f in Factories())
                 {
                     if (f == null || !f.gameObject.activeInHierarchy) continue;
                     var t = f.moveObjectTransform != null ? f.moveObjectTransform : f.transform;
@@ -75,7 +91,8 @@ namespace DelusionMP.Sync
             }
 
             // Client: move each followed factory toward the host's pose every frame.
-            foreach (var f in Resources.FindObjectsOfTypeAll<global::MovingFactory>())
+            if (_follow.Count == 0) return;
+            foreach (var f in Factories())
             {
                 if (f == null || !f.gameObject.activeInHierarchy) continue;
                 if (!_follow.TryGetValue(f.Pointer, out var fl) || now - fl.At > StaleAfter) continue;

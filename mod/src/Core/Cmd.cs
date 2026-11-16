@@ -201,6 +201,18 @@ namespace DelusionMP.Core
                     else Emit("ERR value must be true/false/int");
                     break;
                 }
+                case "resolve":
+                {
+                    foreach (var m in ObjectRegistry.Instance.Matching(parts[1])) Emit("RESOLVE " + m);
+                    foreach (var so in Resources.FindObjectsOfTypeAll<global::SaveableObject>())
+                    {
+                        if (so == null) continue;
+                        string id = null; try { id = so.GetUniqueIdentifier(); } catch { }
+                        if (id != null && id.IndexOf(parts[1], StringComparison.OrdinalIgnoreCase) >= 0)
+                            Emit($"  INSTANCE {so.gameObject.name} iid={so.GetInstanceID()} scene={so.gameObject.scene.name} valid={so.gameObject.scene.IsValid()} active={so.gameObject.activeInHierarchy}");
+                    }
+                    break;
+                }
                 case "saveables":
                 {
                     var all = Resources.FindObjectsOfTypeAll<global::SaveableObject>();
@@ -714,6 +726,12 @@ namespace DelusionMP.Core
                     }
                     break;
                 }
+                case "perf":
+                {
+                    Emit("MIRROR " + WorldMirror.Slowest);
+                    foreach (var pl in Perf.Report(parts.Length > 1 && parts[1] == "reset").Split((char)10)) Emit(pl);
+                    break;
+                }
                 case "scanscenes":
                 {
                     int a = int.Parse(parts[1]), b = int.Parse(parts[2]);
@@ -1104,7 +1122,7 @@ namespace DelusionMP.Core
                     {
                         var (d, l, id) = rows[i];
                         var p = l.transform.position;
-                        Emit($"LIFTSTATE {id} pos={l.liftPosition} moving={Priv.GetField<bool>(l, "isMoving")} d={d:F0} at={p.x:F1},{p.y:F1},{p.z:F1}");
+                        Emit($"LIFTSTATE {id} pos={l.liftPosition} moving={l.isMoving} d={d:F0} at={p.x:F1},{p.y:F1},{p.z:F1}");
                     }
                     break;
                 }
@@ -1113,7 +1131,7 @@ namespace DelusionMP.Core
                     Emit($"SYNC mirror sent={WorldMirror.SentCount} requests={WorldMirror.RequestCount} " +
                          $"applied={WorldMirror.AppliedCount} rejected={WorldMirror.RejectedCount} " +
                          $"volatile={WorldMirror.VolatileCount} facts-forwarded={FactSync.ForwardedCount} " +
-                         $"quests: {QuestSync.Stats} enemies: {EnemySync.Stats} dialogue: {DialogueSync.Stats} cutscenes: {CutsceneSync.Stats} airship: {AirshipSync.Stats}");
+                         $"{WorldMirror.PendingInfo} quests: {QuestSync.Stats} enemies: {EnemySync.Stats} dialogue: {DialogueSync.Stats} cutscenes: {CutsceneSync.Stats} airship: {AirshipSync.Stats}");
                     break;
                 }
                 case "load":
@@ -1338,7 +1356,7 @@ namespace DelusionMP.Core
             p.transform.rotation = Quaternion.Euler(0, yaw, 0);
             try
             {
-                var look = Priv.GetField<global::PlayerLook>(GameRefs.Manager, "playerLook");
+                var look = GameRefs.Manager?.playerLook;
                 look?.LookSetValues(yaw, pitch);
             }
             catch (Exception e) { Emit("WARN LookSetValues: " + e.Message); }

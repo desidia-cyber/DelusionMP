@@ -329,7 +329,7 @@ namespace DelusionMP.Sync
             _lastLocalRestAt = Time.realtimeSinceStartup;
             int day = GameRefs.Stats?.daysPlayed ?? 0;
             if (Connected) SendRest(hour, day);
-            return $"REST hour={hour} day={day} star={Priv.GetField<float>(dn, "_starTimeSeconds"):F0}";
+            return $"REST hour={hour} day={day} star={dn._starTimeSeconds:F0}";
         }
 
         // ================================================================== 3. TriggerOnPlayerEnter
@@ -1021,7 +1021,7 @@ namespace DelusionMP.Sync
                 {
                     var dn = GameRefs.DayNight;
                     if (dn == null) { res.Add("ERR no daynight"); break; }
-                    res.Add($"CLOCK day={GameRefs.Stats?.daysPlayed} star={Priv.GetField<float>(dn, "_starTimeSeconds"):F1} tod={dn.typeOfDay}");
+                    res.Add($"CLOCK day={GameRefs.Stats?.daysPlayed} star={dn._starTimeSeconds:F1} tod={dn.typeOfDay}");
                     break;
                 }
                 case "travel":

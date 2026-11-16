@@ -42,29 +42,50 @@ namespace DelusionMP.Core
             _dirty = false;
         }
 
+        // One shared search for every user of the saveable list (registry rebuild, mirror
+        // sweep): the full-object search is the costliest call the mod makes.
+        private static global::SaveableObject[] _allSaveables;
+        private static float _allSaveablesAt = -10f;
+
+        public static void InvalidateSaveables() => _allSaveablesAt = -10f;
+
+        public static global::SaveableObject[] AllSaveables()
+        {
+            if (_allSaveables == null || UnityEngine.Time.realtimeSinceStartup - _allSaveablesAt > 0.9f)
+            {
+                _allSaveables = UnityEngine.Resources.FindObjectsOfTypeAll<global::SaveableObject>();
+                _allSaveablesAt = UnityEngine.Time.realtimeSinceStartup;
+            }
+            return _allSaveables;
+        }
+
+        private readonly Dictionary<int, string> _rawKeys = new Dictionary<int, string>(8192);
+        private string _keyScene;
+
         private void BuildTable()
         {
             // SaveableObject.GatherComponentIdentifiers() already builds an internal
             // lookup, but it is private. Walking the loaded SaveableObjects is cheap
             // and does not depend on save internals.
-            var saveables = Resources.FindObjectsOfTypeAll<global::SaveableObject>();
+            var saveables = AllSaveables();
             if (saveables == null) return;
 
             var used = new Dictionary<string, int>(saveables.Length, StringComparer.Ordinal);
+            if (_keyScene != _scene) { _rawKeys.Clear(); _keyScene = _scene; }
             foreach (var so in saveables)
             {
                 if (so == null) continue;
-                string id = null;
-                try { id = so.GetUniqueIdentifier(); } catch { /* not initialised yet */ }
-
-                string key;
-                if (!string.IsNullOrEmpty(id))
+                // The raw key of an object never changes while it lives (identifier, or the
+                // hierarchy path of an unnamed one), so it is computed once per instance.
+                int iid = so.GetInstanceID();
+                if (!_rawKeys.TryGetValue(iid, out var key) || key == null)
                 {
-                    key = _scene + "|" + id;
-                }
-                else
-                {
-                    key = _scene + "|#path/" + HierarchyPath(so.transform);
+                    string id = null;
+                    try { id = so.GetUniqueIdentifier(); } catch { /* not initialised yet */ }
+                    if (!string.IsNullOrEmpty(id)) key = _scene + "|" + id;
+                    else key = _scene + "|#path/" + HierarchyPath(so.transform);
+                    // An identifier can be assigned after the first sight; only cache real ids.
+                    if (!string.IsNullOrEmpty(id)) _rawKeys[iid] = key;
                 }
 
                 // Duplicate identifiers exist in the shipped data (4 754 non-empty but only
@@ -104,6 +125,17 @@ namespace DelusionMP.Core
         }
 
         public bool TryResolve(string key, out GameObject obj) => _byKey.TryGetValue(key, out obj);
+
+        public IEnumerable<string> Matching(string part)
+        {
+            foreach (var kv in _byKey)
+                if (kv.Key.IndexOf(part, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    var go = kv.Value;
+                    string d = go == null ? "DESTROYED" : $"{go.name} scene={go.scene.name} valid={go.scene.IsValid()} active={go.activeInHierarchy}";
+                    yield return kv.Key + " -> " + d;
+                }
+        }
 
         public IEnumerable<string> SampleKeys(int n)
         {

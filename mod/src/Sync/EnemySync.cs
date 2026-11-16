@@ -60,7 +60,7 @@ namespace DelusionMP.Sync
                 foreach (var e in all)
                 {
                     if (e == null) continue;
-                    try { _index[KeyFor(reg, e)] = e; } catch { }
+                    try { if (e.gameObject.scene.IsValid()) _index[CachedKey(reg, e)] = e; } catch { }
                 }
             return _index.TryGetValue(key, out c) ? c : null;
         }
@@ -266,7 +266,7 @@ namespace DelusionMP.Sync
 
             var reg = ObjectRegistry.Instance;
             if (reg.NeedsRebuild) reg.Rebuild(CurrentScene());
-            var enemies = Resources.FindObjectsOfTypeAll<global::EnemyController>();
+            var enemies = CachedEnemies();
             if (enemies == null) return;
 
             var player = GameRefs.Player;
@@ -279,7 +279,7 @@ namespace DelusionMP.Sync
             {
                 if (e == null || !e.gameObject.activeInHierarchy) continue;
                 if (_dead.Contains(e.GetInstanceID())) continue;
-                string key = KeyFor(reg, e);
+                string key = CachedKey(reg, e);
                 if (key == null) continue;
 
                 if (IsHost)
@@ -316,7 +316,7 @@ namespace DelusionMP.Sync
             bool isPuppet = _puppetMode.Contains(id);
             if (simulate == !isPuppet) return;
             UnityEngine.AI.NavMeshAgent agent = null;
-            try { agent = Priv.GetField<UnityEngine.AI.NavMeshAgent>(c, "agent"); } catch { }
+            try { agent = c.agent; } catch { }
             if (simulate)
             {
                 _puppetMode.Remove(id);
@@ -458,6 +458,40 @@ namespace DelusionMP.Sync
             p = new Puppet { Controller = c, TargetPos = c.transform.position, TargetYaw = c.transform.eulerAngles.y };
             _puppets[id] = p;
             return p;
+        }
+
+        // ---- caches: the enemy list changes only with region streaming/spawning, and an
+        // enemy's key never changes while it lives. Both were rebuilt 10x per second.
+        private static global::EnemyController[] _enemyCache;
+        private static float _enemyCacheAt = -10f;
+        private static readonly Dictionary<int, string> _keyCache = new Dictionary<int, string>(512);
+        private static float _keyCacheClearedAt;
+
+        private static global::EnemyController[] CachedEnemies()
+        {
+            float now = Time.realtimeSinceStartup;
+            if (_enemyCache == null || now - _enemyCacheAt > 1f)
+            {
+                _enemyCacheAt = now;
+                var all = Resources.FindObjectsOfTypeAll<global::EnemyController>();
+                var list = new List<global::EnemyController>(all != null ? all.Length : 0);
+                if (all != null)
+                    foreach (var e in all)
+                        if (e != null && e.gameObject.scene.IsValid()) list.Add(e);   // skip prefab assets
+                _enemyCache = list.ToArray();
+            }
+            return _enemyCache;
+        }
+
+        private static string CachedKey(ObjectRegistry reg, global::EnemyController e)
+        {
+            float now = Time.realtimeSinceStartup;
+            if (now - _keyCacheClearedAt > 30f) { _keyCache.Clear(); _keyCacheClearedAt = now; }
+            int id = e.GetInstanceID();
+            if (_keyCache.TryGetValue(id, out var k)) return k;
+            k = KeyFor(reg, e);
+            _keyCache[id] = k;
+            return k;
         }
 
         private static string CurrentScene()

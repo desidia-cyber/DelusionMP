@@ -100,72 +100,63 @@ namespace DelusionMP
         {
             var session = Session.Instance;
             if (session == null) return;
-            try
+            // Each subsystem is timed and isolated (Perf.Run): a fault in one no longer skips
+            // every system after it for that frame.
+            Perf.Run("net.pump", () => session.Pump());
+            Perf.Run("bootstrap", Bootstrap.Tick);
+            Perf.Run("cmd", Cmd.Tick);
+
+            // Both sides need the identity table: the client resolves incoming object
+            // states through it, and region streaming adds and removes objects continuously.
+            float now = Time.realtimeSinceStartup;
+            if (now >= _nextSlowTick && (GameRefs.InWorld || session.Connected))
             {
-                session.Pump();
-                Bootstrap.Tick();
-                Cmd.Tick();
-
-                // Both sides need the identity table: the client resolves incoming object
-                // states through it. Rebuilding is cheap relative to a frame and tracks
-                // region streaming, which adds and removes objects continuously.
-                float now = Time.realtimeSinceStartup;
-                if (now >= _nextSlowTick && (GameRefs.InWorld || session.Connected))
-                {
-                    _nextSlowTick = now + 1f;
-                    ObjectRegistry.Instance.Rebuild(CurrentSceneName());
-                }
-
-                // The avatar is streamed whenever a player object exists - also while the
-                // partner sits in a menu, a loot window or a dialogue (those leave RUNNING).
-                if (session.Connected && GameRefs.Player != null)
-                {
-                    PlayerSync.TickSend();
-                    PlayerSync.TickRender();
-                }
-
-                DialogueSync.Tick();
-                RemoteAvatar.PreloadTick(GameRefs.InWorld);
-                CoopDeath.Tick();
-                FactorySync.Tick();
-                WorldEventsSync.Tick();
-                if (GameRefs.Player != null) AirshipSync.Tick();
-
-                if (GameRefs.InWorld)
-                {
-                    QuestSync.Tick();
-
-                    if (session.Role == SessionRole.Host)
-                    {
-                        FactSync.Flush();
-                        EnemySync.TickHost();
-                        ClockSync.TickHost();
-                    }
-                    else
-                    {
-                        EnemySync.TickClient();
-                    }
-                }
-
-                // World objects are replicated whenever a session is live. They do not need
-                // a spawned player: region scenes carry doors, lifts and pickups before the
-                // avatar exists, and a late joiner needs those too.
-                if (session.Connected)
-                {
-                    FactSync.Flush();
-                    WorldMirror.Tick();
-                }
-
-                if (now >= _nextPing)
-                {
-                    _nextPing = now + 1f;
-                    if (session.Connected) session.PingTick();
-                }
+                _nextSlowTick = now + 1f;
+                Perf.Run("registry", () => ObjectRegistry.Instance.Rebuild(CurrentSceneName()));
             }
-            catch (Exception e)
+
+            // The avatar is streamed whenever a player object exists - also while the
+            // partner sits in a menu, a loot window or a dialogue (those leave RUNNING).
+            bool havePlayer = GameRefs.Player != null;
+            bool inWorld = GameRefs.InWorld;
+            if (session.Connected && havePlayer)
             {
-                Game.Log.Error($"tick failed: {e}");
+                Perf.Run("player.send", PlayerSync.TickSend);
+                Perf.Run("player.render", PlayerSync.TickRender);
             }
+
+            Perf.Run("dialogue", DialogueSync.Tick);
+            Perf.Run("avatar.preload", () => RemoteAvatar.PreloadTick(inWorld));
+            Perf.Run("coopdeath", CoopDeath.Tick);
+            Perf.Run("factory", FactorySync.Tick);
+            Perf.Run("worldevents", WorldEventsSync.Tick);
+            if (havePlayer) Perf.Run("airship", AirshipSync.Tick);
+
+            if (inWorld)
+            {
+                Perf.Run("quests", QuestSync.Tick);
+                if (session.Role == SessionRole.Host)
+                {
+                    Perf.Run("clock", ClockSync.TickHost);
+                }
+                Perf.Run("enemies", EnemySync.Tick);
+            }
+
+            // World objects are replicated whenever a session is live. They do not need
+            // a spawned player: region scenes carry doors, lifts and pickups before the
+            // avatar exists, and a late joiner needs those too.
+            if (session.Connected)
+            {
+                Perf.Run("facts", FactSync.Flush);
+                Perf.Run("mirror", WorldMirror.Tick);
+            }
+
+            if (now >= _nextPing)
+            {
+                _nextPing = now + 1f;
+                if (session.Connected) Perf.Run("ping", session.PingTick);
+            }
+            Perf.EndFrame();
         }
     }
 

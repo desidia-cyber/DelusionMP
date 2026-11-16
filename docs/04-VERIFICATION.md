@@ -70,6 +70,9 @@ Commands are written to `rig/instance<N>/game/BepInEx/ddmp_cmd.txt`, results app
 | Moving factory | host → client | both walk to it (natural region streaming) | client follows the host's 5 Hz pose stream; positions match within 2–4 m (query spacing) |
 | Network latency | — | host teleports in a busy region | client sees it within 0.7 s (was > 6 s: the receive loop read only 64 datagrams per frame) |
 | Completable statue | host → client | `complete` with its region loaded on both | event applied on the client; the statue object is inactive at this story stage, so no visible change |
+| Changes far from the host | client → host | host at Pwyll, client loots a potion in Hallowshire (not loaded on the host), host travels there | host keeps the change (save's loaded-state table + pending list) and applies it when the object loads: potion gone on arrival |
+| Clock (time of day) | both | `rest` | real clock values now flow (were read as 0 through reflection that cannot see IL2CPP fields) |
+| Performance | both | `perf` over 30 s, same spot | mod cost per second of play ≈ 450–590 ms → 230–290 ms; client factory 14.7 → 0.04 ms/frame, enemies 5–9 → ~1.5–2 ms/frame, no full-world capture in a single frame |
 | Charm roll in dialogue | host → client | charm note during a shared talk | the same "Charm challenge succeeded. Needed 6." toast on both; screenshot 21 |
 
 The three remaining `statedump` differences are a continuously moving sky object
@@ -129,8 +132,11 @@ The three remaining `statedump` differences are a continuously moving sky object
 
 ## Known gaps
 
-- **Changes in a region the host has not loaded** (players far apart) are rejected by the host
-  and can be reverted later when the host streams that region in. Not fixed yet.
+- **Changes in a region the host has not loaded** are kept in memory for the session and in the
+  save's loaded-state table; if the host quits before ever loading that region, only the
+  loaded-state copy remains (the game may refill that table from disk on a region load).
+- **Duplicate identifiers in the shipped data** (e.g. four doors sharing one id) make the
+  `statedump` comparison show differences between instances that are not real desyncs.
 - **No in-game host/join UI:** a session is started with command-line options
   (`-ddmp-role=host|client -ddmp-host=<ip>`), over UDP to a fixed address: LAN, or a VPN such as
   Tailscale/ZeroTier over the internet. No relay or NAT traversal, no host-loss detection or

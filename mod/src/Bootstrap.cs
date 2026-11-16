@@ -28,6 +28,8 @@ namespace DelusionMP
         public static string HostAddress = "127.0.0.1";
         public static bool Mute;
         public static bool Offline;
+        /// <summary>-ddmp-trace: write state-codec breadcrumbs (native crash hunting only).</summary>
+        public static bool TraceCodec;
         public static int Slot;
 
         private static float _nextJoinAttempt;
@@ -55,6 +57,7 @@ namespace DelusionMP
                 if (map.TryGetValue("host", out var host) && !string.IsNullOrWhiteSpace(host)) HostAddress = host;
                 if (map.TryGetValue("name", out var name) && !string.IsNullOrWhiteSpace(name)) PlayerName = name;
                 Offline = map.ContainsKey("offline");
+                TraceCodec = map.ContainsKey("trace");
                 Mute = map.ContainsKey("mute");
             }
             catch (Exception e)

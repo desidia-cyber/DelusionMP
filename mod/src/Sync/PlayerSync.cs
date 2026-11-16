@@ -23,6 +23,8 @@ namespace DelusionMP.Sync
 
         private static GameObject _puppet;
         private static Vector3 _renderLocal;
+        private static global::PlayerAnimations _pan;
+        private static readonly Dictionary<int, string> _moverKeys = new Dictionary<int, string>();
         private static Transform _groundMover;
 
         /// <summary>The moving object the player stands on (lift carriage / moving factory),
@@ -227,7 +229,13 @@ namespace DelusionMP.Sync
                 while (pt != null && pt.name == "PARENT_PLAYER") pt = pt.parent;
                 if (pt == null) pt = t.parent;
                 string key = null;
-                try { key = EnemySync.KeyFor(ObjectRegistry.Instance, pt); } catch { }
+                int pid = pt.GetInstanceID();
+                if (!_moverKeys.TryGetValue(pid, out key))
+                {
+                    try { key = EnemySync.KeyFor(ObjectRegistry.Instance, pt); } catch { }
+                    if (_moverKeys.Count > 256) _moverKeys.Clear();
+                    _moverKeys[pid] = key;
+                }
                 if (!string.IsNullOrEmpty(key) && key.Length < 400)
                 {
                     var lp = pt.InverseTransformPoint(t.position);
@@ -251,7 +259,12 @@ namespace DelusionMP.Sync
             }
             catch { }
             try { var sp = global::DelusionPlayerSpell.Instance; if (sp != null) ss = (byte)(int)sp._currentSpellState; } catch { }
-            try { var pan = player.GetComponentInChildren<global::PlayerAnimations>(true); if (pan != null) spt = (byte)(int)pan.activeSpellType; } catch { }
+            try
+            {
+                if (_pan == null) _pan = player.GetComponentInChildren<global::PlayerAnimations>(true);
+                if (_pan != null) spt = (byte)(int)_pan.activeSpellType;
+            }
+            catch { _pan = null; }
             w.U8(wt).U8(rar).U8(ws).U8(atk).U8(ss).U8(spt);
 
             Session.Instance.SendUnreliable(PacketKind.PlayerState, w.ToArray());
@@ -597,7 +610,7 @@ namespace DelusionMP.Sync
             _lastTypeOfDay = tod;
 
             var w = new Writer();
-            w.I32(day).U8((byte)tod).F32(Priv.GetField<float>(dn, "_starTimeSeconds"));
+            w.I32(day).U8((byte)tod).F32(dn._starTimeSeconds);
             Session.Instance.SendReliable(PacketKind.ClockState, w.ToArray());
         }
 
@@ -616,14 +629,14 @@ namespace DelusionMP.Sync
                     var stats = GameRefs.Stats;
                     if (dn == null || stats == null)
                     {
-                        if (dn != null) { Priv.SetField(dn, "_starTimeSeconds", star); dn.typeOfDay = tod; }
+                        if (dn != null) { dn._starTimeSeconds = star; dn.typeOfDay = tod; }
                         if (stats != null) stats.daysPlayed = day;
                         return;
                     }
 
                     // A game day is 1440 clock seconds (12 "hours" of 120 s; SetHour = h*120).
                     const float DayLen = 1440f;
-                    float localStar = Priv.GetField<float>(dn, "_starTimeSeconds");
+                    float localStar = dn._starTimeSeconds;
                     int localDay = stats.daysPlayed;
                     double delta = (double)(day - localDay) * DayLen + (star - localStar);
 
@@ -637,22 +650,22 @@ namespace DelusionMP.Sync
                         for (int guard = 0; remaining > 0.01 && guard < 8; guard++)
                         {
                             float chunk = (float)Math.Min(remaining, DayLen - 1f);
-                            float before = Priv.GetField<float>(dn, "_starTimeSeconds");
+                            float before = dn._starTimeSeconds;
                             int dayBefore = stats.daysPlayed;
                             dn.PassTime(chunk);
                             // PassTime does nothing while the game clock is paused.
-                            if (stats.daysPlayed == dayBefore && Math.Abs(Priv.GetField<float>(dn, "_starTimeSeconds") - before) < 0.001f)
+                            if (stats.daysPlayed == dayBefore && Math.Abs(dn._starTimeSeconds - before) < 0.001f)
                                 break;
                             remaining -= chunk;
                         }
-                        Priv.SetField(dn, "_starTimeSeconds", star);
+                        dn._starTimeSeconds = star;
                         if (stats.daysPlayed != day) stats.daysPlayed = day;
                         if (remaining > 0.01) dn.typeOfDay = tod;
                     }
                     else if (delta < 0 && delta > -60)
                     {
                         // Small drift (this side ran a little fast): snap back.
-                        Priv.SetField(dn, "_starTimeSeconds", star);
+                        dn._starTimeSeconds = star;
                         stats.daysPlayed = day;
                     }
                     else if (delta < 0 && WorldEventsSync.RecentLocalRest(15f))
@@ -663,7 +676,7 @@ namespace DelusionMP.Sync
                     else if (delta != 0)
                     {
                         // Large jump either way (save loaded, multi-day skip): host authority.
-                        Priv.SetField(dn, "_starTimeSeconds", star);
+                        dn._starTimeSeconds = star;
                         dn.typeOfDay = tod;
                         stats.daysPlayed = day;
                     }

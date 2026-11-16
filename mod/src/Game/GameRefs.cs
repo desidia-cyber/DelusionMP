@@ -106,7 +106,7 @@ namespace DelusionMP.Game
 
         /// <summary>DelusionManager.playerCamera is private.</summary>
         public static UnityEngine.Camera PlayerCamera =>
-            Safe(() => Priv.GetField<UnityEngine.Camera>(global::DelusionManager.Instance, "playerCamera"),
+            Safe(() => global::DelusionManager.Instance?.playerCamera,
                  nameof(PlayerCamera));
 
         /// <summary>
