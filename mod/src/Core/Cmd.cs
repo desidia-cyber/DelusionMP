@@ -462,6 +462,21 @@ namespace DelusionMP.Core
                     Emit("AVPLAY " + RemoteAvatar.DebugPlay(parts.Length > 1 ? parts[1] : ""));
                     break;
                 }
+                case "avmodels":
+                {
+                    foreach (var m in RemoteAvatar.ListModels()) Emit("  MODEL " + m);
+                    Emit("AVMODELS " + RemoteAvatar.PreloadInfo);
+                    break;
+                }
+                case "avsource":
+                {
+                    // avsource <model GameObject name> [outfit,parts|-]  : rebuild the partner's body
+                    RemoteAvatar.SourceName = parts.Length > 1 ? parts[1] : "fbx_UnionWomen";
+                    if (parts.Length > 2) RemoteAvatar.Outfit = parts[2] == "-" ? new string[0] : parts[2].Split(',');
+                    PlayerSync.DestroyPuppet();
+                    Emit("AVSOURCE " + RemoteAvatar.SourceName);
+                    break;
+                }
                 case "outfit":
                 {
                     if (parts.Length < 2) { Emit("ERR outfit a,b,c"); break; }
@@ -489,6 +504,180 @@ namespace DelusionMP.Core
                     };
                     RemoteAvatar.Override = o;
                     Emit("AVTEST " + string.Join(" ", parts, 1, parts.Length - 1));
+                    break;
+                }
+                case "cuts":
+                {
+                    // World cutscene triggers in memory: name, played flag, distance.
+                    var me = GameRefs.Player;
+                    foreach (var ct in Resources.FindObjectsOfTypeAll<global::CutsceneTrigger>())
+                    {
+                        if (ct == null || !ct.gameObject.scene.IsValid()) continue;
+                        float d = me != null ? Vector3.Distance(me.transform.position, ct.transform.position) : -1f;
+                        Emit($"CUT {ct.name} scene={(ct.sceneToPlay != null ? ct.sceneToPlay.name : "-")} played={ct.hasBeenPlayed} active={ct.gameObject.activeInHierarchy} d={d:F0}");
+                    }
+                    Emit("CUTS " + CutsceneSync.Stats);
+                    break;
+                }
+                case "cut":
+                {
+                    string want = parts.Length > 1 ? parts[1] : "";
+                    foreach (var ct in Resources.FindObjectsOfTypeAll<global::CutsceneTrigger>())
+                    {
+                        if (ct == null || !ct.gameObject.scene.IsValid()) continue;
+                        if (ct.name.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0
+                            && (ct.sceneToPlay == null || ct.sceneToPlay.name.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0)) continue;
+                        ct.TriggerCutscene();
+                        Emit($"CUT played {ct.name}");
+                        break;
+                    }
+                    break;
+                }
+                case "skipcut":
+                {
+                    global::DelusionCinematics.Instance?.TrySkipCinematic();
+                    Emit("SKIPCUT");
+                    break;
+                }
+                case "coopdeath":
+                {
+                    if (parts.Length > 1) CoopDeath.SetStacks(int.Parse(parts[1]), "command");
+                    var cs = GameRefs.Stats;
+                    string hp = cs != null ? $" hp={cs.currentHealth:F0}/{cs.maxHealth.GetValue()} mana={cs.maxMana.GetValue()} stam={cs.maxStamina.GetValue()}" : "";
+                    Emit("COOPDEATH " + CoopDeath.Stats + hp);
+                    break;
+                }
+                case "playcine":
+                {
+                    // playcine fortressScene|cutterLiftoff|angelAwaken|velaKillPlayer
+                    var m = CutsceneSync.Manager;
+                    UnityEngine.Playables.PlayableDirector d = null;
+                    if (m != null)
+                        switch (parts.Length > 1 ? parts[1] : "")
+                        {
+                            case "fortressScene": d = m.fortressScene; break;
+                            case "cutterLiftoff": d = m.cutterLiftoff; break;
+                            case "angelAwaken": d = m.angelAwaken; break;
+                            case "velaKillPlayer": d = m.velaKillPlayer; break;
+                        }
+                    if (d == null) { Emit("ERR no such cinematic"); break; }
+                    global::DelusionCinematics.Instance.WorldCutscene(d, true, false);
+                    Emit($"PLAYCINE {parts[1]} state={GameRefs.Manager?.CurrentGameState} {CutsceneSync.Stats}");
+                    break;
+                }
+                case "bedrest":
+                {
+                    // The last step of sleeping in a bed (what the rest fade ends with).
+                    var dn = GameRefs.DayNight;
+                    if (dn == null) { Emit("ERR no day/night"); break; }
+                    dn.restingInBed = true;
+                    dn.hourAfterScreenFade = parts.Length > 1 ? int.Parse(parts[1]) : 9;
+                    dn.ScreenFadeEnded();
+                    Emit("BEDREST " + CoopDeath.Stats);
+                    break;
+                }
+                case "underfoot":
+                {
+                    Emit("UNDERFOOT " + PlayerSync.UnderfootInfo());
+                    break;
+                }
+                case "loadscene":
+                {
+                    int idx = int.Parse(parts[1]);
+                    UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(idx, UnityEngine.SceneManagement.LoadSceneMode.Additive);
+                    Emit("LOADSCENE " + idx);
+                    break;
+                }
+                case "factory":
+                {
+                    foreach (var f in Resources.FindObjectsOfTypeAll<global::MovingFactory>())
+                    {
+                        if (f == null || !f.gameObject.scene.IsValid()) continue;
+                        var mt = f.moveObjectTransform;
+                        var mp = mt != null ? mt.position : f.transform.position;
+                        Emit($"FACTORY active={f.gameObject.activeInHierarchy} state={f.currentMoveState} pos={mp.x:F1},{mp.y:F1},{mp.z:F1} rotY={(mt != null ? mt.eulerAngles.y : 0f):F0}");
+                    }
+                    Emit("FACTORY " + WorldEventsSync.Stats);
+                    break;
+                }
+                case "complete":
+                {
+                    foreach (var co in Resources.FindObjectsOfTypeAll<global::CompletableObject>())
+                    {
+                        if (co == null || !co.gameObject.scene.IsValid()) continue;
+                        if (parts.Length > 1 && parts[1] == "check") { Emit($"COMPLETABLE {co.name} active={co.gameObject.activeInHierarchy}"); continue; }
+                        co.AllComponentsComplete();
+                        Emit($"COMPLETE {co.name}");
+                    }
+                    break;
+                }
+                case "charmtest":
+                {
+                    // Inside a conversation: show a charm-roll result as the game does.
+                    var note = global::DelusionNote.Instance;
+                    note.SetCharmInt(5);
+                    note.StartCharmNote(parts.Length > 1 && parts[1] == "fail" ? false : true, false, false);
+                    Emit("CHARMTEST " + DialogueSync.Stats);
+                    break;
+                }
+                case "shop":
+                {
+                    // shop [n]: nearest shops and their stock
+                    var me = GameRefs.Player;
+                    foreach (var sh in Resources.FindObjectsOfTypeAll<global::ShopSpeaker>())
+                    {
+                        if (sh == null || !sh.gameObject.activeInHierarchy || me == null) continue;
+                        float d = Vector3.Distance(sh.transform.position, me.transform.position);
+                        var inv = sh.shopInventory;
+                        var names = new List<string>();
+                        if (inv != null) for (int k = 0; k < inv.Count && k < 12; k++) { var it = inv[k]; if (it != null) names.Add($"{k}:{it.itemInstanceID}x{it.amount}"); }
+                        Emit($"SHOP {sh.name} d={d:F0} pos={sh.transform.position} items={string.Join(" ", names)}");
+                    }
+                    break;
+                }
+                case "buy":
+                {
+                    // buy <shop name substring> <index>: buy through the game's own purchase path
+                    global::ShopSpeaker shop = null;
+                    foreach (var sh in Resources.FindObjectsOfTypeAll<global::ShopSpeaker>())
+                        if (sh != null && sh.gameObject.activeInHierarchy && sh.name.IndexOf(parts[1], StringComparison.OrdinalIgnoreCase) >= 0) { shop = sh; break; }
+                    if (shop == null) { Emit("ERR no shop"); break; }
+                    var item = shop.shopInventory[int.Parse(parts[2])];
+                    var pinv = GameRefs.Inventory;
+                    shop.Activate();
+                    pinv.StartBuyItem(item);
+                    pinv.FinishBuyItem(false);
+                    Emit($"BUY {item.itemInstanceID} from {shop.name} stockNow={shop.shopInventory.Count} {WorldEventsSync.Stats}");
+                    break;
+                }
+                case "die":
+                {
+                    bool ok = GameRefs.PlayerActions?.StartPlayerDeath() ?? false;
+                    Emit("DIE " + ok);
+                    break;
+                }
+                case "npcgive":
+                {
+                    // npcgive <item> [amount] : the nearest dialogue NPC gives the player an item.
+                    var me = GameRefs.Player;
+                    global::NPCBase best = null; float bd = float.MaxValue;
+                    foreach (var npc in Resources.FindObjectsOfTypeAll<global::NPCBase>())
+                    {
+                        if (npc == null || !npc.gameObject.activeInHierarchy || me == null) continue;
+                        float d = Vector3.Distance(npc.transform.position, me.transform.position);
+                        if (d < bd) { bd = d; best = npc; }
+                    }
+                    if (best == null) { Emit("ERR no npc"); break; }
+                    int amt = parts.Length > 2 ? int.Parse(parts[2]) : 1;
+                    best.GiveItem(parts[1], amt, 1);
+                    Emit($"NPCGIVE {best.name} {parts[1]} x{amt} {DialogueSync.GiftStats}");
+                    break;
+                }
+                case "inv":
+                {
+                    var inv = GameRefs.Inventory;
+                    var it = inv?.GetItemFromInvAnyRarity(parts[1]);
+                    Emit($"INV {parts[1]} has={(it != null)} {DialogueSync.GiftStats}");
                     break;
                 }
                 case "ship":

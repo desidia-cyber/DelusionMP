@@ -23,6 +23,125 @@ namespace DelusionMP.Sync
 
         private static GameObject _puppet;
         private static Vector3 _renderLocal;
+        private static Transform _groundMover;
+
+        /// <summary>The moving object the player stands on (lift carriage / moving factory),
+        /// found by a short ray down; null on static ground.</summary>
+        public static string UnderfootInfo()
+        {
+            var p = GameRefs.Player;
+            if (p == null) return "no player";
+            var sb = new System.Text.StringBuilder();
+            var hits = Physics.RaycastAll(p.transform.position + Vector3.up * 0.5f, Vector3.down, 2.5f, ~0, QueryTriggerInteraction.Ignore);
+            if (hits != null)
+                foreach (var h in hits)
+                {
+                    if (h.collider == null) continue;
+                    var lift = h.collider.GetComponentInParent<global::DelusionLift>();
+                    sb.Append($" [{ObjectRegistry.HierarchyPath(h.collider.transform)} lift={(lift != null ? lift.name : "-")} carriage={(lift != null && lift.liftCarriage != null ? lift.liftCarriage.name : "-")} self={h.collider.transform.IsChildOf(p.transform)}]");
+                }
+            var m = MoverUnderfoot(p.transform);
+            return $"parent={(p.transform.parent != null ? p.transform.parent.name : "-")} mover={(m != null ? m.name : "-")} hits:{sb}";
+        }
+
+        internal static Transform MoverUnderfoot(Transform player)
+        {
+            try
+            {
+                var hits = Physics.RaycastAll(player.position + Vector3.up * 0.5f, Vector3.down, 2.5f, ~0, QueryTriggerInteraction.Ignore);
+                if (hits == null) return null;
+                foreach (var h in hits)
+                {
+                    var c = h.collider;
+                    if (c == null || c.transform.IsChildOf(player)) continue;
+                    var lift = c.GetComponentInParent<global::DelusionLift>();
+                    if (lift != null)
+                    {
+                        // The carriage, or whichever moving piece of the lift we stand on.
+                        if (lift.liftCarriage != null && c.transform.IsChildOf(lift.liftCarriage.transform)) return lift.liftCarriage.transform;
+                        if (lift.liftCarriage != null) return lift.liftCarriage.transform;
+                        return c.transform;
+                    }
+                    var fac = c.GetComponentInParent<global::MovingFactory>();
+                    if (fac != null) return fac.transform;
+                }
+            }
+            catch { }
+            return null;
+        }
+        private static float _nextLook;
+
+        public static void ApplyLook(byte[] payload)
+        {
+            var r = new Reader(payload);
+            string model = r.Str(), outfit = r.Str();
+            if (RemoteAvatar.ApplyPartnerLook(model, outfit) && _puppet != null) DestroyPuppet();
+        }
+        private static string _frameKey;
+
+        // ---------------- moving-parent resolution ----------------
+
+        private static readonly Dictionary<string, Transform> _keyCache = new Dictionary<string, Transform>(StringComparer.Ordinal);
+        private static readonly Dictionary<string, float> _keyMiss = new Dictionary<string, float>(StringComparer.Ordinal);
+
+        /// <summary>Finds a transform from a registry key: a saveable id, or
+        /// "scene|#path/root:i/child:j/..." walked from the loaded scenes' roots.</summary>
+        internal static Transform ResolveKey(string key)
+        {
+            if (_keyCache.TryGetValue(key, out var cached) && cached != null) return cached;
+            if (_keyMiss.TryGetValue(key, out var missAt) && Time.realtimeSinceStartup - missAt < 2f) return null;
+            Transform found = null;
+            try
+            {
+                if (ObjectRegistry.Instance.TryResolve(key, out var go) && go != null) found = go.transform;
+                else
+                {
+                    int at = key.IndexOf("|#path/", StringComparison.Ordinal);
+                    if (at >= 0)
+                    {
+                        var segs = key.Substring(at + 7).Split('/');
+                        for (int si = 0; si < UnityEngine.SceneManagement.SceneManager.sceneCount && found == null; si++)
+                        {
+                            var sc = UnityEngine.SceneManagement.SceneManager.GetSceneAt(si);
+                            if (!sc.isLoaded) continue;
+                            foreach (var root in sc.GetRootGameObjects())
+                            {
+                                var cur = WalkFrom(root.transform, segs);
+                                if (cur != null) { found = cur; break; }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            _keyCache[key] = found;
+            if (found == null) _keyMiss[key] = Time.realtimeSinceStartup; else _keyMiss.Remove(key);
+            return found;
+        }
+
+        private static Transform WalkFrom(Transform root, string[] segs)
+        {
+            if (!SegMatches(root, segs[0], true)) return null;
+            var cur = root;
+            for (int i = 1; i < segs.Length; i++)
+            {
+                int c = segs[i].LastIndexOf(':');
+                if (c < 0 || !int.TryParse(segs[i].Substring(c + 1), out int idx)) return null;
+                if (idx >= cur.childCount) return null;
+                var ch = cur.GetChild(idx);
+                if (ch.name != segs[i].Substring(0, c)) return null;
+                cur = ch;
+            }
+            return cur;
+        }
+
+        private static bool SegMatches(Transform t, string seg, bool root)
+        {
+            int c = seg.LastIndexOf(':');
+            if (c < 0) return false;
+            if (t.name != seg.Substring(0, c)) return false;
+            return int.TryParse(seg.Substring(c + 1), out int idx) && t.GetSiblingIndex() == idx;
+        }
         private static Vector3 _lastRenderPos;
         private static float _renderSpeed;
         private static float _nextBodyRetry;
@@ -41,6 +160,7 @@ namespace DelusionMP.Sync
             public bool Dodging;
             public float ReceivedAt;
             public bool ShipLocal;      // pose is relative to the airship
+            public string ParentKey;    // or relative to another moving parent (lift carriage, platform)
             public Vector3 LocalPos;
             public float LocalYaw;
             public AvatarState Av;
@@ -96,6 +216,25 @@ namespace DelusionMP.Sync
                 var lp = st.InverseTransformPoint(t.position);
                 w.U8(1).F32(lp.x).F32(lp.y).F32(lp.z).F32(Mathf.DeltaAngle(st.eulerAngles.y, t.eulerAngles.y));
             }
+            else if ((_groundMover = MoverUnderfoot(t)) != null || t.parent != null)
+            {
+                // Riding something that moves (lift carriage, moving factory, or anything the
+                // game parents the player to): send the pose in that object's space so the
+                // partner's body stays glued to their own copy of it, whatever its timing.
+                // Prefer the moving object itself (it exists on both machines); the game's
+                // runtime helper "PARENT_PLAYER" does not exist on the partner's side.
+                var pt = _groundMover != null ? _groundMover : t.parent;
+                while (pt != null && pt.name == "PARENT_PLAYER") pt = pt.parent;
+                if (pt == null) pt = t.parent;
+                string key = null;
+                try { key = EnemySync.KeyFor(ObjectRegistry.Instance, pt); } catch { }
+                if (!string.IsNullOrEmpty(key) && key.Length < 400)
+                {
+                    var lp = pt.InverseTransformPoint(t.position);
+                    w.U8(2).Str(key).F32(lp.x).F32(lp.y).F32(lp.z).F32(Mathf.DeltaAngle(pt.eulerAngles.y, t.eulerAngles.y));
+                }
+                else w.U8(0);
+            }
             else w.U8(0);
 
             // What the body is doing: equipped weapon, swing, spell.
@@ -116,6 +255,15 @@ namespace DelusionMP.Sync
             w.U8(wt).U8(rar).U8(ws).U8(atk).U8(ss).U8(spt);
 
             Session.Instance.SendUnreliable(PacketKind.PlayerState, w.ToArray());
+
+            // Our chosen look, every few seconds (tiny; survives a lost packet and reconnects).
+            if (Time.realtimeSinceStartup >= _nextLook)
+            {
+                _nextLook = Time.realtimeSinceStartup + 3f;
+                var lw = new Writer();
+                lw.Str(RemoteAvatar.LocalModel).Str(RemoteAvatar.LocalOutfit);
+                Session.Instance.SendUnreliable(PacketKind.PlayerLoadout, lw.ToArray());
+            }
         }
 
         private static float CameraPitch()
@@ -150,9 +298,16 @@ namespace DelusionMP.Sync
                 ReceivedAt = Time.realtimeSinceStartup,
             };
             int hp = r.I32(); r.I32(); r.I32();
-            if (r.Remaining > 0 && r.U8() == 1)
+            byte frame = r.Remaining > 0 ? r.U8() : (byte)0;
+            if (frame == 1)
             {
                 s.ShipLocal = true;
+                s.LocalPos = new Vector3(r.F32(), r.F32(), r.F32());
+                s.LocalYaw = r.F32();
+            }
+            else if (frame == 2)
+            {
+                s.ParentKey = r.Str();
                 s.LocalPos = new Vector3(r.F32(), r.F32(), r.F32());
                 s.LocalYaw = r.F32();
             }
@@ -177,13 +332,15 @@ namespace DelusionMP.Sync
 
             // The body model lives in the world scene; a puppet made at the menu fell back
             // to the mannequin. Rebuild with the real body once the world is there.
-            if (!RemoteAvatar.Ready && GameRefs.InWorld && Time.realtimeSinceStartup >= _nextBodyRetry)
+            if ((!RemoteAvatar.Ready || RemoteAvatar.IsStandIn) && GameRefs.InWorld && Time.realtimeSinceStartup >= _nextBodyRetry)
             {
-                _nextBodyRetry = Time.realtimeSinceStartup + 10f;
+                _nextBodyRetry = Time.realtimeSinceStartup + (RemoteAvatar.Ready ? 30f : 10f);
+                if (RemoteAvatar.Ready && !RemoteAvatar.ChosenModelAvailable()) goto bodyDone;
                 DestroyPuppet();
                 CreatePuppet();
                 if (_puppet == null) return;
             }
+            bodyDone:
 
             // Hide (rather than extrapolate) if the peer went quiet for a while - loading,
             // quitting. Short gaps just hold the last pose. Extrapolating here is what makes puppets slide into walls.
@@ -195,11 +352,15 @@ namespace DelusionMP.Sync
             if (!_puppet.activeSelf) _puppet.SetActive(true);
 
             var t = _puppet.transform;
-            var ship = _latest.ShipLocal ? AirshipSync.Ship : null;
-            if (ship != null)
+            Transform frameT = null;
+            if (_latest.ShipLocal) { var sh = AirshipSync.Ship; if (sh != null) frameT = sh.transform; }
+            else if (_latest.ParentKey != null) frameT = ResolveKey(_latest.ParentKey);
+            if (frameT != null && _frameKey != (_latest.ShipLocal ? "ship" : _latest.ParentKey)) _wasShipLocal = false;
+            _frameKey = frameT != null ? (_latest.ShipLocal ? "ship" : _latest.ParentKey) : null;
+            if (frameT != null)
             {
-                // Smooth in ship space, then place with the local ship transform.
-                var st = ship.transform;
+                // Smooth in the moving object's space, then place with the local copy of it.
+                var st = frameT;
                 if (!_wasShipLocal) _renderLocal = _latest.LocalPos;
                 _renderLocal = Vector3.Lerp(_renderLocal, _latest.LocalPos, 0.4f);
                 t.position = st.TransformPoint(_renderLocal);
@@ -300,7 +461,7 @@ namespace DelusionMP.Sync
                     var col = tag.GetComponent<Collider>();
                     if (col != null) UnityEngine.Object.Destroy(col);
                     tag.transform.SetParent(_puppet.transform, false);
-                    tag.transform.localPosition = new Vector3(0, headY + (body ? 0.75f : 0.55f), 0);
+                    tag.transform.localPosition = new Vector3(0, headY + (body ? 1.15f : 0.55f), 0);
                     tag.transform.localRotation = Quaternion.Euler(45f, 0f, 45f);
                     tag.transform.localScale = Vector3.one * (body ? 0.09f : 0.18f);
                     var mk = MakeMaterial(new Color(0.3f, 0.95f, 1f));
@@ -391,7 +552,11 @@ namespace DelusionMP.Sync
                 try
                 {
                     var p = _puppet.transform.position;
-                    return $"{(int)p.x},{(int)p.y},{(int)p.z} active={_puppet.activeSelf}";
+                    string fk = _latest.ShipLocal ? "ship" : (_latest.ParentKey ?? "-");
+                    var ft = _latest.ParentKey != null ? ResolveKey(_latest.ParentKey) : null;
+                    bool res = ft != null;
+                    if (ft != null) { var rl = ft.InverseTransformPoint(p); fk += $" rel=({rl.x:F2},{rl.y:F2},{rl.z:F2}) frameY={ft.position.y:F1}"; }
+                    return $"{(int)p.x},{(int)p.y},{(int)p.z} active={_puppet.activeSelf} frame={fk} resolved={res}";
                 }
                 catch { return "invalid"; }
             }

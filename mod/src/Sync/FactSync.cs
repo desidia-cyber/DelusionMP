@@ -67,7 +67,7 @@ namespace DelusionMP.Sync
 
         private static readonly HashSet<string> _playerOwned = new HashSet<string>(StringComparer.Ordinal)
         {
-            "playerCoin", "playerPicks", "picksNotFull", "totalPlayerDeaths",
+            "playerCoin", "playerPicks", "picksNotFull", "totalPlayerDeaths", CoopDeath.StackFact,
         };
         private static bool _seededFromItems;
         [ThreadStatic] private static int _ownerDepth;

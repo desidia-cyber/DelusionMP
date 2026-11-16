@@ -30,6 +30,7 @@ namespace DelusionMP.Sync
     public static class DialogueSync
     {
         private const byte MsgStart = 0, MsgNode = 1, MsgText = 2, MsgChoice = 3, MsgCharm = 4, MsgEnd = 5;
+        private const byte MsgGiftItem = 6, MsgGiftCoin = 7;
         private const float PovDistance = 12f;
 
         private static bool _spectating;
@@ -185,6 +186,63 @@ namespace DelusionMP.Sync
             Log.Info("dialogue -> peer: end");
         }
 
+        // ------------------------------------------------------------------ shared gifts
+        //
+        // Items and coin an NPC hands over (quest items, rewards) go to BOTH players, so a
+        // quest that later checks for the item can never soft-lock the partner who didn't
+        // do the talking. Items the player hands to an NPC stay with that player.
+
+        private static int _giftsSent, _giftsApplied;
+        public static string GiftStats => $"giftsSent={_giftsSent} giftsApplied={_giftsApplied}";
+
+        internal static void OnGiveItem(string itemID, int amount, int quality)
+        {
+            var s = Session.Instance;
+            if (s == null || !s.Connected || LoopGuard.ApplyingRemote || _spectating) return;
+            if (string.IsNullOrEmpty(itemID) || amount <= 0) return;
+            var w = new Writer();
+            w.U8(MsgGiftItem).Str(itemID).I32(amount).I32(quality);
+            s.SendReliable(PacketKind.Dialogue, w.ToArray());
+            _giftsSent++;
+            Log.Info($"gift -> partner: {itemID} x{amount} q{quality}");
+        }
+
+        internal static void OnChangePlayerCoin(string amt)
+        {
+            var s = Session.Instance;
+            if (s == null || !s.Connected || LoopGuard.ApplyingRemote || _spectating) return;
+            if (!int.TryParse(amt, out int n) || n <= 0) return;   // only rewards are shared
+            var w = new Writer();
+            w.U8(MsgGiftCoin).I32(n);
+            s.SendReliable(PacketKind.Dialogue, w.ToArray());
+            _giftsSent++;
+        }
+
+        private static void ApplyGiftItem(string itemID, int amount, int quality)
+        {
+            var inv = GameRefs.Inventory;
+            if (inv == null) return;
+            LoopGuard.Apply(() =>
+            {
+                try
+                {
+                    var it = inv.CreateItem(itemID, (global::ItemRarity)quality, amount);
+                    if (it != null && inv.StoreItem(it, global::ItemPopupMode.PopupIfNew, amount, true)) _giftsApplied++;
+                    Log.Info($"gift <- partner: {itemID} x{amount}");
+                }
+                catch (Exception e) { Log.Warn($"gift {itemID} failed: {e.Message}"); }
+            });
+        }
+
+        private static void ApplyGiftCoin(int amount)
+        {
+            LoopGuard.Apply(() =>
+            {
+                try { global::DelusionStats.Instance?.ChangeCoin(amount, true, true); _giftsApplied++; }
+                catch (Exception e) { Log.Warn("coin gift failed: " + e.Message); }
+            });
+        }
+
         private static string Clip(string s, int n) => s.Length <= n ? s : s.Substring(0, n);
 
         // ------------------------------------------------------------------ spectator
@@ -203,6 +261,8 @@ namespace DelusionMP.Sync
                     case MsgChoice: ApplyChoice(r.I32()); break;
                     case MsgCharm: ApplyCharm(r.Bool(), r.Bool(), r.Bool(), r.I32()); break;
                     case MsgEnd: ApplyEnd(); break;
+                    case MsgGiftItem: ApplyGiftItem(r.Str(), r.I32(), r.I32()); break;
+                    case MsgGiftCoin: ApplyGiftCoin(r.I32()); break;
                 }
             }
             catch (Exception e) { Log.Warn($"dialogue apply {kind} failed: {e.Message}"); }
@@ -618,4 +678,40 @@ namespace DelusionMP.Sync
 
     [HarmonyPatch(typeof(global::DialoguePanelController), "OnDlgExitClick")]
     internal static class Patch_Panel_Exit { [HarmonyPrefix] static bool Prefix() => !DialogueSync.BlockLocal; }
+
+    // NPC gifts. The typed overload carries the final values and always reports; the string
+    // overload ("id,amount,quality") reports only if it did not go through the typed one.
+    [HarmonyPatch(typeof(global::NPCBase), nameof(global::NPCBase.GiveItem), new[] { typeof(string), typeof(int), typeof(int) })]
+    internal static class Patch_NPC_GiveItemTyped
+    {
+        [HarmonyPostfix]
+        static void Postfix(string itemID, int amount, int quality)
+        {
+            Patch_NPC_GiveItemString.TypedRan = true;
+            DialogueSync.OnGiveItem(itemID, amount, quality);
+        }
+    }
+
+    [HarmonyPatch(typeof(global::NPCBase), nameof(global::NPCBase.GiveItem), new[] { typeof(string) })]
+    internal static class Patch_NPC_GiveItemString
+    {
+        internal static bool TypedRan;
+        [HarmonyPrefix] static void Prefix() => TypedRan = false;
+        [HarmonyPostfix]
+        static void Postfix(string s)
+        {
+            if (TypedRan || string.IsNullOrEmpty(s)) return;
+            var parts = s.Split(',');
+            int amount = 1, quality = 1;
+            if (parts.Length > 1) int.TryParse(parts[1].Trim(), out amount);
+            if (parts.Length > 2) int.TryParse(parts[2].Trim(), out quality);
+            DialogueSync.OnGiveItem(parts[0].Trim(), amount <= 0 ? 1 : amount, quality);
+        }
+    }
+
+    [HarmonyPatch(typeof(global::NPCBase), nameof(global::NPCBase.ChangePlayerCoin))]
+    internal static class Patch_NPC_ChangePlayerCoin
+    {
+        [HarmonyPostfix] static void Postfix(string amtString) => DialogueSync.OnChangePlayerCoin(amtString);
+    }
 }

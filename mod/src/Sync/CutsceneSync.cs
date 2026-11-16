@@ -28,12 +28,20 @@ namespace DelusionMP.Sync
 
         private static readonly string[] Named = { "fortressScene", "cutterLiftoff", "angelAwaken", "velaKillPlayer" };
 
-        private static global::CinematicsManager Manager
+        internal static global::CinematicsManager Manager
         {
             get
             {
-                try { return global::DelusionCinematics.Instance?.worldCinemaManager; }
-                catch { return null; }
+                try
+                {
+                    var m = global::DelusionCinematics.Instance?.worldCinemaManager;
+                    if (m != null) return m;
+                    // Assigned lazily by the game (CheckCinemaManager); find it directly.
+                    foreach (var c in Resources.FindObjectsOfTypeAll<global::CinematicsManager>())
+                        if (c != null && c.gameObject.scene.IsValid()) return c;
+                }
+                catch { }
+                return null;
             }
         }
 

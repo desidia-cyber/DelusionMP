@@ -33,6 +33,66 @@ namespace DelusionMP.Sync
     /// </summary>
     public static class RemoteAvatar
     {
+        /// <summary>Which model the body is cloned from (all female models share Armature_F).</summary>
+        public static string SourceName = "fbx_UnionWomen";
+
+        /// <summary>Female character models currently in memory: name -> example path.</summary>
+        public static List<string> ListModels()
+        {
+            var seen = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var a in Resources.FindObjectsOfTypeAll<Animator>())
+            {
+                if (a == null || !a.gameObject.scene.IsValid()) continue;
+                string av = "";
+                try { av = a.avatar != null ? a.avatar.name : ""; } catch { }
+                var n = a.gameObject.name;
+                bool female = av.IndexOf("Wom", StringComparison.OrdinalIgnoreCase) >= 0 || av.IndexOf("Fem", StringComparison.OrdinalIgnoreCase) >= 0
+                              || n.IndexOf("Wom", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("_F", StringComparison.Ordinal) >= 0;
+                if (!female || seen.ContainsKey(n)) continue;
+                int smr = 0;
+                try { smr = a.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length; } catch { }
+                seen[n] = $"{n} avatar={av} meshes={smr} at {ObjectPath(a.transform)}";
+            }
+            return new List<string>(seen.Values);
+        }
+
+        public static readonly Dictionary<string, string> Presets = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "thief", "Thief_F_body,Thief_F_head,Thief_F_hood,Thief_F_gaiter" },
+            { "civilianA", "UnionCIV_F_head001,UnionCIV_F_hair002,UnionCIV_F_Ears001,UnionCIV_F_body003,UnionCIV_F_arms002,UnionCIV_F_legs002,UnionCIV_F_boots003" },
+            { "civilianB", "UnionCIV_F_head002,UnionCIV_F_hair001,UnionCIV_F_Ears002,UnionCIV_F_body001,UnionCIV_F_arms001,UnionCIV_F_legs001,UnionCIV_F_shoes001" },
+            { "civilianC", "UnionCIV_F_head003,UnionCIV_F_hair003,UnionCIV_F_Ears003,UnionCIV_F_body004,UnionCIV_F_arms004,UnionCIV_F_legs004,UnionCIV_F_boots004" },
+            { "soldier", "Soldier_F_body,UnionCIV_F_head001,UnionCIV_F_hair002,UnionCIV_F_Ears001,Soldier_F_pauldron_Blue.L,Soldier_F_pauldron_Blue.R,Soldier_F_gorget_Blue,Soldier_F_tasset_Blue,Soldier_F_cuisses_Blue,Soldier_F_vambrace_Small.L,Soldier_F_vambrace_Small.R,UnionCIV_F_boots002" },
+            { "inquisitor", "Inqstr_F_body,Inqstr_F_head,Inqstr_F_breastplate,Inqstr_F_cuisses.L,Inqstr_F_cuisses.R,Inqstr_F_greaves.L,Inqstr_F_greaves.R,Inqstr_F_pauldron.L,Inqstr_F_pauldron.R,Inqstr_F_vambrace.L,Inqstr_F_vambrace.R" },
+            { "cultist", "Cultist_F_body,Cultist_F_hood,Cultist_F_capelet,Cultist_F_skirt,Cultist_F_sleeve,Cultist_F_bracelet.L,Cultist_F_bracelet.R,UnionCIV_F_head002" },
+        };
+
+        /// <summary>This player's own look (config), sent to the partner.</summary>
+        public static string LocalModel = "fbx_UnionWomen", LocalOutfit = "thief";
+
+        public static void SetLocalLook(string model, string outfit)
+        {
+            LocalModel = string.IsNullOrWhiteSpace(model) ? "fbx_UnionWomen" : model.Trim();
+            LocalOutfit = string.IsNullOrWhiteSpace(outfit) ? "thief" : outfit.Trim();
+        }
+
+        private static string[] ExpandOutfit(string o) =>
+            (Presets.TryGetValue(o, out var p) ? p : o).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+        private static string _partnerLook = "";
+
+        /// <summary>The partner told us how they look; rebuild if it changed.</summary>
+        public static bool ApplyPartnerLook(string model, string outfit)
+        {
+            string look = model + "|" + outfit;
+            if (look == _partnerLook) return false;
+            _partnerLook = look;
+            SourceName = model;
+            Outfit = ExpandOutfit(outfit);
+            Log.Info($"avatar: partner looks like {model} / {outfit}");
+            return true;
+        }
+
         public static string[] Outfit =
         {
             "Thief_F_body", "Thief_F_head", "Thief_F_hood", "Thief_F_gaiter",
@@ -44,7 +104,7 @@ namespace DelusionMP.Sync
         private static readonly Dictionary<string, GameObject> _parts = new Dictionary<string, GameObject>(StringComparer.Ordinal);
         private static GameObject _heldClone;
         private static string _heldKey = "";
-        public static Vector3 HeldEuler = new Vector3(0f, 0f, 90f);
+        public static Vector3 HeldEuler = Vector3.zero;
         public static Vector3 HeldOffset = Vector3.zero;
 
         private static AvatarState _prev;
@@ -80,6 +140,27 @@ namespace DelusionMP.Sync
 
         private static GameObject FindSource(out RuntimeAnimatorController controller)
         {
+            var go = FindSourceNamed(SourceName, out controller);
+            BuiltFrom = SourceName;
+            if (go == null && SourceName != "fbx_UnionWomen")
+            {
+                // The chosen model's region isn't loaded here: use the main female model meanwhile.
+                go = FindSourceNamed("fbx_UnionWomen", out controller);
+                BuiltFrom = "fbx_UnionWomen";
+            }
+            return go;
+        }
+
+        /// <summary>Model the current body was actually built from.</summary>
+        public static string BuiltFrom = "";
+
+        public static bool ChosenModelAvailable() => FindSourceNamed(SourceName, out _) != null;
+
+        /// <summary>True when the body is a stand-in for a model that wasn't loaded yet.</summary>
+        public static bool IsStandIn => _model != null && BuiltFrom != SourceName;
+
+        private static GameObject FindSourceNamed(string sourceName, out RuntimeAnimatorController controller)
+        {
             controller = null;
             GameObject best = null;
             var all = Resources.FindObjectsOfTypeAll<Animator>();
@@ -91,7 +172,7 @@ namespace DelusionMP.Sync
                 if (!go.scene.IsValid()) continue;
                 var rc = a.runtimeAnimatorController;
                 if (rc != null && rc.name == "a_UnionWomen" && controller == null) controller = rc;
-                if (go.name != "fbx_UnionWomen") continue;
+                if (go.name != sourceName) continue;
                 if (best == null || (rc != null && rc.name == "a_UnionWomen")) best = go;
             }
             if (controller == null)
@@ -155,15 +236,24 @@ namespace DelusionMP.Sync
                 }
 
                 _parts.Clear();
+                var original = new Dictionary<string, bool>(StringComparer.Ordinal);
                 foreach (var smr in clone.GetComponentsInChildren<SkinnedMeshRenderer>(true))
                 {
                     if (smr == null) continue;
                     smr.updateWhenOffscreen = true;
                     var go = smr.gameObject;
                     _parts[go.name] = go;
+                    original[go.name] = go.activeSelf;
                     go.SetActive(false);
                 }
-                foreach (var n in Outfit) if (_parts.TryGetValue(n, out var p)) p.SetActive(true);
+                int matched = 0;
+                var outfitNow = BuiltFrom == SourceName ? Outfit : ExpandOutfit("thief");
+                foreach (var n in outfitNow) if (_parts.TryGetValue(n, out var p)) { p.SetActive(true); matched++; }
+                if (matched == 0)
+                {
+                    // Not a dressable model (or "-" given): keep the look it has in the game.
+                    foreach (var kv in original) if (_parts.TryGetValue(kv.Key, out var go) && !IsEquipmentPart(kv.Key)) go.SetActive(kv.Value);
+                }
 
                 _anim = clone.GetComponent<Animator>();
                 if (_anim != null)
@@ -191,6 +281,89 @@ namespace DelusionMP.Sync
 
         private static float _nextCtrlSearch;
 
+        // ------------------------------------------------------------------ combat clips from the start
+        //
+        // a_UnionWomen lives in DelusionMain's shared assets but Unity only loads it with a
+        // region that uses it (female guards/outlaws). The smallest such region is the Hallow
+        // mines (level 9). If the controller is not in memory shortly after entering the world,
+        // that region is loaded additively once, the controller is captured (a hidden Animator
+        // keeps the asset alive), and the region is unloaded again.
+
+        private const int CombatScene = 9;
+        private static RuntimeAnimatorController _combatCtrl;
+        private static GameObject _keeper;
+        private static AsyncOperation _preloadOp;
+        private static bool _preloadTried, _unloadPending;
+        private static float _worldSince = -1f, _nextPreloadCheck;
+
+        public static string PreloadInfo => $"combatCtrl={(_combatCtrl != null)} preloadTried={_preloadTried} loading={(_preloadOp != null)}";
+
+        private static RuntimeAnimatorController FindCombatController()
+        {
+            foreach (var rc in Resources.FindObjectsOfTypeAll<RuntimeAnimatorController>())
+                if (rc != null && rc.name == "a_UnionWomen") return rc;
+            return null;
+        }
+
+        private static void Keep(RuntimeAnimatorController rc)
+        {
+            _combatCtrl = rc;
+            if (_keeper == null)
+            {
+                _keeper = new GameObject("DelusionMP_AnimKeeper");
+                _keeper.SetActive(false);
+                UnityEngine.Object.DontDestroyOnLoad(_keeper);
+                _keeper.AddComponent<Animator>();
+            }
+            var a = _keeper.GetComponent<Animator>();
+            if (a != null) a.runtimeAnimatorController = rc;
+            Log.Info("avatar: combat animations captured for the session");
+        }
+
+        /// <summary>Per frame while in the world.</summary>
+        public static void PreloadTick(bool inWorld)
+        {
+            float now = Time.realtimeSinceStartup;
+            if (!inWorld) { _worldSince = -1f; return; }
+            if (_worldSince < 0f) _worldSince = now;
+
+            if (_preloadOp != null)
+            {
+                if (!_preloadOp.isDone) return;
+                _preloadOp = null;
+                var rc = FindCombatController();
+                if (rc != null) Keep(rc);
+                else Log.Warn("avatar: combat controller not found in the preloaded region");
+                _unloadPending = true;
+            }
+            if (_unloadPending)
+            {
+                _unloadPending = false;
+                try { UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(CombatScene); }
+                catch (Exception e) { Log.Debug("avatar preload unload: " + e.Message); }
+                return;
+            }
+
+            if (_combatCtrl != null || now < _nextPreloadCheck) return;
+            _nextPreloadCheck = now + 2f;
+            var found = FindCombatController();
+            if (found != null) { Keep(found); return; }
+            if (_preloadTried || now - _worldSince < 8f) return;
+
+            _preloadTried = true;
+            try
+            {
+                var sc = UnityEngine.SceneManagement.SceneManager.GetSceneByBuildIndex(CombatScene);
+                if (sc.IsValid() && sc.isLoaded) return;   // the game streamed it; next check finds it
+                // Never while the game is streaming regions itself.
+                var rm = GameRefs.Regions;
+                if (rm != null && rm.IsLoadingOrUnloading()) { _preloadTried = false; return; }
+                _preloadOp = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(CombatScene, UnityEngine.SceneManagement.LoadSceneMode.Additive);
+                Log.Info("avatar: loading the combat animations (region 9) in the background");
+            }
+            catch (Exception e) { Log.Warn("avatar preload: " + e.Message); }
+        }
+
         /// <summary>The full combat controller (a_UnionWomen) is only in memory while a region
         /// with female guards is loaded. Adopt it as soon as it appears; our Animator then
         /// keeps it alive for the rest of the session.</summary>
@@ -198,6 +371,13 @@ namespace DelusionMP.Sync
         {
             var cur = _anim.runtimeAnimatorController;
             if (cur != null && cur.name == "a_UnionWomen") return;
+            if (_combatCtrl != null && !_clipActive)
+            {
+                _anim.runtimeAnimatorController = _combatCtrl;
+                _anim.Rebind();
+                _oneShot = "";
+                return;
+            }
             float now = Time.realtimeSinceStartup;
             if (now < _nextCtrlSearch) return;
             _nextCtrlSearch = now + 5f;
@@ -322,6 +502,13 @@ namespace DelusionMP.Sync
                          new[]{"Clockwork_Bowblade"}, new[]{"Voidsteel_Bow"}, new[]{"Emberian_Bow"} } },
         };
 
+        // Poor, Common, Fine, Shroomweave, Clockwork, Void, Emberian.
+        private static readonly string[][] RarityPrefixes =
+        {
+            new[] { "Rusty" }, new[] { "Steel", "TEMP_Steel" }, new[] { "Fine" }, new[] { "Shroomweave" },
+            new[] { "Clockwork", "cwk_" }, new[] { "VoidSteel" }, new[] { "Emberian" },
+        };
+
         private static Transform FindTrophyRig(string rigName)
         {
             var all = Resources.FindObjectsOfTypeAll<Transform>();
@@ -352,29 +539,106 @@ namespace DelusionMP.Sync
                 foreach (var a in clone.GetComponentsInChildren<Animation>(true)) if (a != null) UnityEngine.Object.DestroyImmediate(a);
                 foreach (var p in clone.GetComponentsInChildren<Renderer>(true)) if (p != null && p.GetIl2CppType().Name.Contains("Particle")) p.enabled = false;
 
-                var want = new HashSet<string>(StringComparer.Ordinal);
-                if (RarityParts.TryGetValue(type, out var table)) foreach (var n in table[Mathf.Clamp(rarity, 0, 6)]) want.Add(n);
+                // Every mesh of this quality (blade, guard, handle, arrow...), by name prefix.
+                var prefixes = RarityPrefixes[Mathf.Clamp(rarity, 0, 6)];
                 foreach (var r in clone.GetComponentsInChildren<Renderer>(true))
                 {
                     if (r == null) continue;
                     var rn = r.GetIl2CppType().Name;
                     if (rn != "SkinnedMeshRenderer" && rn != "MeshRenderer") r.enabled = false;
-                    else r.gameObject.SetActive(want.Contains(r.gameObject.name));
+                    else
+                    {
+                        var rn2 = r.gameObject.name;
+                        bool on = false;
+                        foreach (var px in prefixes) if (rn2.StartsWith(px, StringComparison.OrdinalIgnoreCase)) { on = true; break; }
+                        r.gameObject.SetActive(on);
+                    }
                 }
 
                 var worldScale = src.lossyScale;
                 var ct = clone.transform;
-                ct.SetParent(_handR, false);
+                // The model's own skinned weapon of this kind shows how it is held: which hand
+                // bone, and which way the blade points from the grip.
+                string refPart = type == 3 ? "Bow_Steel_F" : "swordSteel_F";
+                var hand = _handR;
+                Vector3 targetDir = Vector3.zero;
+                if (_parts.TryGetValue(refPart, out var refGo)) ReferenceGrip(refGo, type == 3 ? "Hand.L" : "Hand.R", ref hand, out targetDir);
+                ct.SetParent(hand, false);
                 ct.localPosition = HeldOffset;
                 ct.localRotation = Quaternion.Euler(HeldEuler);
-                var hs = _handR.lossyScale;
+                var hs = hand.lossyScale;
                 ct.localScale = new Vector3(worldScale.x / Mathf.Max(1e-4f, hs.x), worldScale.y / Mathf.Max(1e-4f, hs.y), worldScale.z / Mathf.Max(1e-4f, hs.z));
+                AlignGrip(clone, hand, targetDir);
                 foreach (var tr in clone.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = 0;
                 clone.SetActive(true);
                 UnityEngine.Object.Destroy(holder);
                 _heldClone = clone;
             }
             catch (Exception e) { Log.Debug("avatar held item: " + e.Message); }
+        }
+
+        /// <summary>From a skinned reference weapon on the body: the hand bone it is bound to
+        /// and the blade direction in that bone's space (grip at the bone origin).</summary>
+        private static void ReferenceGrip(GameObject refGo, string handName, ref Transform hand, out Vector3 dir)
+        {
+            dir = Vector3.zero;
+            try
+            {
+                var smr = refGo.GetComponent<SkinnedMeshRenderer>();
+                var mesh = smr != null ? smr.sharedMesh : null;
+                if (mesh == null) return;
+                var bones = smr.bones;
+                var bp = mesh.bindposes;
+                int hi = -1;
+                for (int i = 0; i < bones.Length && i < bp.Length; i++)
+                {
+                    var b = bones[i];
+                    if (b == null) continue;
+                    if (b.name == handName) { hi = i; break; }
+                    if (hi < 0 && (b.name == "Hand.R" || b.name == "Hand.L")) hi = i;
+                }
+                if (hi < 0) return;
+                hand = bones[hi];
+                var c = bp[hi].MultiplyPoint3x4(mesh.bounds.center);
+                if (c.sqrMagnitude > 1e-8f) dir = c.normalized;
+            }
+            catch (Exception e) { Log.Debug("avatar grip reference: " + e.Message); }
+        }
+
+        /// <summary>Puts the weapon's Hilt in the hand and turns the blade to the reference
+        /// direction.</summary>
+        private static void AlignGrip(GameObject clone, Transform hand, Vector3 targetDir)
+        {
+            try
+            {
+                Transform hilt = null;
+                foreach (var t in clone.GetComponentsInChildren<Transform>(true))
+                    if (t.name == "Hilt" || t.name == "Base") { hilt = t; if (t.name == "Hilt") break; }
+                var ct = clone.transform;
+                if (hilt == null) return;
+                ct.position += hand.position - hilt.position;
+                if (targetDir == Vector3.zero) return;
+
+                // Current blade direction: grip -> centre of the visible weapon meshes.
+                Vector3 sum = Vector3.zero; int n = 0;
+                foreach (var r in clone.GetComponentsInChildren<Renderer>(false))
+                {
+                    if (r == null || !r.gameObject.activeInHierarchy) continue;
+                    Mesh m = null;
+                    var smr = r.TryCast<SkinnedMeshRenderer>();
+                    if (smr != null) m = smr.sharedMesh;
+                    else { var mf = r.GetComponent<MeshFilter>(); if (mf != null) m = mf.sharedMesh; }
+                    if (m == null) continue;
+                    sum += r.transform.TransformPoint(m.bounds.center); n++;
+                }
+                if (n == 0) return;
+                var cur = hand.InverseTransformPoint(sum / n) - hand.InverseTransformPoint(hilt.position);
+                if (cur.sqrMagnitude < 1e-8f) return;
+                var q = Quaternion.FromToRotation(cur.normalized, targetDir);
+                ct.localRotation = q * ct.localRotation;
+                ct.position += hand.position - hilt.position;
+            }
+            catch (Exception e) { Log.Debug("avatar grip align: " + e.Message); }
         }
 
         public static void RetuneHeld()

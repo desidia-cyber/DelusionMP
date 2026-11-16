@@ -77,6 +77,7 @@ namespace DelusionMP.Core
         Airship = 51,
         AirshipState = 52,
         WorldAction = 53,
+        CoopDeath = 54,
     }
 
     public struct Header

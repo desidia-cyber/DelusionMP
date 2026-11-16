@@ -54,6 +54,18 @@ Commands are written to `rig/instance<N>/game/BepInEx/ddmp_cmd.txt`, results app
 | Lifts | both | `liftdown`/`liftup` on 3 lifts from either side | partner's lift runs the same transition and settles at the same height |
 | Smashables | host → client | `smashnear` | applied on the client without re-rolling loot |
 | Story counter merge | — | code path (`ChangeOrCreateIntFact` deltas) | simultaneous increments are added, not overwritten |
+| Combat animations from the start | both | fresh session, `avatar` | `a_UnionWomen` captured ~1 s after entering the world (region 9 loaded and unloaded in the background) |
+| Moving-platform glue | host → client | host rides a lift 110 m → 430 m | partner's body stays on the client's own carriage: horizontal ±0.05 m, vertical within ~1 m (was 11–17 m off) |
+| Weapons in hand | — | dagger/greatsword/clockwork/void/emberian/bow | grip at the hand, blade along the model's own sword; bows in the left hand; screenshot 22 |
+| Partner looks | both | `avmodels`, `avsource`, `outfit` | 3 female models + 7 outfits; chosen per player in the config (`[Avatar] Model/Outfit`), sent to the partner |
+| NPC gifts to both | host → client | NPC gives `deedAirship` | client receives it too (sent 1, applied 1) |
+| Co-op death, one down | host | `die` with the client alive | down 8 s, gets up next to the partner, 1 stack (max HP/mana/stamina 101 → 91); enemies stay dead |
+| Co-op death, party wipe | both | both `die` within the window | wipe detected on both, game's own respawn at own points, "respawn on death" spawners run on the host, stacks cleared |
+| Death stacks cleared by rest | client | `bedrest` with 2 stacks | stacks 0, max stats back to 101 |
+| Cutscene | host → client | `playcine cutterLiftoff`, client `skipcut` | played on the client (field-keyed director); the client's skip ended it on the host |
+| Floor triggers | host → client | host death respawn trigger | replayed on the client without moving its respawn point |
+| Story travel | host → client | `travel underlands` | both players arrive at the same spot (1568, -3333, -3905) |
+| Charm roll in dialogue | host → client | charm note during a shared talk | the same "Charm challenge succeeded. Needed 6." toast on both; screenshot 21 |
 
 The three remaining `statedump` differences are a continuously moving sky object
 (`StarOrbit`, sampled a second apart) and two empty trophy stands (`Null_Item` on one side,
@@ -67,6 +79,9 @@ The three remaining `statedump` differences are a continuously moving sky object
 | `proof_16_dialogue_spectator.png` / `proof_17_dialogue_driver.png` | the same line on both screens |
 | `proof_18_airship_passenger_view.png` / `proof_19_airship_pilot_view.png` | the host flying with the client on deck |
 | `proof_20_dialogue_partner_pov.png` | far-away partner watching the conversation from the speaker's eyes |
+| `proof_21_dialogue_charm_both.png` | the charm-roll toast on both screens |
+| `proof_22_avatar_special_weapons.png` | daggers, greatswords, special-quality sword and bow in the partner's hands |
+| `avatar_model_options.png` | the female models and outfits a player can choose from |
 | `proof_01_host_sees_client.png` | host's view: the client's avatar 4 m away |
 | `proof_02_client_sees_host.png` | client's view: the host's avatar |
 | `proof_03_host_before_client_pickup.png` | host's view: knife on the ground, client avatar behind |
@@ -109,18 +124,17 @@ The three remaining `statedump` differences are a continuously moving sky object
 
 ## Known gaps
 
-- **Not yet exercised on the rig** (implemented, compiled, partly unit-checked through commands):
-  world cutscenes (`CinematicsManager.PlayScene` replay), one-shot floor triggers, story travel
-  (Underlands/Cradle), the moving factory, traps (the event was sent; the disarm wasn't confirmed visually),
-  completable objects, shop stock arbitration, enemy respawns after a death, charm-roll toasts in dialogue.
+- **Not conclusively exercised:** shop purchase arbitration (no merchant loaded around the test
+  save), the moving factory (the client follows the host's phase as designed, but the host's own
+  factory did not move after a forced additive load of its region, which is not how the game
+  streams it), completable objects and trap disarming (events sent/applied, effect not checked
+  visually).
 - **Partner body:** the game has no jump/fall clip for humans, so a jumping partner holds a
-  mid-stride pose. Daggers, greatswords and the special rarities use a clone of the trophy-wall
-  weapon attached to the hand; its grip rotation was not tuned visually (`heldrot` command).
-  The full combat controller (`a_UnionWomen`) is only in memory once a region with female guards
-  has been loaded; until then the body uses the idle-pose controller and swings fall back to it.
+  mid-stride pose. DarkStar/Pwyll women only load with their regions; until then the partner is
+  shown as the main female model and switches when the chosen one appears.
 - **Dialogue:** if the partner is already in their own conversation, they are not pulled in
-  (both talk independently; effects still sync). Gifts given in a conversation go to the
-  player who talked.
+  (both talk independently; effects still sync). Items and coin rewards an NPC hands over now go
+  to both players; items a player hands to an NPC are taken only from that player.
 - **Airship:** `AirshipController.Use()` saves the game (vanilla behaviour) on the pilot's machine.
   A player without `deedAirship` cannot take the helm (vanilla rule, inventory is per player).
 - **Fact conflicts:** additive counters now merge; two absolute writes to the same key at the

@@ -335,6 +335,8 @@ namespace DelusionMP.Net
                 case PacketKind.FactDelta: FactSync.ApplyDelta(payload); break;
                 case PacketKind.QuestState: QuestSync.Apply(payload); break;
                 case PacketKind.Dialogue: DialogueSync.Apply(payload); break;
+                case PacketKind.PlayerLoadout: PlayerSync.ApplyLook(payload); break;
+                case PacketKind.CoopDeath: CoopDeath.Apply(payload); break;
                 case PacketKind.Airship: AirshipSync.Apply(payload); break;
                 case PacketKind.AirshipState: AirshipSync.ApplyState(payload); break;
                 case PacketKind.Cutscene: CutsceneSync.Apply(payload); break;

@@ -34,6 +34,26 @@ namespace DelusionMP
             Game.Log.Bind(Log);
             Game.Log.Info($"DelusionMP {DelusionMP.Net.PluginInfo.Version} loading");
 
+            // How this player looks to the partner (sent to them on connect).
+            var model = Config.Bind("Avatar", "Model", "fbx_UnionWomen",
+                "Character model your partner sees you as. Female models: fbx_UnionWomen (dressable, " +
+                "see Outfit), fbx_DarkStarWomen, fbx_PwyllWomen. See docs/screenshots/avatar_model_options.png.");
+            var outfit = Config.Bind("Avatar", "Outfit", "thief",
+                "Outfit for fbx_UnionWomen: a preset (thief, civilianA, civilianB, civilianC, soldier, " +
+                "inquisitor, cultist) or a comma-separated list of part names.");
+            Sync.RemoteAvatar.SetLocalLook(model.Value, outfit.Value);
+
+            // Co-op death rules (one player down: respawn by the partner with a debuff until a
+            // rest; both down: the game's own death and enemies return).
+            Sync.CoopDeath.Enabled = Config.Bind("Rules", "DeathDebuffs", true,
+                "Dying while the partner is alive adds a stack that lowers max health/mana/stamina until you rest in a bed.").Value;
+            Sync.CoopDeath.MaxStacks = Config.Bind("Rules", "MaxStacks", 5, "Most death stacks a player can carry.").Value;
+            Sync.CoopDeath.PctPerStack = Config.Bind("Rules", "PercentPerStack", 10f, "Max health/mana/stamina lost per stack, in %.").Value;
+            Sync.CoopDeath.RespawnDelay = Config.Bind("Rules", "RespawnDelaySeconds", 8f,
+                "Seconds a player stays down when the partner is alive (the window in which a second death is a party wipe).").Value;
+            Sync.CoopDeath.RespawnAtPartner = Config.Bind("Rules", "RespawnAtPartner", true,
+                "Get up next to the partner instead of at the nearest respawn point (when the partner is alive).").Value;
+
             BuildInfo.Compute();
             ObjectRegistry.Instance.Invalidate();
             FactSync.Init();
@@ -103,6 +123,8 @@ namespace DelusionMP
                 }
 
                 DialogueSync.Tick();
+                RemoteAvatar.PreloadTick(GameRefs.InWorld);
+                CoopDeath.Tick();
                 WorldEventsSync.Tick();
                 if (GameRefs.Player != null) AirshipSync.Tick();
 
