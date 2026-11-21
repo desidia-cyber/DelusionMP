@@ -56,6 +56,24 @@ namespace DelusionMP
             Sync.CoopDeath.RespawnAtPartner = Config.Bind("Rules", "RespawnAtPartner", true,
                 "Get up next to the partner instead of at the nearest respawn point (when the partner is alive).").Value;
 
+            // Local chat and proximity voice. The launcher writes these into this config file.
+            VoiceConfig.ChatEnabled = Config.Bind("Voice", "ChatEnabled", true,
+                "1 = the chat key opens a text line; partner lines are still shown when off.").Value;
+            VoiceConfig.ChatKey = Config.Bind("Voice", "ChatKey", "T", "Key that opens the chat line.").Value;
+            VoiceConfig.VoiceChat = Config.Bind("Voice", "VoiceChat", true,
+                "1 = proximity voice chat: you hear your partner and can talk; 0 = off.").Value;
+            VoiceConfig.VoiceMode = Config.Bind("Voice", "VoiceMode", 0,
+                "0 = hold the key to talk, 1 = always on (silence is gated out).").Value;
+            VoiceConfig.VoiceKey = Config.Bind("Voice", "VoiceKey", "V", "Push-to-talk key.").Value;
+            VoiceConfig.VoiceRangeM = Config.Bind("Voice", "VoiceRangeM", 80,
+                "Partner's voice fades to nothing at this many metres; 0 = no proximity.").Value;
+            VoiceConfig.VoiceVolumePct = Config.Bind("Voice", "VoiceVolumePct", 100,
+                "How loud your partner's voice is, in %.").Value;
+            VoiceConfig.VoiceMicPct = Config.Bind("Voice", "VoiceMicPct", 100,
+                "How loud your microphone is sent, in %.").Value;
+            VoiceConfig.VoiceAwayPct = Config.Bind("Voice", "VoiceAwayPct", 40,
+                "Partner's volume while they are away, in %; ignored when VoiceRangeM is 0.").Value;
+
             BuildInfo.Compute();
             ObjectRegistry.Instance.Invalidate();
             FactSync.Init();
@@ -63,6 +81,7 @@ namespace DelusionMP
             WorldMirror.Init();
             EnemySync.Init();
             PlayerSync.Init();
+            VoiceSync.Init();
 
             _harmony = new Harmony(Guid);
             _harmony.PatchAll(typeof(Plugin).Assembly);
@@ -73,11 +92,13 @@ namespace DelusionMP
 
             DelusionMPBootstrap.Current = this;
             AddComponent<TickBehaviour>();
+            AddComponent<VoiceGuiBehaviour>();
             Cmd.Init();
         }
 
         public override bool Unload()
         {
+            VoiceSync.Shutdown();
             Session.Instance.Close();
             PlayerSync.DestroyPuppet();
             _harmony?.UnpatchSelf();
@@ -123,6 +144,7 @@ namespace DelusionMP
             {
                 Perf.Run("player.send", PlayerSync.TickSend);
                 Perf.Run("player.render", PlayerSync.TickRender);
+                Perf.Run("voice", VoiceSync.Tick);
             }
 
             Perf.Run("mirror.pending", WorldMirror.TickPending);

@@ -1,0 +1,13 @@
+[package]
+name = "delusionmp-launcher"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "DelusionMP-Coop.exe: starts Dread Delusion with the co-op mod, on its own save"
+
+[[bin]]
+name = "DelusionMP-Coop"
+path = "src/main.rs"
+
+[dependencies]

@@ -1,0 +1,15 @@
+[package]
+name = "delusionmp-launcher-gui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "DelusionMP-Launcher.exe: settings window for the DelusionMP co-op launcher"
+
+[[bin]]
+name = "DelusionMP-Launcher"
+path = "src/main.rs"
+
+[dependencies]
+eframe = { version = "0.29", default-features = false, features = ["glow", "default_fonts"] }
+image = { version = "0.25", default-features = false, features = ["png"] }

@@ -20,3 +20,8 @@ rig/
 
 # local scratch
 *.log
+
+# launcher build output and bundled binaries (rebuilt / fetched, not source)
+target/
+mod/DelusionMP.dll
+tools/bepinex-payload/

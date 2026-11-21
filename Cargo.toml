@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+members = ["crates/delusionmp-launcher", "crates/delusionmp-launcher-gui"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+description = "Seamless co-op launcher for Dread Delusion"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+
+[profile.bench]
+opt-level = 3

@@ -74,6 +74,10 @@
       <HintPath>$(BepInExDir)\interop\UnityEngine.AudioModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(BepInExDir)\interop\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>$(BepInExDir)\interop\UnityEngine.UI.dll</HintPath>
       <Private>false</Private>

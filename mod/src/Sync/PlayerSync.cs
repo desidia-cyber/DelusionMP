@@ -547,6 +547,17 @@ namespace DelusionMP.Sync
             return _hasLatest;
         }
 
+        /// <summary>Peer position for spatial voice, with a freshness flag (partner may be away).</summary>
+        public static bool TryPeerVoicePose(out Vector3 pos, out bool fresh)
+        {
+            pos = default; fresh = false;
+            if (!_hasLatest) return false;
+            var t = PuppetTransform;
+            pos = t != null ? t.position : _latest.Pos;
+            fresh = Time.realtimeSinceStartup - _latest.ReceivedAt < 2f;
+            return true;
+        }
+
         /// <summary>Puppet head position, for aiming a camera at the partner.</summary>
         public static bool TryPuppetHead(out Vector3 head)
         {
