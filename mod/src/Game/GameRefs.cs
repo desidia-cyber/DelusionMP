@@ -116,6 +116,24 @@ namespace DelusionMP.Game
         /// still holds stray SaveableObjects; running sync against that state is how a
         /// session dies before it starts. Require a live player as well.
         /// </summary>
+        private static int _menuCheckFrame = -1;
+        private static bool _menuCached;
+
+        /// <summary>The title/boot scene is the active scene (checked once per frame).</summary>
+        public static bool InMenuScene()
+        {
+            int f = UnityEngine.Time.frameCount;
+            if (f == _menuCheckFrame) return _menuCached;
+            _menuCheckFrame = f;
+            try
+            {
+                var n = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name ?? "";
+                _menuCached = n.StartsWith("DelusionMenu", StringComparison.Ordinal) || n.StartsWith("DelusionPreBoot", StringComparison.Ordinal);
+            }
+            catch { _menuCached = false; }
+            return _menuCached;
+        }
+
         public static bool InWorld
         {
             get
@@ -131,6 +149,9 @@ namespace DelusionMP.Game
                         && s != global::DelusionManager.GameState.PLAYER_DISABLED
                         && s != global::DelusionManager.GameState.FORCED_LOOK)
                         return false;
+                    // The title screen also reports RUNNING with a player object; a host there
+                    // must not count as in the world (its story would be empty).
+                    if (InMenuScene()) return false;
                     return Player != null;
                 }
                 catch { return false; }

@@ -102,7 +102,7 @@ namespace DelusionMP
                 var session = Session.Instance;
                 if (Role == SessionRole.Host)
                 {
-                    var t = new UdpTransport().Configure(Port, HostAddress, Port + 1);
+                    var t = new UdpTransport().Configure(Port, HostAddress, Port + 1, learnPeer: true);
                     session.Host(t);
                 }
                 else

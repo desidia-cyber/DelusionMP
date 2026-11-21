@@ -26,13 +26,21 @@ namespace DelusionMP.Net
         public bool IsOpen => _open;
 
         /// <summary>Endpoint setup. Call before <see cref="Open"/>.</summary>
-        public UdpTransport Configure(int localPort, string remoteHost, int remotePort)
+        public UdpTransport Configure(int localPort, string remoteHost, int remotePort, bool learnPeer = false)
         {
             _localPort = localPort;
             _remoteHost = remoteHost;
             _remotePort = remotePort;
+            _learnPeer = learnPeer;
             return this;
         }
+
+        /// <summary>
+        /// Host: reply to whoever is talking to us. The client's address is not known in
+        /// advance on a real network (another PC, a VPN address, a NAT'd port, or the Steam
+        /// tunnel's local relay), so the host latches onto the source of what it receives.
+        /// </summary>
+        private bool _learnPeer;
 
         private int _localPort;
         private string _remoteHost = "127.0.0.1";
@@ -46,7 +54,7 @@ namespace DelusionMP.Net
             // Windows reports ICMP "port unreachable" from a previous send as a reset on the
             // next receive; with the peer restarting that would stall the socket.
             try { _sock.Client.IOControl(-1744830452 /* SIO_UDP_CONNRESET */, new byte[] { 0 }, null); } catch { }
-            _remote = new IPEndPoint(IPAddress.Parse(_remoteHost), _remotePort);
+            _remote = new IPEndPoint(Resolve(_remoteHost), _remotePort);
             _open = true;
 
             _sock.BeginReceive(OnReceive, null);
@@ -60,7 +68,15 @@ namespace DelusionMP.Net
             {
                 IPEndPoint from = null;
                 var data = _sock.EndReceive(ar, ref from);
-                if (data != null && data.Length > 0) _inbox.Enqueue(data);
+                if (data != null && data.Length > 0)
+                {
+                    if (_learnPeer && from != null && !from.Equals(_remote) && data.Length >= 4 && data[0] == Proto.Magic[0] && data[1] == Proto.Magic[1] && data[2] == Proto.Magic[2] && data[3] == Proto.Magic[3])
+                    {
+                        Log.Info($"udp peer is {from}");
+                        _remote = from;
+                    }
+                    _inbox.Enqueue(data);
+                }
                 _sock.BeginReceive(OnReceive, null);
             }
             catch (ObjectDisposedException) { }
@@ -70,6 +86,19 @@ namespace DelusionMP.Net
         private void TryAgain()
         {
             try { if (_open) _sock.BeginReceive(OnReceive, null); } catch { }
+        }
+
+        private static IPAddress Resolve(string host)
+        {
+            if (string.IsNullOrWhiteSpace(host) || host == "0.0.0.0" || host == "*") return IPAddress.Loopback;
+            if (IPAddress.TryParse(host.Trim(), out var ip)) return ip;
+            try
+            {
+                foreach (var a in Dns.GetHostAddresses(host.Trim()))
+                    if (a.AddressFamily == AddressFamily.InterNetwork) return a;
+            }
+            catch (Exception e) { Log.Warn($"udp: cannot resolve '{host}': {e.Message}"); }
+            return IPAddress.Loopback;
         }
 
         public void Close()

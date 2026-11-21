@@ -1,4 +1,4 @@
-//! DelusionMP-Coop.exe -- starts Dread Delusion with the co-op mod, on its own session.
+﻿//! DelusionMP-Coop.exe -- starts Dread Delusion with the co-op mod, on its own session.
 //!
 //! The normal install is never written to. The co-op game lives next to this exe in `game\`:
 //! the large `Dread Delusion_Data` folder is a junction into the install (read only), the small
@@ -275,9 +275,17 @@ fn copy_tree(from: &Path, to: &Path, skip: &[&str]) -> io::Result<usize> {
         if skip.iter().any(|s| name.to_string_lossy().eq_ignore_ascii_case(s)) { continue; }
         let (src, dst) = (e.path(), to.join(&name));
         if src.is_dir() { n += copy_tree(&src, &dst, skip)?; }
-        else { fs::copy(&src, &dst)?; n += 1; }
+        else if !same_file_meta(&src, &dst) { fs::copy(&src, &dst)?; n += 1; }
     }
     Ok(n)
+}
+
+/// Same length and modification time (a copy keeps the source's time): already installed.
+fn same_file_meta(a: &Path, b: &Path) -> bool {
+    match (fs::metadata(a), fs::metadata(b)) {
+        (Ok(x), Ok(y)) => x.len() == y.len() && x.modified().ok() == y.modified().ok(),
+        _ => false,
+    }
 }
 
 fn same_bytes(a: &Path, b: &Path) -> bool {
@@ -408,7 +416,15 @@ fn prepare(l: &Layout) -> Result<(), String> {
     if !payload.is_dir() {
         return Err(format!("BepInEx payload is missing: {}", payload.display()));
     }
-    copy_tree(&payload, &l.coop, &[]).map_err(|e| format!("install BepInEx: {e}"))?;
+    // The mod's config is the player's (the launcher's Rules/Player pages edit it): never
+    // overwritten here; a default is written below only when there is none.
+    copy_tree(&payload, &l.coop, &["delusionmp.coop.cfg", "DelusionMP.dll"]).map_err(|e| format!("install BepInEx: {e}"))?;
+    // A Steam build started from a copy needs its app id beside it, or the Steam API asks
+    // Steam to restart it from the original (unmodded) install. 1574240 = Dread Delusion.
+    let appid = l.coop.join("steam_appid.txt");
+    if !appid.is_file() {
+        fs::write(&appid, "1574240").map_err(|e| format!("write steam_appid.txt: {e}"))?;
+    }
 
     // The mod DLL, latest copy from this package.
     let src_dll = l.pkg.join("mod").join("DelusionMP.dll");

@@ -81,7 +81,8 @@ namespace DelusionMP.Core
         FactoryState = 55,
         JoinTruth = 56,
         Rejoin = 57,
-        Voice = 58,           // 20 ms of 16 kHz mono PCM, unreliable
+        Voice = 58,           // 20 ms of 16 kHz mono mu-law, unreliable
+        Rules = 59,           // host's session rules, reliable
     }
 
     public struct Header

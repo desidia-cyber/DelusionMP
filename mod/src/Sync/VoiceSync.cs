@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using DelusionMP.Core;
 using DelusionMP.Net;
 using UnityEngine;
 
 namespace DelusionMP.Sync
 {
-    /// <summary>Local voice/text-chat settings. Never sent on the wire.</summary>
+    /// <summary>Local voice/text-chat settings (the launcher writes them). Never sent on the wire.</summary>
     public static class VoiceConfig
     {
         public static bool ChatEnabled = true;
@@ -21,34 +22,99 @@ namespace DelusionMP.Sync
     }
 
     /// <summary>
-    /// Proximity voice chat, ported from DollsMP's dmp_talk / sidecar voice design to Unity.
+    /// Keys read the way the game reads them: through the Input System's keyboard device
+    /// (the game is built on the Input System; the legacy Input class may be disabled).
+    /// Names are Input System key names (T, V, F1, LeftCtrl, Tab ...); a few legacy KeyCode
+    /// spellings are accepted too.
+    /// </summary>
+    internal static class Keys
+    {
+        private static readonly Dictionary<string, int> Cache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        private static bool _legacyBroken;
+
+        private static bool TryKey(string name, out UnityEngine.InputSystem.Key key)
+        {
+            key = UnityEngine.InputSystem.Key.None;
+            if (string.IsNullOrWhiteSpace(name) || name.Equals("none", StringComparison.OrdinalIgnoreCase)) return false;
+            name = name.Trim();
+            if (Cache.TryGetValue(name, out var v)) { key = (UnityEngine.InputSystem.Key)v; return v != 0; }
+            string n = name;
+            if (n.Equals("LeftControl", StringComparison.OrdinalIgnoreCase)) n = "LeftCtrl";
+            else if (n.Equals("RightControl", StringComparison.OrdinalIgnoreCase)) n = "RightCtrl";
+            else if (n.Equals("Return", StringComparison.OrdinalIgnoreCase)) n = "Enter";
+            else if (n.Equals("BackQuote", StringComparison.OrdinalIgnoreCase)) n = "Backquote";
+            else if (n.StartsWith("Alpha", StringComparison.OrdinalIgnoreCase) && n.Length == 6) n = "Digit" + n.Substring(5);
+            if (!Enum.TryParse(n, true, out key)) key = UnityEngine.InputSystem.Key.None;
+            Cache[name] = (int)key;
+            return key != UnityEngine.InputSystem.Key.None;
+        }
+
+        public static bool Held(string name)
+        {
+            if (!TryKey(name, out var k)) return false;
+            try
+            {
+                var kb = UnityEngine.InputSystem.Keyboard.current;
+                if (kb != null) return kb[k].isPressed;
+            }
+            catch { }
+            return LegacyHeld(name);
+        }
+
+        public static bool Pressed(string name)
+        {
+            if (!TryKey(name, out var k)) return false;
+            try
+            {
+                var kb = UnityEngine.InputSystem.Keyboard.current;
+                if (kb != null) return kb[k].wasPressedThisFrame;
+            }
+            catch { }
+            return false;
+        }
+
+        private static bool LegacyHeld(string name)
+        {
+            if (_legacyBroken) return false;
+            try { return Enum.TryParse(name.Trim(), true, out KeyCode kc) && Input.GetKey(kc); }
+            catch { _legacyBroken = true; return false; }
+        }
+    }
+
+    /// <summary>
+    /// Proximity voice chat and text chat, ported from DollsMP's design to Unity.
     ///
-    /// The game owns the microphone and the speaker (Unity AudioModule); the mod's own UDP
-    /// session carries 20 ms frames of 16 kHz mono PCM as unreliable Voice packets with a
-    /// sequence number, a jitter buffer and packet-loss concealment. Audio work never touches
-    /// the save state and is isolated by Perf.Run like every other subsystem.
+    /// Voice: the game's own microphone (Unity Microphone) at 16 kHz mono, 20 ms frames,
+    /// G.711 mu-law (8 bits per sample, 128 kbit/s) over the session as unreliable packets
+    /// with a sequence number. The receiver keeps a small jitter buffer, conceals short
+    /// losses with a fading repeat, and feeds a looping clip that is always written ahead of
+    /// the playhead - with silence when nothing arrives, so old audio is never replayed.
+    ///
+    /// Text: reliable packets carrying the sender's name. While the line is open the game's
+    /// input maps are switched off so typing does not move the player.
     /// </summary>
     public static class VoiceSync
     {
         private const int Rate = 16000;
         private const int Frame = 320;              // 20 ms at 16 kHz
-        private const int FrameBytes = Frame * 2;   // 16-bit mono
-        private const int PacketBytes = 4 + FrameBytes;
-        private const int JitterMax = 12;           // 240 ms
-        private const int ConcealMax = 6;           // 120 ms
+        private const byte FmtPcm16 = 1, FmtMuLaw = 2;
+        private const int JitterMax = 16;           // 320 ms
+        private const int ConcealMax = 5;           // 100 ms
+        private const int Lead = 1600;              // keep ~100 ms written ahead of the playhead
+        private const int Guard = 6400;             // and keep the 400 ms after it silent
+        private static readonly float[] Silence = new float[Frame];
 
         private static readonly object Gate = new object();
-        private static readonly Dictionary<ushort, byte[]> Incoming = new Dictionary<ushort, byte[]>();
+        private static readonly Dictionary<ushort, short[]> Incoming = new Dictionary<ushort, short[]>();
         private static readonly Queue<float> Capture = new Queue<float>();
 
         private static ushort _seq;
         private static ushort _next;
         private static bool _started;
-        private static float _firstAt;
-        private static byte[] _lastFrame;
+        private static short[] _lastFrame;
         private static int _concealLeft;
         private static float _concealGain = 1f;
-        private static float _lastHeard;
+        private static float _lastHeard = -10f;
 
         private static string _device;
         private static AudioClip _mic;
@@ -59,59 +125,101 @@ namespace DelusionMP.Sync
         private static AudioClip _outClip;
         private static AudioSource _source;
         private static int _writePos;
+        private static bool _playing;
+        private static float _outGain = 1f;
 
-        private static float _nextFrameAt;
         private static float _gateUntil;
         private static float _pttTail;
         private static bool _wasSending;
+
+        // test hooks (rig: no microphone, muted)
+        private static byte[] _testIn;
+        private static int _testPos;
+        private static float _testNext;
+        private static bool _testChecked;
+        private static float _testTalkUntil;
+        private static FileStream _dump;
+
+        // stats
+        private static int _sent, _recv, _played, _concealed, _dropped;
 
         private static readonly List<string> Lines = new List<string>();
         private static bool _chatOpen;
         private static string _chatText = "";
         private static float _chatHideAt;
+        private static int _chatFocusFrames;
 
         public static bool ChatOpen => _chatOpen;
-        public static string ChatText { get => _chatText; set => _chatText = value; }
+        public static string ChatText { get => _chatText; set => _chatText = value ?? ""; }
         public static IReadOnlyList<string> ChatLines => Lines;
         public static float ChatHideAt => _chatHideAt;
         public static bool Sending => _wasSending;
         public static bool Hearing => Time.realtimeSinceStartup - _lastHeard < 0.6f;
+        internal static int ChatFocusFrames { get => _chatFocusFrames; set => _chatFocusFrames = value; }
+
+        public static string Stats =>
+            $"voice={(VoiceConfig.VoiceChat ? "on" : "off")} mode={(VoiceConfig.VoiceMode == 1 ? "open" : "ptt:" + VoiceConfig.VoiceKey)} " +
+            $"mic={(_testIn != null ? "test-file" : _device ?? "none")} sending={_wasSending} hearing={Hearing} " +
+            $"sent={_sent} recv={_recv} played={_played} concealed={_concealed} dropped={_dropped} buffered={Incoming.Count} " +
+            $"gain={_outGain:F2} spatial={(_source != null ? _source.spatialBlend : -1):F0} " +
+            $"head={(_source != null ? _source.timeSamples : -1)} playing={(_source != null && _source.isPlaying)} listenerPause={AudioListener.pause} " +
+            $"chat={(VoiceConfig.ChatEnabled ? "on:" + VoiceConfig.ChatKey : "off")} open={_chatOpen} lines={Lines.Count}";
 
         // ---------------------------------------------------------------- lifecycle
 
         public static void Init()
         {
+            EnsurePlayer();
+            Game.Log.Info($"voice ready (16 kHz mono mu-law, {Frame} samples/frame, mic: {Devices()})");
+        }
+
+        /// <summary>
+        /// The playback object. Created on demand: the game tears down objects made during
+        /// boot when it loads its scenes, so this is re-made whenever it has gone.
+        /// </summary>
+        private static bool EnsurePlayer()
+        {
+            if (_source != null && _outClip != null) return true;
+            _playing = false;
             try
             {
                 var holder = new GameObject("DelusionMP_Voice");
+                holder.hideFlags = HideFlags.HideAndDontSave;
                 UnityEngine.Object.DontDestroyOnLoad(holder);
                 _source = holder.AddComponent<AudioSource>();
                 _source.playOnAwake = false;
                 _source.loop = true;
                 _source.spatialBlend = 0f;
                 _source.dopplerLevel = 0f;
+                _source.rolloffMode = AudioRolloffMode.Linear;
                 _source.bypassEffects = true;
+                _source.bypassReverbZones = true;
+                _source.ignoreListenerPause = true;    // menus pause game audio; the partner keeps talking
                 _source.priority = 0;
-                // A streaming clip needs a native PCMReaderCallback delegate, which IL2CPP interop
-                // cannot bridge for float[]. Use a looping one-second clip and SetData instead.
+                // A streaming clip needs a PCMReaderCallback delegate, which IL2CPP interop
+                // cannot bridge for float[]; a looping one-second clip written ahead of the
+                // playhead does the same job.
                 _outClip = AudioClip.Create("DelusionMP_Voice_In", Rate, 1, Rate, false);
-                _writePos = 0;
+                _outClip.hideFlags = HideFlags.HideAndDontSave;
                 _source.clip = _outClip;
-                _source.Play();
-                Game.Log.Info($"voice ready (16 kHz mono, {Frame} samples/frame, mic: {Devices()})");
+                Game.Log.Info("voice playback object created");
+                return true;
             }
             catch (Exception e)
             {
                 Game.Log.Warn($"voice playback could not start: {e.Message}");
+                return false;
             }
         }
 
         public static void Shutdown()
         {
-            try { if (_device != null && Microphone.IsRecording(_device)) Microphone.End(_device); } catch { }
-            try { if (_source != null) _source.Stop(); } catch { }
+            StopMic();
+            StopPlayback();
             try { if (_outClip != null) UnityEngine.Object.Destroy(_outClip); } catch { }
-            lock (Gate) { Incoming.Clear(); Capture.Clear(); _lastFrame = null; _started = false; }
+            try { _dump?.Dispose(); } catch { }
+            _dump = null;
+            BlockGameInput(false);
         }
 
         private static string Devices()
@@ -124,30 +232,33 @@ namespace DelusionMP.Sync
             catch { return "none"; }
         }
 
+        /// <summary>Test hook: talk (as if the push-to-talk key were held) for this many seconds.</summary>
+        public static void TestTalk(float seconds) => _testTalkUntil = Time.realtimeSinceStartup + seconds;
+
         // ---------------------------------------------------------------- per-frame
 
         public static void Tick()
         {
             var session = Session.Instance;
-            if (session == null || !session.Connected || !VoiceConfig.VoiceChat)
+            bool live = session != null && session.Connected && VoiceConfig.VoiceChat;
+            if (!live)
             {
                 StopMic();
+                StopPlayback();
                 _wasSending = false;
                 return;
             }
 
+            float now = Time.realtimeSinceStartup;
             UpdateSpatial();
             PumpPlayback();
-            float now = Time.realtimeSinceStartup;
-            if (now < _nextFrameAt) return;
-            _nextFrameAt = now + 0.02f;
 
-            if (!CaptureMic(now)) return;
+            if (!CaptureMic(now)) { _wasSending = false; return; }
+            float gain = VoiceConfig.VoiceMicPct / 100f;
             while (Capture.Count >= Frame)
             {
                 var pcm = new short[Frame];
                 float sum = 0f;
-                float gain = VoiceConfig.VoiceMicPct / 100f;
                 for (int i = 0; i < Frame; i++)
                 {
                     float v = Capture.Dequeue() * gain;
@@ -156,7 +267,7 @@ namespace DelusionMP.Sync
                     sum += v * v;
                 }
                 float rms = (float)Math.Sqrt(sum / Frame);
-                // Always-on mode uses a noise gate with a 400 ms hangover, like the sidecar.
+                // Always-on mode: a noise gate with a 400 ms hangover, like the DollsMP sidecar.
                 if (VoiceConfig.VoiceMode == 1 && rms > 0.008f) _gateUntil = now + 0.4f;
 
                 bool send = WantsToSend(now);
@@ -167,22 +278,11 @@ namespace DelusionMP.Sync
 
         private static bool WantsToSend(float now)
         {
-            if (!VoiceConfig.VoiceChat) return false;
-            if (KeyHeld(VoiceConfig.VoiceKey)) _pttTail = now + 0.2f;
+            if (now < _testTalkUntil) return true;
+            if (_chatOpen) return VoiceConfig.VoiceMode == 1 && now < _gateUntil;   // typing T/V must not key the mic
+            if (Keys.Held(VoiceConfig.VoiceKey)) _pttTail = now + 0.2f;             // keep the end of the last word
             if (VoiceConfig.VoiceMode == 1) return now < _gateUntil;
             return now < _pttTail;
-        }
-
-        private static bool KeyHeld(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name) || name.Equals("none", StringComparison.OrdinalIgnoreCase)) return false;
-            try
-            {
-                KeyCode k;
-                if (!Enum.TryParse(name.Trim(), true, out k)) return false;
-                return Input.GetKey(k);
-            }
-            catch { return false; }
         }
 
         private static void UpdateSpatial()
@@ -190,75 +290,101 @@ namespace DelusionMP.Sync
             if (_source == null) return;
             try
             {
-                float vol = VoiceConfig.VoiceVolumePct / 100f;
+                float gain = VoiceConfig.VoiceVolumePct / 100f;
+                _source.volume = 1f;
                 _source.spatialBlend = 0f;
-                _source.volume = vol;
                 if (VoiceConfig.VoiceRangeM > 0)
                 {
-                    Vector3 pos;
-                    bool fresh;
-                    if (PlayerSync.TryPeerVoicePose(out pos, out fresh) && fresh)
+                    if (PlayerSync.TryPeerVoicePose(out var pos, out bool fresh) && fresh)
                     {
                         _source.transform.position = pos;
                         _source.spatialBlend = 1f;
-                        _source.minDistance = 8f;
+                        _source.minDistance = Mathf.Min(8f, VoiceConfig.VoiceRangeM * 0.5f);
                         _source.maxDistance = VoiceConfig.VoiceRangeM;
                     }
                     else
                     {
-                        _source.volume = vol * (VoiceConfig.VoiceAwayPct / 100f);
+                        // The partner is in a menu, loading or not spawned: heard flat, quieter.
+                        gain *= VoiceConfig.VoiceAwayPct / 100f;
                     }
                 }
+                _outGain = gain;
             }
             catch { }
         }
 
         private static void SendFrame(short[] pcm)
         {
-            var packet = new byte[PacketBytes];
-            byte[] seq = BitConverter.GetBytes(_seq++);
-            packet[0] = seq[0]; packet[1] = seq[1];
-            packet[2] = 1; packet[3] = 0;
-            Buffer.BlockCopy(pcm, 0, packet, 4, FrameBytes);
+            var packet = new byte[4 + Frame];
+            packet[0] = (byte)_seq; packet[1] = (byte)(_seq >> 8); _seq++;
+            packet[2] = FmtMuLaw; packet[3] = 0;
+            for (int i = 0; i < Frame; i++) packet[4 + i] = MuLawEncode(pcm[i]);
             Session.Instance.SendUnreliable(PacketKind.Voice, packet);
+            _sent++;
         }
 
         // ---------------------------------------------------------------- microphone
 
         private static bool CaptureMic(float now)
         {
+            if (!_testChecked)
+            {
+                _testChecked = true;
+                try
+                {
+                    var p = Path.Combine(BepInEx.Paths.BepInExRootPath, "ddmp_voice_test_in.raw");
+                    if (File.Exists(p)) { _testIn = File.ReadAllBytes(p); Game.Log.Info($"voice: test input {p} ({_testIn.Length / 2} samples) replaces the microphone"); }
+                }
+                catch { }
+            }
+            if (_testIn != null && _testIn.Length >= 2)
+            {
+                // Real-time pacing, like a microphone: one frame of samples per 20 ms.
+                if (_testNext == 0f) _testNext = now;
+                while (_testNext <= now)
+                {
+                    for (int i = 0; i < Frame; i++)
+                    {
+                        if (_testPos + 1 >= _testIn.Length) _testPos = 0;
+                        short s = (short)(_testIn[_testPos] | (_testIn[_testPos + 1] << 8));
+                        _testPos += 2;
+                        Capture.Enqueue(s / 32768f);
+                    }
+                    _testNext += 0.02f;
+                }
+                return true;
+            }
             try
             {
-                if (VoiceConfig.VoiceMode == 1)
-                {
-                    // gate state is computed from the captured frame below
-                }
                 if (_mic == null)
                 {
                     var devices = Microphone.devices;
                     if (devices == null || devices.Length == 0)
                     {
-                        if (!_micWarned) { Game.Log.Warn("no microphone found: voice will be receive-only"); _micWarned = true; }
+                        if (!_micWarned) { Game.Log.Warn("no microphone found: voice is receive-only"); _micWarned = true; }
                         return false;
                     }
                     _device = devices[0];
                     _mic = Microphone.Start(_device, true, 1, Rate);
-                    _micBuf = new float[Rate];
+                    _micBuf = new float[_mic != null ? _mic.samples : Rate];
                     _micPos = Microphone.GetPosition(_device);
-                    Game.Log.Info($"microphone open: {_device}");
+                    Game.Log.Info($"microphone open: {_device} ({_mic?.frequency} Hz)");
                 }
+                int len = _micBuf.Length;
                 int pos = Microphone.GetPosition(_device);
                 int delta = pos - _micPos;
-                if (delta < 0) delta += Rate;
-                if (delta <= 0 || delta > Rate) return false;
+                if (delta < 0) delta += len;
+                if (delta <= 0) return true;
                 _mic.GetData(_micBuf, 0);
                 for (int i = 0; i < delta; i++)
                 {
                     int idx = _micPos + i;
-                    if (idx >= Rate) idx -= Rate;
+                    if (idx >= len) idx -= len;
                     Capture.Enqueue(_micBuf[idx]);
                 }
                 _micPos = pos;
+                // Never let a stalled consumer build up seconds of delay.
+                while (Capture.Count > Rate / 4) Capture.Dequeue();
                 return true;
             }
             catch (Exception e)
@@ -276,86 +402,167 @@ namespace DelusionMP.Sync
             _device = null;
             _micBuf = null;
             Capture.Clear();
+            _testNext = 0f;
         }
 
         // ---------------------------------------------------------------- receive / jitter
 
         public static void Receive(byte[] packet)
         {
-            if (packet == null || packet.Length < PacketBytes || !VoiceConfig.VoiceChat) return;
-            ushort seq = BitConverter.ToUInt16(packet, 0);
-            var pcm = new byte[FrameBytes];
-            Buffer.BlockCopy(packet, 4, pcm, 0, FrameBytes);
+            if (packet == null || packet.Length < 4 || !VoiceConfig.VoiceChat) return;
+            ushort seq = (ushort)(packet[0] | (packet[1] << 8));
+            short[] pcm;
+            if (packet[2] == FmtMuLaw && packet.Length >= 4 + Frame)
+            {
+                pcm = new short[Frame];
+                for (int i = 0; i < Frame; i++) pcm[i] = MuLawDecode(packet[4 + i]);
+            }
+            else if (packet[2] == FmtPcm16 && packet.Length >= 4 + Frame * 2)
+            {
+                pcm = new short[Frame];
+                Buffer.BlockCopy(packet, 4, pcm, 0, Frame * 2);
+            }
+            else return;
+
             lock (Gate)
             {
+                _recv++;
+                // After a pause (or the partner's restart) the stream starts wherever it is.
+                if (!_started && Incoming.Count == 0) _next = seq;
                 short diff = (short)(seq - _next);
-                if (diff < 0) return; // late duplicate
-                if (diff > JitterMax) { Incoming.Clear(); _next = seq; }
-                if (!Incoming.ContainsKey(seq) && Incoming.Count >= JitterMax)
-                {
-                    // drop the oldest held frame
-                    ushort oldest = seq;
-                    bool have = false;
-                    foreach (var k in Incoming.Keys) { if (!have || IsOlder(k, oldest)) { oldest = k; have = true; } }
-                    if (have) Incoming.Remove(oldest);
-                }
+                if (diff < 0) { _dropped++; return; }                       // late or duplicate
+                if (diff > JitterMax) { Incoming.Clear(); _next = seq; }    // far ahead: resync
                 Incoming[seq] = pcm;
-                if (!_started && (Incoming.Count >= 3 || Time.realtimeSinceStartup - _firstAt > 0.08f))
-                    _started = true;
-                if (!_started) _firstAt = Time.realtimeSinceStartup;
+                while (Incoming.Count > JitterMax)
+                {
+                    // Too much queued: drop the oldest so latency stays bounded.
+                    Incoming.Remove(_next); _next++; _dropped++;
+                }
+                if (!_started && Incoming.Count >= 3) _started = true;     // 60 ms cushion
             }
             _lastHeard = Time.realtimeSinceStartup;
         }
 
-        private static bool IsOlder(ushort a, ushort b) => (short)(a - b) < 0;
+        private static void StopPlayback()
+        {
+            if (!_playing) return;
+            _playing = false;
+            try { _source?.Stop(); } catch { }
+            lock (Gate) { Incoming.Clear(); _started = false; _lastFrame = null; }
+        }
 
-        /// <summary>Drain the jitter buffer into the looping clip, ahead of the playhead.</summary>
+        /// <summary>
+        /// Keep ~100 ms written ahead of the playhead: real frames when they are there, a fading
+        /// repeat for a short loss, silence otherwise. The clip loops, so whatever is not
+        /// overwritten would be heard again a second later - hence the silence.
+        /// </summary>
         private static void PumpPlayback()
         {
-            if (_outClip == null || !_started) return;
-            for (int budget = 0; budget < 3; budget++)
+            if (!EnsurePlayer()) return;
+            if (!_playing)
             {
-                byte[] frame = null;
-                lock (Gate)
+                try
                 {
-                    if (Incoming.TryGetValue(_next, out frame))
-                    {
-                        Incoming.Remove(_next);
-                        _next++;
-                        _lastFrame = frame;
-                        _concealLeft = 0;
-                        _concealGain = 1f;
-                    }
-                    else if (_lastFrame != null && _concealLeft < ConcealMax)
-                    {
-                        frame = _lastFrame;
-                        _concealLeft++;
-                        _concealGain *= 0.65f;
-                    }
-                    else
-                    {
-                        if (Incoming.Count == 0 && Time.realtimeSinceStartup - _lastHeard > 2f) _started = false;
-                        return;
-                    }
+                    _outClip.SetData(new float[Rate], 0);
+                    _writePos = 0;
+                    _source.timeSamples = 0;
+                    _source.Play();
+                    _playing = true;
                 }
-                var data = new float[Frame];
-                for (int i = 0; i < Frame; i++)
-                    data[i] = (BitConverter.ToInt16(frame, i * 2) / 32768f) * _concealGain;
-                WriteClip(data);
+                catch (Exception e) { Game.Log.Warn("voice playback start failed: " + e.Message); return; }
             }
+            int head;
+            try { head = _source.timeSamples; } catch { return; }
+            if (head < 0 || head >= Rate) head = 0;
+            int lead = (_writePos - head + Rate) % Rate;
+            if (lead > Rate / 2) { _writePos = head; lead = 0; }   // the playhead overtook us (a hitch)
+            int guard = 0;
+            while (lead < Lead && guard++ < 16)
+            {
+                WriteClip(NextFrame());
+                lead += Frame;
+            }
+        }
+
+        private static float[] NextFrame()
+        {
+            short[] frame = null;
+            float g = 1f;
+            bool real = false;
+            lock (Gate)
+            {
+                if (_started && Incoming.TryGetValue(_next, out frame))
+                {
+                    Incoming.Remove(_next);
+                    _next++;
+                    _lastFrame = frame;
+                    _concealLeft = 0;
+                    _concealGain = 1f;
+                    real = true;
+                }
+                else if (_started && Incoming.Count > 0 && _lastFrame != null && _concealLeft < ConcealMax)
+                {
+                    // A later frame is here but this one is not: it was lost. Repeat the last
+                    // one, fading, and move on.
+                    frame = _lastFrame;
+                    _concealLeft++;
+                    _concealGain *= 0.6f;
+                    g = _concealGain;
+                    _next++;
+                    _concealed++;
+                }
+                else if (_started && Incoming.Count > 0)
+                {
+                    // A gap longer than concealment: jump to the oldest held frame.
+                    ushort oldest = _next; bool have = false;
+                    foreach (var k in Incoming.Keys) if (!have || (short)(k - oldest) < 0) { oldest = k; have = true; }
+                    if (have) _next = oldest;
+                    frame = null;
+                }
+                else
+                {
+                    // Nothing queued: we are ahead of the stream (or it ended). Silence, and
+                    // do not skip - the frame may still be on its way. After a pause the next
+                    // spurt starts with a fresh cushion.
+                    frame = null;
+                    if (_started && Time.realtimeSinceStartup - _lastHeard > 0.3f) { _started = false; _lastFrame = null; }
+                }
+            }
+            var data = new float[Frame];
+            if (frame == null) return data;
+            float gain = g * _outGain;
+            for (int i = 0; i < Frame; i++)
+            {
+                float v = frame[i] / 32768f * gain;
+                data[i] = v > 1f ? 1f : (v < -1f ? -1f : v);
+            }
+            _played++;
+            if (real) DumpFrame(frame);
+            return data;
+        }
+
+        private static void DumpFrame(short[] frame)
+        {
+            try
+            {
+                if (_dump == null)
+                {
+                    var flag = Path.Combine(BepInEx.Paths.BepInExRootPath, "ddmp_voice_dump.on");
+                    if (!File.Exists(flag)) return;
+                    _dump = new FileStream(Path.Combine(BepInEx.Paths.BepInExRootPath, "ddmp_voice_dump.raw"), FileMode.Create, FileAccess.Write);
+                }
+                var b = new byte[Frame * 2];
+                Buffer.BlockCopy(frame, 0, b, 0, b.Length);
+                _dump.Write(b, 0, b.Length);
+                _dump.Flush();
+            }
+            catch { }
         }
 
         private static void WriteClip(float[] data)
         {
-            if (_outClip == null) return;
             try
             {
-                int head;
-                try { head = _source != null ? _source.timeSamples : 0; } catch { head = 0; }
-                if (head < 0 || head >= Rate) head = 0;
-                int behind = (_writePos - head + Rate) % Rate;
-                if (behind > Rate / 2) _writePos = (head + Rate / 3) % Rate;
-
                 if (_writePos + data.Length <= Rate)
                 {
                     _outClip.SetData(data, _writePos);
@@ -371,6 +578,10 @@ namespace DelusionMP.Sync
                     _outClip.SetData(second, 0);
                 }
                 _writePos = (_writePos + data.Length) % Rate;
+                // Clear a stretch beyond what is written: if the game stalls longer than the
+                // lead, the playhead runs into silence instead of last second's audio.
+                int g = (_writePos + Guard) % Rate;
+                if (g + Frame <= Rate) _outClip.SetData(Silence, g);
             }
             catch (Exception e)
             {
@@ -378,31 +589,76 @@ namespace DelusionMP.Sync
             }
         }
 
-        // ---------------------------------------------------------------- text chat
-
-        public static void ToggleChat()
+        // G.711 mu-law
+        private static byte MuLawEncode(short sample)
         {
-            _chatOpen = !_chatOpen;
-            if (_chatOpen) _chatText = "";
+            const int Bias = 0x84, Clip = 32635;
+            int s = sample;
+            int sign = (s >> 8) & 0x80;
+            if (sign != 0) s = -s;
+            if (s > Clip) s = Clip;
+            s += Bias;
+            int exponent = 7;
+            for (int mask = 0x4000; (s & mask) == 0 && exponent > 0; mask >>= 1) exponent--;
+            int mantissa = (s >> (exponent + 3)) & 0x0F;
+            return (byte)~(sign | (exponent << 4) | mantissa);
         }
 
-        public static void CancelChat() { _chatOpen = false; _chatText = ""; }
+        private static short MuLawDecode(byte b)
+        {
+            int u = ~b & 0xFF;
+            int sign = u & 0x80, exponent = (u >> 4) & 0x07, mantissa = u & 0x0F;
+            int s = (((mantissa << 3) + 0x84) << exponent) - 0x84;
+            return (short)(sign != 0 ? -s : s);
+        }
+
+        // ---------------------------------------------------------------- text chat
+
+        public static void OpenChat()
+        {
+            if (_chatOpen) return;
+            _chatOpen = true;
+            _chatText = "";
+            _chatFocusFrames = 3;
+            _chatHideAt = Time.realtimeSinceStartup + 3600f;   // history stays visible while typing
+            BlockGameInput(true);
+        }
+
+        public static void CloseChat()
+        {
+            if (!_chatOpen) return;
+            _chatOpen = false;
+            _chatText = "";
+            _chatHideAt = Time.realtimeSinceStartup + 8f;
+            // Re-enable a frame later: the Enter/Esc that closed the line must not also reach
+            // the game (Esc would open the pause menu).
+            _unblockAt = Time.frameCount + 2;
+        }
+
+        private static int _unblockAt = -1;
+
+        internal static void TickChat()
+        {
+            if (_unblockAt > 0 && Time.frameCount >= _unblockAt) { _unblockAt = -1; if (!_chatOpen) BlockGameInput(false); }
+        }
 
         public static void SendChat(string text)
         {
-            if (string.IsNullOrWhiteSpace(text)) { _chatOpen = false; return; }
+            CloseChat();
+            if (string.IsNullOrWhiteSpace(text)) return;
             text = text.Trim();
             if (text.Length > 200) text = text.Substring(0, 200);
+            AddLine("You: " + text);
             try
             {
+                var s = Session.Instance;
+                if (s == null || !s.Connected) { AddLine("(not connected - not sent)"); return; }
                 var w = new Writer();
-                w.Str(text);
-                Session.Instance.SendUnreliable(PacketKind.Chat, w.ToArray());
-                AddLine("You: " + text);
+                w.Str(Bootstrap.PlayerName ?? "Partner").Str(text);
+                s.SendReliable(PacketKind.Chat, w.ToArray());
+                Game.Log.Info("chat sent: " + text);
             }
             catch (Exception e) { Game.Log.Warn($"chat send failed: {e.Message}"); }
-            _chatText = "";
-            _chatOpen = false;
         }
 
         public static void ReceiveChat(byte[] payload)
@@ -410,8 +666,13 @@ namespace DelusionMP.Sync
             try
             {
                 var r = new Reader(payload);
-                var text = r.Str();
-                if (!string.IsNullOrWhiteSpace(text)) AddLine(text);
+                string name = r.Str();
+                string text = r.Remaining > 0 ? r.Str() : null;
+                if (text == null) { text = name; name = "Partner"; }
+                if (string.IsNullOrWhiteSpace(text)) return;
+                if (string.IsNullOrWhiteSpace(name)) name = "Partner";
+                AddLine(name + ": " + text);
+                Game.Log.Info($"chat received: {name}: {text}");
             }
             catch { }
         }
@@ -421,74 +682,143 @@ namespace DelusionMP.Sync
             lock (Lines)
             {
                 Lines.Add(line);
-                while (Lines.Count > 6) Lines.RemoveAt(0);
+                while (Lines.Count > 8) Lines.RemoveAt(0);
             }
-            _chatHideAt = Time.realtimeSinceStartup + 12f;
+            if (!_chatOpen) _chatHideAt = Time.realtimeSinceStartup + 12f;
+        }
+
+        // ---------------------------------------------------------------- game input while typing
+
+        private static readonly List<UnityEngine.InputSystem.InputActionMap> Disabled = new List<UnityEngine.InputSystem.InputActionMap>();
+        private static bool _blocked;
+
+        private static void BlockGameInput(bool on)
+        {
+            try
+            {
+                if (on)
+                {
+                    if (_blocked) return;
+                    _blocked = true;
+                    Disabled.Clear();
+                    var di = global::DelusionInput.Instance;
+                    if (di == null) return;
+                    DisableAll(di.controls);
+                    try { DisableAll(di.delusionControls?.asset); } catch { }
+                    try { DisableAll(di.playerInput?.actions); } catch { }
+                }
+                else
+                {
+                    if (!_blocked) return;
+                    _blocked = false;
+                    foreach (var m in Disabled) { try { m?.Enable(); } catch { } }
+                    Disabled.Clear();
+                }
+            }
+            catch (Exception e) { Game.Log.Debug("chat input block: " + e.Message); }
+        }
+
+        private static void DisableAll(UnityEngine.InputSystem.InputActionAsset asset)
+        {
+            if (asset == null) return;
+            var maps = asset.actionMaps;
+            for (int i = 0; i < maps.Count; i++)
+            {
+                var m = maps[i];
+                if (m == null || !m.enabled || Disabled.Contains(m)) continue;
+                m.Disable();
+                Disabled.Add(m);
+            }
         }
     }
 
-    /// <summary>Minimal on-screen chat line / voice indicator (IMGUI).</summary>
+    /// <summary>On-screen chat (IMGUI) and the talking indicator.</summary>
     public sealed class VoiceGuiBehaviour : MonoBehaviour
     {
-        private bool _lastChatKey;
+        private GUIStyle _line, _box;
 
         private void Update()
         {
             try
             {
-                if (VoiceConfig.ChatEnabled)
+                VoiceSync.TickChat();
+                if (!VoiceConfig.ChatEnabled) { if (VoiceSync.ChatOpen) VoiceSync.CloseChat(); return; }
+                if (!VoiceSync.ChatOpen)
                 {
-                    bool down = KeyDown(VoiceConfig.ChatKey, ref _lastChatKey);
-                    if (down)
-                    {
-                        if (VoiceSync.ChatOpen) VoiceSync.CancelChat();
-                        else VoiceSync.ToggleChat();
-                    }
-                    if (VoiceSync.ChatOpen && Input.GetKeyDown(KeyCode.Escape)) VoiceSync.CancelChat();
-                    if (VoiceSync.ChatOpen && Input.GetKeyDown(KeyCode.Return)) VoiceSync.SendChat(VoiceSync.ChatText);
+                    if (GameRefs_InWorld() && Keys.Pressed(VoiceConfig.ChatKey)) VoiceSync.OpenChat();
+                    return;
                 }
+                if (Keys.Pressed("Escape")) { VoiceSync.CloseChat(); return; }
+                if (Keys.Pressed("Enter") || Keys.Pressed("NumpadEnter")) VoiceSync.SendChat(VoiceSync.ChatText);
             }
             catch { }
         }
 
-        private static bool KeyDown(string name, ref bool previous)
+        private static bool GameRefs_InWorld()
         {
-            if (string.IsNullOrWhiteSpace(name) || name.Equals("none", StringComparison.OrdinalIgnoreCase)) return false;
-            KeyCode k;
-            if (!Enum.TryParse(name.Trim(), true, out k)) return false;
-            bool now = Input.GetKey(k);
-            bool hit = now && !previous;
-            previous = now;
-            return hit;
+            try { return Game.GameRefs.InWorld; } catch { return false; }
         }
 
         private void OnGUI()
         {
-            if (VoiceConfig.ChatEnabled)
+            try
             {
-                float y = 12f;
-                if (Time.realtimeSinceStartup < VoiceSync.ChatHideAt)
+                if (_line == null)
                 {
-                    string[] lines;
-                    lock (VoiceSync.ChatLines)
+                    _line = new GUIStyle(); _line.fontSize = 16; _line.wordWrap = true;
+                    _line.normal.textColor = Color.white;
+                    _box = GUI.skin.box;
+                }
+                if (VoiceConfig.ChatEnabled)
+                {
+                    bool show = VoiceSync.ChatOpen || Time.realtimeSinceStartup < VoiceSync.ChatHideAt;
+                    if (show)
                     {
-                        lines = new string[VoiceSync.ChatLines.Count];
-                        for (int i = 0; i < lines.Length; i++) lines[i] = VoiceSync.ChatLines[i];
+                        string[] lines;
+                        lock (VoiceSync.ChatLines)
+                        {
+                            lines = new string[VoiceSync.ChatLines.Count];
+                            for (int i = 0; i < lines.Length; i++) lines[i] = VoiceSync.ChatLines[i];
+                        }
+                        if (lines.Length > 0)
+                        {
+                            float h = lines.Length * 22f + 10f;
+                            float top = Screen.height - 140f - h;
+                            GUI.Box(new Rect(10f, top, 540f, h), GUIContent.none, _box);
+                            for (int i = 0; i < lines.Length; i++)
+                                GUI.Label(new Rect(18f, top + 5f + i * 22f, 528f, 22f), lines[i], _line);
+                        }
                     }
-                    foreach (var line in lines)
+                    if (VoiceSync.ChatOpen)
                     {
-                        GUI.Label(new Rect(14f, y, 520f, 26f), line);
-                        y += 22f;
+                        float y = Screen.height - 128f;
+                        GUI.Box(new Rect(10f, y - 4f, 540f, 34f), GUIContent.none, _box);
+                        GUI.Label(new Rect(18f, y, 50f, 26f), "Say:", _line);
+                        GUI.SetNextControlName("ddmp_chat");
+                        VoiceSync.ChatText = GUI.TextField(new Rect(66f, y, 476f, 26f), VoiceSync.ChatText ?? "", 200);
+                        if (VoiceSync.ChatFocusFrames > 0)
+                        {
+                            GUI.FocusControl("ddmp_chat");
+                            // The key that opened the line may have typed itself into it.
+                            if (VoiceSync.ChatText.Length == 1 && VoiceSync.ChatText.Equals(VoiceConfig.ChatKey, StringComparison.OrdinalIgnoreCase))
+                                VoiceSync.ChatText = "";
+                            VoiceSync.ChatFocusFrames--;
+                        }
+                        var e = Event.current;
+                        if (e != null && e.type == EventType.KeyDown && (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter))
+                        { VoiceSync.SendChat(VoiceSync.ChatText); e.Use(); }
+                        else if (e != null && e.type == EventType.KeyDown && e.keyCode == KeyCode.Escape)
+                        { VoiceSync.CloseChat(); e.Use(); }
                     }
                 }
-                if (VoiceSync.ChatOpen)
+                if (VoiceConfig.VoiceChat && (VoiceSync.Sending || VoiceSync.Hearing))
                 {
-                    GUI.Label(new Rect(14f, Screen.height - 96f, 120f, 24f), "Say:");
-                    VoiceSync.ChatText = GUI.TextField(new Rect(80f, Screen.height - 96f, 420f, 26f), VoiceSync.ChatText ?? "");
+                    string t = VoiceSync.Sending && VoiceSync.Hearing ? "VOICE  ◄►" : VoiceSync.Sending ? "VOICE  ►" : "VOICE  ◄";
+                    GUI.Box(new Rect(Screen.width - 150f, Screen.height - 46f, 138f, 30f), GUIContent.none, _box);
+                    GUI.Label(new Rect(Screen.width - 140f, Screen.height - 43f, 128f, 26f), t, _line);
                 }
             }
-            if (VoiceConfig.VoiceChat && VoiceSync.Sending)
-                GUI.Label(new Rect(Screen.width - 130f, Screen.height - 42f, 120f, 26f), "VOICE");
+            catch { }
         }
     }
 }

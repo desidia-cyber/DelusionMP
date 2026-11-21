@@ -755,6 +755,53 @@ namespace DelusionMP.Core
                     }
                     break;
                 }
+                case "voice":
+                    Emit("VOICE " + VoiceSync.Stats);
+                    break;
+                case "voicetalk":
+                {
+                    float sec = parts.Length > 1 && float.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var vs) ? vs : 3f;
+                    VoiceSync.TestTalk(sec);
+                    Emit($"VOICETALK {sec}s");
+                    break;
+                }
+                case "chat":
+                    VoiceSync.SendChat(string.Join(" ", parts, 1, parts.Length - 1));
+                    Emit("CHAT sent");
+                    break;
+                case "chatopen":
+                    VoiceSync.OpenChat();
+                    Emit("CHAT open=" + VoiceSync.ChatOpen);
+                    break;
+                case "chatclose":
+                    VoiceSync.CloseChat();
+                    Emit("CHAT open=" + VoiceSync.ChatOpen);
+                    break;
+                case "chatlog":
+                    lock (VoiceSync.ChatLines) foreach (var cl in VoiceSync.ChatLines) Emit("CHATLINE " + cl);
+                    Emit($"CHAT open={VoiceSync.ChatOpen} text='{VoiceSync.ChatText}'");
+                    break;
+                case "rules":
+                    Emit("RULES " + RulesSync.Describe());
+                    break;
+                case "inputmaps":
+                {
+                    var di = global::DelusionInput.Instance;
+                    if (di == null) { Emit("ERR no DelusionInput"); break; }
+                    void Dump(string tag, UnityEngine.InputSystem.InputActionAsset a)
+                    {
+                        if (a == null) { Emit($"MAPS {tag} null"); return; }
+                        var ms = a.actionMaps;
+                        for (int i = 0; i < ms.Count; i++) Emit($"MAPS {tag} {ms[i].name} enabled={ms[i].enabled}");
+                    }
+                    Dump("controls", di.controls);
+                    try { Dump("delusionControls", di.delusionControls?.asset); } catch (Exception e) { Emit("MAPS delusionControls err " + e.Message); }
+                    try { Dump("playerInput", di.playerInput?.actions); } catch (Exception e) { Emit("MAPS playerInput err " + e.Message); }
+                    Emit($"MOVE {di.moveInput}");
+                    try { var kb = UnityEngine.InputSystem.Keyboard.current; Emit($"KEYBOARD {(kb != null ? kb.name : "null")} T={kb?[UnityEngine.InputSystem.Key.T].isPressed} W={kb?[UnityEngine.InputSystem.Key.W].isPressed}"); } catch (Exception e) { Emit("KEYBOARD err " + e.Message); }
+                    try { Emit($"LEGACY W={Input.GetKey(KeyCode.W)}"); } catch (Exception e) { Emit("LEGACY err " + e.GetType().Name); }
+                    break;
+                }
                 case "perf":
                 {
                     Emit("MIRROR " + WorldMirror.Slowest);

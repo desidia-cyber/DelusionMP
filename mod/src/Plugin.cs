@@ -144,8 +144,8 @@ namespace DelusionMP
             {
                 Perf.Run("player.send", PlayerSync.TickSend);
                 Perf.Run("player.render", PlayerSync.TickRender);
-                Perf.Run("voice", VoiceSync.Tick);
             }
+            Perf.Run("voice", VoiceSync.Tick);
 
             Perf.Run("mirror.pending", WorldMirror.TickPending);
             Perf.Run("join", JoinSync.Tick);

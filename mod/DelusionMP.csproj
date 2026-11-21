@@ -58,6 +58,10 @@
       <HintPath>$(BepInExDir)\interop\UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="Unity.InputSystem">
+      <HintPath>$(BepInExDir)\interop\Unity.InputSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityEngine.AIModule">
       <HintPath>$(BepInExDir)\interop\UnityEngine.AIModule.dll</HintPath>
       <Private>false</Private>
