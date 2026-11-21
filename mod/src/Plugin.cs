@@ -27,6 +27,7 @@ namespace DelusionMP
         private Harmony _harmony;
         private float _nextPing;
         private float _nextSlowTick;
+        private bool _lastInWorld;
 
         public override void Load()
         {
@@ -140,6 +141,13 @@ namespace DelusionMP
             // partner sits in a menu, a loot window or a dialogue (those leave RUNNING).
             bool havePlayer = GameRefs.Player != null;
             bool inWorld = GameRefs.InWorld;
+            if (inWorld != _lastInWorld)
+            {
+                _lastInWorld = inWorld;
+                string gs = "-";
+                try { gs = GameRefs.Manager != null ? GameRefs.Manager.CurrentGameState.ToString() : "-"; } catch { }
+                DelusionMP.Game.Log.Info($"inWorld={inWorld} (state={gs} active={UnityEngine.SceneManagement.SceneManager.GetActiveScene().name} player={havePlayer})");
+            }
             if (session.Connected && havePlayer)
             {
                 Perf.Run("player.send", PlayerSync.TickSend);

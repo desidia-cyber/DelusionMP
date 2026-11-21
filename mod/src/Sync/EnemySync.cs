@@ -26,6 +26,58 @@ namespace DelusionMP.Sync
         private const float StateInterval = 1f / StateHz;
         private static float _nextState;
 
+        // Last health seen for each enemy (local or streamed). An enemy that comes back into
+        // play here - an encounter zone re-entered, a region scene reloaded - is rebuilt by
+        // the game at full health while the partner may have been fighting it.
+        private const float HealthMemory = 90f;
+        private static readonly Dictionary<string, (int hp, float at)> _lastHp = new Dictionary<string, (int, float)>(256, StringComparer.Ordinal);
+        private static readonly HashSet<int> _activeLastTick = new HashSet<int>();
+        private static readonly HashSet<int> _activeNow = new HashSet<int>();
+
+        private static void NoteHealth(string key, int hp) => _lastHp[key] = (hp, Time.realtimeSinceStartup);
+
+        /// <summary>A real respawn (rest, day, party wipe): forget the remembered health.</summary>
+        internal static void ForgetHealth(global::EnemyController c)
+        {
+            if (c == null) return;
+            var k = KeyFor(ObjectRegistry.Instance, c);
+            _lastHp.Remove(k);
+            _returning.Remove(k);
+        }
+        internal static void ForgetAllHealth() { _lastHp.Clear(); _returning.Clear(); }
+
+        // The game refills health a little after the enemy is re-enabled (spawner setup), so a
+        // returning enemy is watched for a few seconds.
+        private const float ReturnWatch = 3f;
+        private static readonly Dictionary<string, (int hp, float until)> _returning = new Dictionary<string, (int, float)>(StringComparer.Ordinal);
+
+        private static void RestoreHealthOnReturn(global::EnemyController e, string key)
+        {
+            if (!_lastHp.TryGetValue(key, out var m) || Time.realtimeSinceStartup - m.at > HealthMemory || m.hp <= 0) return;
+            _returning[key] = (m.hp, Time.realtimeSinceStartup + ReturnWatch);
+        }
+
+        /// <summary>Returns true while the enemy's health is being held at the fight's value.</summary>
+        private static bool WatchReturn(global::EnemyController e, string key)
+        {
+            if (!_returning.TryGetValue(key, out var w)) return false;
+            if (Time.realtimeSinceStartup > w.until) { _returning.Remove(key); return false; }
+            try
+            {
+                var st = e.myStats;
+                if (st != null && st.currentHealth > w.hp)
+                {
+                    int was = st.currentHealth;
+                    LoopGuard.Apply(() => Priv.SetProp(st, "currentHealth", w.hp));
+                    Log.Info($"enemy {e.gameObject.name}: back in play at {was} hp, kept the fight's {w.hp}");
+                }
+            }
+            catch { }
+            return true;
+        }
+
+        internal static void ForgetReturn(string key) => _returning.Remove(key);
+
         private sealed class Puppet
         {
             public global::EnemyController Controller;
@@ -186,6 +238,7 @@ namespace DelusionMP.Sync
         internal static void ClearDead(global::EnemyController c)
         {
             if (c != null) _dead.Remove(c.GetInstanceID());
+            ForgetHealth(c);
         }
 
         // ------------------------------------------------------------------ ownership
@@ -275,12 +328,18 @@ namespace DelusionMP.Sync
 
             var outgoing = new List<(string key, global::EnemyController c, byte owner)>(64);
             int clientOwned = 0;
+            _activeNow.Clear();
             foreach (var e in enemies)
             {
                 if (e == null || !e.gameObject.activeInHierarchy) continue;
-                if (_dead.Contains(e.GetInstanceID())) continue;
+                int eid = e.GetInstanceID();
+                if (_dead.Contains(eid)) continue;
                 string key = CachedKey(reg, e);
                 if (key == null) continue;
+                _activeNow.Add(eid);
+                if (!_activeLastTick.Contains(eid)) RestoreHealthOnReturn(e, key);
+                bool held = WatchReturn(e, key);
+                try { if (e.myStats != null && !held) NoteHealth(key, e.myStats.currentHealth); } catch { }
 
                 if (IsHost)
                 {
@@ -300,6 +359,8 @@ namespace DelusionMP.Sync
                 }
             }
             _ownedByClient = clientOwned;
+            _activeLastTick.Clear();
+            _activeLastTick.UnionWith(_activeNow);
             if (outgoing.Count > 0) FlushBatch(outgoing);
         }
 
@@ -321,6 +382,11 @@ namespace DelusionMP.Sync
             {
                 _puppetMode.Remove(id);
                 _puppets.Remove(id);
+                // Re-enabling the controller runs the game's enemy setup, which refills
+                // health: a hand-over mid-fight healed the enemy. Keep what the previous
+                // owner streamed.
+                int keepHp = int.MinValue;
+                try { if (c.myStats != null) keepHp = c.myStats.currentHealth; } catch { }
                 try
                 {
                     if (agent != null)
@@ -334,6 +400,15 @@ namespace DelusionMP.Sync
                     if (det != null) { det.enabled = true; det.ResetDetectionLists(); }
                 }
                 catch (Exception e) { Log.Debug("enemy resume: " + e.Message); }
+                if (keepHp != int.MinValue)
+                {
+                    try
+                    {
+                        if (c.myStats != null && c.myStats.currentHealth != keepHp)
+                            LoopGuard.Apply(() => Priv.SetProp(c.myStats, "currentHealth", keepHp));
+                    }
+                    catch (Exception e) { Log.Debug("enemy resume hp: " + e.Message); }
+                }
             }
             else
             {
@@ -415,6 +490,7 @@ namespace DelusionMP.Sync
                 var c = Resolve(key);
                 if (c == null || _dead.Contains(c.GetInstanceID())) continue;
                 int id = c.GetInstanceID();
+                if (host || owner != OwnerClient) NoteHealth(key, hp);   // the simulating peer's value
 
                 if (host)
                 {
@@ -555,6 +631,28 @@ namespace DelusionMP.Sync
 
 namespace DelusionMP.Sync
 {
+    // An encounter zone switches its spawners when the *local* player enters or leaves.
+    // That is streaming, not a world change: keep it off the mirror (see WorldMirror.LocalOnly).
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyCombatEncounter), "ToggleEnemies")]
+    internal static class Patch_EnemyCombatEncounter_ToggleEnemies
+    {
+        [HarmonyLib.HarmonyPrefix]
+        static void Prefix(global::EnemyCombatEncounter __instance)
+        {
+            try
+            {
+                var arr = __instance.enemiesToSpawn;
+                if (arr == null) return;
+                foreach (var sp in arr)
+                {
+                    if (sp == null) continue;
+                    WorldMirror.LocalOnly(sp.GetComponent<global::SaveableObject>());
+                }
+            }
+            catch { }
+        }
+    }
+
     // Trigger messages still reach a disabled detector; a puppet must not detect anyone.
     [HarmonyLib.HarmonyPatch(typeof(global::EnemyDetector), "ProcessCollider")]
     internal static class Patch_EnemyDetector_ProcessCollider

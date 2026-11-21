@@ -187,6 +187,7 @@ namespace DelusionMP.Sync
             _wipeEpisode = true;
             _wipes++;
             Log.Info($"coop death: PARTY WIPE ({why}) - enemies return, both respawn at their own points");
+            EnemySync.ForgetAllHealth();
             // A held respawn goes now.
             if (_respawnDue > 0f) _respawnDue = Time.realtimeSinceStartup;
             // The host owns enemy respawns; it runs the game's own "player died" respawns.

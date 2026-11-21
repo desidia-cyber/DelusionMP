@@ -260,7 +260,16 @@ namespace DelusionMP.Sync
                 try
                 {
                     var rm = GameRefs.Regions;
-                    if (rm != null) { rm.ResetRegions(); _reset++; Log.Info("join: regions reloaded so untouched-on-host objects return to default"); }
+                    if (rm != null)
+                    {
+                        rm.ResetRegions();
+                        // ResetRegions empties the region list; only OnRegionChanged (normally
+                        // fired when the player crosses a region border) rebuilds it. Without
+                        // this the player keeps no region scene until the next border.
+                        rm.OnRegionChanged();
+                        _reset++;
+                        Log.Info($"join: regions reloaded so untouched-on-host objects return to default ({rm.regions?.Count ?? 0} region(s))");
+                    }
                 }
                 catch (Exception e) { Log.Warn("join: region reload failed: " + e.Message); }
             }

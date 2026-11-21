@@ -137,8 +137,14 @@ namespace DelusionMP.Core
         private static float _holdUntil = -1f;
         private static Vector3 _holdPos;
 
+        private static bool _god;
+
         private static void HoldTick(float now)
         {
+            if (_god)
+            {
+                try { var cs = GameRefs.Stats; if (cs != null) cs.currentHealth = cs.maxHealth.GetValue(); } catch { }
+            }
             if (_holdUntil < 0f) return;
             var p = GameRefs.Player;
             if (p == null) return;
@@ -203,6 +209,8 @@ namespace DelusionMP.Core
                     Emit($"STATUS role={s.Role} connected={s.Connected} inWorld={GameRefs.InWorld} " +
                          $"objects={ObjectRegistry.Instance.Count} scene={ObjectRegistry.Instance.CurrentScene} " +
                          $"puppet={Sync.PlayerSync.PuppetInfo} " +
+                         $"gs={(GameRefs.Manager != null ? GameRefs.Manager.CurrentGameState.ToString() : "-")} " +
+                         $"active={UnityEngine.SceneManagement.SceneManager.GetActiveScene().name} " +
                          $"uptime={Time.realtimeSinceStartup:F0}s");
                     break;
                 }
@@ -840,6 +848,113 @@ namespace DelusionMP.Core
                     Emit("SPAWNPOINTS done");
                     break;
                 }
+                case "bosses":
+                {
+                    // bosses [minMaxHp]: every scene enemy (loaded, active or not) with a big health pool.
+                    int min = parts.Length > 1 ? int.Parse(parts[1]) : 300;
+                    var reg = ObjectRegistry.Instance;
+                    foreach (var e in Resources.FindObjectsOfTypeAll<global::EnemyController>())
+                    {
+                        if (e == null || !e.gameObject.scene.IsValid()) continue;
+                        int mh = 0, ch = 0; try { mh = e.myStats.maxHealth; ch = e.myStats.currentHealth; } catch { }
+                        if (mh < min) continue;
+                        var p = e.transform.position;
+                        string spi = "";
+                        global::EnemySpawner bsp = null;
+                        for (var t = e.transform; t != null && bsp == null; t = t.parent) bsp = t.GetComponent<global::EnemySpawner>();
+                        if (bsp != null)
+                        {
+                            try
+                            {
+                                var qo = bsp.GetComponent<global::QuestObject>();
+                                spi = $" spawner={bsp.gameObject.activeInHierarchy}/act={bsp.spawnerActive}/init={bsp.hasBeenInitialized} respawn={bsp.canRespawn} days={bsp.maxDaysUntilRespawn} killData={bsp.savesKillData} fact='{bsp.setNormalFact}' id='{bsp.optionalEnemyID}'" +
+                                      (qo != null ? $" quest='{qo.taskString}'@{qo.taskStage}" : "");
+                            }
+                            catch (Exception ex) { spi = " spawner=? " + ex.Message; }
+                        }
+                        Emit($"BOSS {e.gameObject.name} hp={ch}/{mh} active={e.gameObject.activeInHierarchy} dead={EnemySync.IsDead(e)} puppet={EnemySync.IsPuppet(e)} at {p.x:F1},{p.y:F1},{p.z:F1}{spi} key={EnemySync.KeyFor(reg, e)}");
+                    }
+                    Emit("BOSSES done");
+                    break;
+                }
+                case "god":
+                {
+                    // god on|off: rig only - the local player's health is refilled every frame.
+                    _god = parts.Length < 2 || parts[1] != "off";
+                    Emit($"GOD {_god}");
+                    break;
+                }
+                case "comps":
+                {
+                    // comps <name substring> [max]: scene objects by name with activeSelf and components.
+                    string want = parts.Length > 1 ? parts[1] : "";
+                    int max = parts.Length > 2 ? int.Parse(parts[2]) : 8;
+                    int seen = 0;
+                    foreach (var t in Resources.FindObjectsOfTypeAll<Transform>())
+                    {
+                        if (seen >= max) break;
+                        if (t == null || !t.gameObject.scene.IsValid()) continue;
+                        if (t.gameObject.name.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                        seen++;
+                        var cs = new List<string>();
+                        foreach (var c in t.GetComponents<Component>())
+                            if (c != null) cs.Add(c.GetIl2CppType().Name);
+                        Emit($"COMP {ObjectRegistry.HierarchyPath(t)} self={t.gameObject.activeSelf} inHier={t.gameObject.activeInHierarchy} children={t.childCount} [{string.Join(",", cs)}]");
+                    }
+                    Emit("COMPS done");
+                    break;
+                }
+                case "fot":
+                {
+                    // fot <name substring>: TriggerByFactOrTask gates (what turns story objects on).
+                    string want = parts.Length > 1 ? parts[1] : "";
+                    foreach (var t in Resources.FindObjectsOfTypeAll<global::TriggerByFactOrTask>())
+                    {
+                        if (t == null || !t.gameObject.scene.IsValid()) continue;
+                        if (t.gameObject.name.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                        string cond = "";
+                        try
+                        {
+                            var f = t.factCnd; var k = t.taskCnd;
+                            cond = $"type={t.typeOfTrigger} fact={(f != null ? $"{f.factType}:'{f.factToCheck}' true={f.mustBeTrue} >{f.activeIfGreaterInt}" : "-")} " +
+                                   $"task={(k != null ? $"'{k.taskToCheck}' on>={k.activeOnAndAfterStage} before={k.activeBeforeStage} notStarted={k.activeIfTaskNotStarted} default={k.activeByDefault} stages=[{(k.stagesWhenActive != null ? string.Join(",", k.stagesWhenActive) : "")}] off=[{(k.stagesWhenInactive != null ? string.Join(",", k.stagesWhenInactive) : "")}]" : "-")} " +
+                                   $"world={t.worldState} regionSwapOnly={t.onlyCheckOnRegionSwap}";
+                        }
+                        catch (Exception ex) { cond = "? " + ex.Message; }
+                        Emit($"FOT {ObjectRegistry.HierarchyPath(t.transform)} isActive={t.isActive} {cond}");
+                    }
+                    Emit("FOTS done");
+                    break;
+                }
+                case "encounters":
+                {
+                    // encounters [radius]: combat encounter zones near the player, their fact gate
+                    // and the enemies they spawn.
+                    float rad = parts.Length > 1 ? float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture) : 150f;
+                    var me = GameRefs.Player != null ? GameRefs.Player.transform.position : Vector3.zero;
+                    foreach (var enc in Resources.FindObjectsOfTypeAll<global::EnemyCombatEncounter>())
+                    {
+                        if (enc == null || !enc.gameObject.scene.IsValid()) continue;
+                        var col = enc.GetComponent<Collider>();
+                        var ctr = col != null ? col.bounds.center : enc.transform.position;
+                        float d = Vector3.Distance(ctr, me);
+                        if (d > rad) continue;
+                        var names = new List<string>();
+                        try
+                        {
+                            var arr = enc.enemiesToSpawn;
+                            if (arr != null)
+                                foreach (var sp in arr)
+                                    if (sp != null) names.Add(sp.gameObject.name + (sp.enemyObject != null && sp.enemyObject.activeInHierarchy ? "(on)" : "(off)"));
+                        }
+                        catch { }
+                        bool inside = col != null && col.bounds.Contains(me);
+                        Emit($"ENC {ObjectRegistry.HierarchyPath(enc.transform)} active={enc.gameObject.activeInHierarchy} at {ctr.x:F0},{ctr.y:F0},{ctr.z:F0} dist={d:F1} inside={inside} " +
+                             $"size={(col != null ? col.bounds.size.ToString("F0") : "-")} fact='{enc.factMustBeTrue}'>={enc.intEqualOrHigher} neverDisables={enc.neverDisables} spawns=[{string.Join(",", names)}]");
+                    }
+                    Emit("ENCS done");
+                    break;
+                }
                 case "spawnboss":
                 {
                     // spawnboss <name substring>: bring a boss in as its encounter would - activate
@@ -854,7 +969,8 @@ namespace DelusionMP.Core
                         if (mh > bestHp) { bestHp = mh; best = e; }
                     }
                     if (best == null) { Emit("ERR no enemy " + want); break; }
-                    var sp = best.GetComponentInParent<global::EnemySpawner>(true);
+                    global::EnemySpawner sp = null;
+                    for (var t = best.transform; t != null && sp == null; t = t.parent) sp = t.GetComponent<global::EnemySpawner>();
                     for (var t = best.transform; t != null; t = t.parent) if (!t.gameObject.activeSelf) t.gameObject.SetActive(true);
                     try { if (sp != null) sp.ActivateSpawner(true); } catch (Exception e) { Emit("spawner: " + e.Message); }
                     int hp = 0; try { hp = best.myStats.currentHealth; } catch { }

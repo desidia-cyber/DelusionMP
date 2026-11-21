@@ -197,6 +197,21 @@ namespace DelusionMP.Sync
                 try { return tasks.TaskStageTrigger(taskID, stage, false); }
                 catch (Exception e) { Log.Warn($"journal {taskID}->{stage} failed: {e.Message}"); return false; }
             });
+            if (!ok && local < 0)
+            {
+                // Not in this journal and the stage cannot start a task: add the entry the
+                // way a save load does.
+                try
+                {
+                    tasks.RestoreTask(new DelusionTasks.PersistentTaskData { id = taskID, stage = stage });
+                    tasks.RefreshTasksFromDataCore();
+                    LoopGuard.Apply(() => tasks.OnTaskUpdated?.Invoke());
+                    ok = LocalStage(tasks, taskID) == stage;
+                    Log.Info($"journal {taskID}: added at {stage} ({(ok ? "ok" : "failed")})");
+                    return;
+                }
+                catch (Exception e) { Log.Warn($"journal add {taskID}@{stage}: {e.Message}"); }
+            }
             Log.Info($"journal {taskID}: {local} -> {stage} ({(ok ? "ok" : "refused")})");
         }
 
@@ -213,11 +228,13 @@ namespace DelusionMP.Sync
             // The live journal (GetPersistentTaskData returns a copy).
             var list = tasks?.playerTasks?.taskDataList;
             if (list == null) return;
-            int removed = 0, set = 0;
+            int removed = 0, set = 0, added = 0;
+            var present = new HashSet<string>(StringComparer.Ordinal);
             for (int i = list.Count - 1; i >= 0; i--)
             {
                 var t = list[i];
                 if (t == null) continue;
+                present.Add(t.taskID);
                 if (!truth.TryGetValue(t.taskID, out int want)) { list.RemoveAt(i); removed++; continue; }
                 int cur = t.activeStage != null ? t.activeStage.stageID : -1;
                 if (cur == want) continue;
@@ -228,10 +245,23 @@ namespace DelusionMP.Sync
                 }
                 catch (Exception e) { Log.Debug($"journal set {t.taskID}: {e.Message}"); }
             }
-            if (removed + set == 0) return;
+            // Quests the host has and this side never started: the trigger refuses a stage
+            // that cannot start a task, so the entry is rebuilt the way a save load does.
+            foreach (var kv in truth)
+            {
+                if (present.Contains(kv.Key)) continue;
+                try
+                {
+                    var item = new DelusionTasks.PersistentTaskData { id = kv.Key, stage = kv.Value };
+                    tasks.RestoreTask(item);
+                    added++;
+                }
+                catch (Exception e) { Log.Warn($"journal add {kv.Key}@{kv.Value}: {e.Message}"); }
+            }
+            if (removed + set + added == 0) return;
             try { tasks.RefreshTasksFromDataCore(); } catch { }
             try { LoopGuard.Apply(() => tasks.OnTaskUpdated?.Invoke()); } catch { }
-            Log.Info($"journal: matched to the host ({removed} entr(ies) removed, {set} stage(s) set)");
+            Log.Info($"journal: matched to the host ({removed} entr(ies) removed, {set} stage(s) set, {added} added)");
         }
 
         public static void Tick()

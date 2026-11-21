@@ -251,6 +251,11 @@ namespace DelusionMP.Sync
                 bool known = _hashes.TryGetValue(key, out var old);
                 if (known && old == h) return;
                 _hashes[key] = h;
+                if (_localOnlyUntil.TryGetValue(key, out var lo))
+                {
+                    if (Time.realtimeSinceStartup < lo) return;   // local streaming change: baseline only
+                    _localOnlyUntil.Remove(key);
+                }
 
                 if (!host)
                 {
@@ -828,6 +833,20 @@ namespace DelusionMP.Sync
                 }
             });
                 }
+
+        private static readonly Dictionary<string, float> _localOnlyUntil = new Dictionary<string, float>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// The object's state is about to change for a reason local to this player (an
+        /// encounter zone switching its spawners with the local player's position): record
+        /// the new state as the baseline instead of sending it. Sent, it turned the partner's
+        /// enemies off and back on - respawned at full health in the middle of a fight.
+        /// </summary>
+        internal static void LocalOnly(global::SaveableObject so, float seconds = 5f)
+        {
+            if (so == null || !TryGetKey(so, out var key)) return;
+            _localOnlyUntil[key] = Time.realtimeSinceStartup + seconds;
+        }
 
         /// <summary>Join: this side now holds what the host holds for that object.</summary>
         internal static void Rebaseline(string key, global::SaveableObject so)
