@@ -102,6 +102,12 @@ Commands are written to `rig/instance<N>/game/BepInEx/ddmp_cmd.txt`, results app
 | Duplicate save ids | host → client | `mirrortop` | three doors sharing one id no longer flip the client's door between locked and unlocked twice a second |
 | Voice (final build) | host → client | test signal through `voicetalk` | 200/202 frames played, mean error 69/32768 (mu-law); 2 dropped in the post-join load hitch |
 | Package | — | `tools/package.ps1` | `dist/DelusionMP-Coop.zip` with both launchers, the mod and BepInEx |
+| Aggro | both | host 3 m from a mech, client 18 m away hits it three times; then the host hits harder | control and the AI's target move to the client (score 30 vs 12), the mech fights the client (client 91 → 1 hp, dies); it turns back to the host when the client is down and when the host out-damages it |
+| Enemies hurting the partner | both | as above | the player the enemy fights takes the damage on their own machine |
+| Menus during a fight | both | host opens the pause menu (time 0), later the client opens the inventory (time 0.2) | the other player's fight continues at full speed: the enemies move to the playing partner at once and come back by score (they froze or snapped back before) |
+| Quest hand-over stage | client → host | client holds `merchantLoot`, host does not; client reaches `thievesTwo` 30, which takes it | both journals at 30, host inventory unchanged (the host's game refused the stage before and stayed at 20) |
+| World cutscene from its real trigger | host → client | `CutterTransportScript.CradleJourneyBegin` (the cutter journey) | the liftoff cutscene plays on the client, then both travel to the same spot in the Cradle. The shipped game has no walk-in cutscene trigger objects; its four world cutscenes are started by scripts like this one |
+| Version mismatch | — | code review | protocol, mod version (now 0.2.0) and game build are compared on connect; a mismatch is shown as an in-game note |
 
 Not verifiable on the rig: typing into the chat box with a real keyboard (the rig windows never
 have focus) and Steam tunnel mode (two Steam accounts on two machines).
@@ -183,8 +189,12 @@ The three remaining `statedump` differences are a continuously moving sky object
   host's copy when the host arrives (each copy runs on its own until then).
 - **Shop selling:** items sold to a merchant are not saved by the game, so only the seller's copy
   of the shop lists them for buyback.
-- **Enemies attack the nearer player only** (the player whose machine runs them); control moves
-  to the other player when they get 4 m closer.
+- **Aggro is by threat, one target at a time:** an enemy fights the player with the most threat
+  (damage dealt, closeness); it switches when the other player clearly out-threatens it, at most
+  every 2 s, never attacking both in the same swing.
+- **A player in a menu** keeps the vanilla pause/slow-motion on their own screen, but their
+  fights move to the partner; the day/night clock follows the host, so it stops while the host
+  is paused.
 - **Partner body:** the game has no jump/fall clip for humans, so a jumping partner holds a
   mid-stride pose. DarkStar/Pwyll women only load with their regions; until then the partner is
   shown as the main female model and switches when the chosen one appears.

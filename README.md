@@ -1,16 +1,31 @@
-# DelusionMP  Etwo-player co-op for Dread Delusion
+# DelusionMP — two-player co-op for Dread Delusion
 
 Reverse engineering and co-op implementation for **Dread Delusion** (Lovely Hellplace /
 DreadXP, Unity 2022.3.60f1, IL2CPP), built on the methodology and tooling in
 [cranebeaker/coop-anything](https://github.com/cranebeaker/coop-anything) and reusing the
 protocol design from the DollsMP co-op mod.
 
-Status: **reverse engineering complete; the co-op core is running and verified live.**
-Fact sync, world-state consistency, door replication and remote player puppets have been
-observed in a real two-instance session; enemy encounters, quest-journal advancement and
-cutscenes are wired but not yet exercised. See `docs/04-VERIFICATION.md` for exactly what
-was proven and how to reproduce it, and `docs/03-IMPLEMENTATION-PLAN.md` for the remaining
-work.
+Status: **playable two-player co-op, verified on a two-instance rig** (story, quests, world
+objects, enemies and bosses, deaths, airship, lifts, dialogue, cutscenes, the ending and
+credits, text chat and proximity voice). It has not yet been played start to finish by two
+people. `docs/04-VERIFICATION.md` lists what was proven and how; the known limitations are at
+its end.
+
+## Playing
+
+1. Build the package once: `./tools/package.ps1` writes `dist/DelusionMP-Coop.zip`
+   (launchers, the mod, BepInEx). Both players use the **same** package; a different mod
+   version is refused with an in-game note.
+2. Each player unzips it and runs `DelusionMP-Launcher.exe`: pick host or join, LAN or Steam,
+   a name and the game folder, then **Launch**. The launcher prepares a separate co-op copy of
+   the game (your normal saves are untouched; co-op saves live in `Dread Delusion MP1`).
+3. The host loads or starts a game; the joiner loads any save and is brought to the host's
+   world, story and journal on joining.
+
+In game: **T** opens text chat (Enter sends, Esc cancels); voice is push-to-talk on **V** or
+open-mic, set on the launcher's Player page (takes effect on the next start). Session rules
+(death penalties, respawn at the partner, exclusive shop items) are the host's and are sent to
+the joiner.
 
 ---
 
@@ -23,7 +38,9 @@ work.
 | `docs/03-IMPLEMENTATION-PLAN.md` | Phased build plan with exit criteria |
 | `docs/04-VERIFICATION.md` | What was proven in a live two-instance session, and the rig procedure |
 | `mod/src/` | BepInEx 6 IL2CPP plugin: protocol, loop guard, event journal, fact/quest/world/enemy/player sync |
-| `tools/rig.ps1` | Two-instance invisible rig: private desktops, muted, isolated saves |
+| `crates/delusionmp-launcher*` | The launcher (window and command-line): co-op game copy, LAN/Steam, settings |
+| `tools/package.ps1` | Builds the shareable package `dist/DelusionMP-Coop.zip` |
+| `tools/rig.ps1` | Two-instance invisible rig: private desktops, muted, isolated saves (`-Visible` for manual checks) |
 | `tools/session.ps1` | Brings up a full two-player session and reports state |
 | `mod/typecheck/` | Compile harness (stubs) so the source typechecks without the game |
 | `tools/` | Dump parser, type query CLI, asset and database extractors, manifest builder |
@@ -43,8 +60,8 @@ captures a `Dictionary<string, object>` from every `ISaveable` component in the 
 distinct across 4 804 components). That identity table is what co-op keys on.
 
 **Story state is one small map.** `FactDB` holds `Dictionary<string,bool>` and
-`Dictionary<string,int>`; almost everything  Edoors, spawners, triggers, quest stages,
-cutscenes  Ekeys off it. Syncing facts correctly is most of "story co-op".
+`Dictionary<string,int>`; almost everything —doors, spawners, triggers, quest stages,
+cutscenes —keys off it. Syncing facts correctly is most of "story co-op".
 
 **Quests have one entry point and one serialisable state.** `DelusionTasks.TaskStageTrigger`
 (`0x415E90`) advances a task and returns whether it did; `GetPersistentTaskData` /
@@ -114,18 +131,11 @@ bare assembly name (`Assembly-CSharp`, not `.dll`), which is patched in the scri
 
 ## Not yet verified
 
-Be honest about these before shipping anything:
-
-1. **BepInEx 6 IL2CPP against metadata v31**  Ethe whole plan depends on it loading.
-   Phase 0 exists solely to prove it.
-2. **`FactDB.SetFact` event fan-out at runtime**  Ethe hook assumes a postfix on the two
-   `SetFact` overloads catches every write. A live probe should confirm no writer bypasses it.
-3. **Per-`ISaveable` payload mapping**  E`CaptureState()` returns `object`; each component
-   still needs its typed wire variant written (the design lists the common ones).
-4. **The 50 `SaveableObject`s without identifiers**  Eneed the runtime census to see whether
-   hierarchy paths are stable between two copies.
-5. **Real `CharacterStats` ownership**  E`DelusionStats.characterStats` is assumed canonical;
-   only a running game can confirm there is not a second instance per save slot.
+- A real playthrough by two people from start to finish (late-game story beats and bosses were
+  reached on the rig through quest stages and travel commands).
+- Typing into the chat box with a physical keyboard (the rig's windows never have focus;
+  `tools/rig.ps1 -Action launch -Visible` opens small visible windows for this check).
+- Steam mode (needs two Steam accounts on two machines).
 
 ---
 
