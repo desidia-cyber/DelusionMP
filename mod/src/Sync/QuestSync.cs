@@ -45,6 +45,60 @@ namespace DelusionMP.Sync
 
         public static void Init() { }
 
+        /// <summary>True while a hand-over stage runs with lent items (notes are hidden).</summary>
+        internal static bool Loaning;
+
+        /// <summary>
+        /// Runs TaskStageTrigger for a stage the partner reached. A hand-over stage (the NPC
+        /// takes or checks an item) is refused when this player does not carry the item - the
+        /// partner handed it over - and the journals split. The missing items are lent for the
+        /// call: the game takes them back itself, and this player gets the stage's facts and
+        /// rewards like the partner did. Check-only items still here afterwards are removed.
+        /// </summary>
+        internal static bool TriggerWithLoan(global::DelusionTasks tasks, string taskID, int stage, bool popup)
+        {
+            var lent = new List<string>();
+            var inv = GameRefs.Inventory;
+            try
+            {
+                var db = global::DelusionTextFiles.Instance?.taskTextData;
+                global::Task def = null;
+                if (db != null && db.ContainsKey(taskID)) def = db[taskID];
+                global::TaskStage st = null;
+                if (def?.stages != null) foreach (var x in def.stages) if (x != null && x.stageID == stage) { st = x; break; }
+                if (st != null && inv != null)
+                {
+                    var need = new List<string>();
+                    if (!string.IsNullOrEmpty(st.itemRemoved)) need.Add(st.itemRemoved);
+                    if (st.itemsToRemove != null) foreach (var i in st.itemsToRemove) if (!string.IsNullOrEmpty(i) && !need.Contains(i)) need.Add(i);
+                    if (st.keyItemsNeeded != null) foreach (var i in st.keyItemsNeeded) if (!string.IsNullOrEmpty(i) && !need.Contains(i)) need.Add(i);
+                    var rarity = st.removeItemHasRarity ? st.removedRarity : global::ItemRarity.Common;
+                    Loaning = true;
+                    foreach (var id in need)
+                    {
+                        if (inv.GetItemFromInvAnyRarity(id) != null) continue;
+                        var it = inv.CreateItem(id, rarity, 1);
+                        if (it != null && inv.StoreItem(it, global::ItemPopupMode.ForceNote, 1, false)) lent.Add(id);
+                    }
+                }
+            }
+            catch (Exception e) { Log.Debug($"loan {taskID}/{stage}: {e.Message}"); }
+
+            bool ok = false;
+            try { ok = tasks.TaskStageTrigger(taskID, stage, popup && lent.Count == 0); }
+            finally
+            {
+                foreach (var id in lent)
+                {
+                    try { if (inv.GetItemFromInvAnyRarity(id) != null) inv.RemoveItemByID(id, global::ItemRarity.Common, false, 1, false); }
+                    catch { }
+                }
+                Loaning = false;
+                if (lent.Count > 0) Log.Info($"quest {taskID} -> {stage}: hand-over item(s) {string.Join(",", lent)} lent for the stage (trigger={ok})");
+            }
+            return ok;
+        }
+
         /// <summary>The interop constructor does not run the field initialiser, so the
         /// backing list is null until we give it one.</summary>
         private static DelusionTasks.PersistentTaskDataList NewTaskList()
@@ -120,7 +174,7 @@ namespace DelusionMP.Sync
                     bool popup = r.Bool();
                     if (Session.Instance?.Role != SessionRole.Host) break;
                     bool ok = false;
-                    try { ok = GameRefs.Tasks?.TaskStageTrigger(taskID, stage, popup) ?? false; }
+                    try { var tk = GameRefs.Tasks; ok = tk != null && TriggerWithLoan(tk, taskID, stage, popup); }
                     catch (Exception e) { Log.Warn($"client stage {taskID}/{stage} failed: {e.Message}"); }
                     if (!ok) ApplyStage(taskID, stage, popup);
                     Log.Info($"client advanced {taskID} -> {stage} (trigger={ok})");
@@ -171,7 +225,7 @@ namespace DelusionMP.Sync
             if (tasks == null) return;
             bool ok = LoopGuard.Apply(() =>
             {
-                try { return tasks.TaskStageTrigger(taskID, stage, popup); }
+                try { return TriggerWithLoan(tasks, taskID, stage, popup); }
                 catch (Exception e) { Log.Warn($"replay {taskID}/{stage} failed: {e.Message}"); return false; }
             });
             if (ok) { _replayed++; Log.Info($"quest {taskID} -> {stage} (replayed)"); return; }
@@ -194,7 +248,7 @@ namespace DelusionMP.Sync
             if (local == stage) return;
             bool ok = LoopGuard.Apply(() =>
             {
-                try { return tasks.TaskStageTrigger(taskID, stage, false); }
+                try { return TriggerWithLoan(tasks, taskID, stage, false); }
                 catch (Exception e) { Log.Warn($"journal {taskID}->{stage} failed: {e.Message}"); return false; }
             });
             if (!ok && local < 0)
@@ -335,5 +389,12 @@ namespace DelusionMP.Sync
     {
         [HarmonyPostfix]
         static void Postfix(string ID) => QuestSync.OnQuestStarted(ID);
+    }
+
+    // Lent hand-over items come and go inside one call: no "item added/removed" notes.
+    [HarmonyPatch(typeof(global::DelusionNote), nameof(global::DelusionNote.StartNewNote))]
+    internal static class Patch_DelusionNote_QuietLoan
+    {
+        [HarmonyPrefix] static bool Prefix() => !QuestSync.Loaning;
     }
 }

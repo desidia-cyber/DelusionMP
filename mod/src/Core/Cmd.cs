@@ -854,6 +854,29 @@ namespace DelusionMP.Core
                     Emit($"TASKDB {n}");
                     break;
                 }
+                case "itemstages":
+                {
+                    // Quest stages that need or remove items (hand-overs).
+                    var tf = global::DelusionTextFiles.Instance;
+                    var db = tf != null ? tf.taskTextData : null;
+                    if (db == null) { Emit("ERR no task data"); break; }
+                    foreach (var kv in db)
+                    {
+                        var t = kv.Value;
+                        if (t == null || t.stages == null) continue;
+                        foreach (var st in t.stages)
+                        {
+                            if (st == null) continue;
+                            string rm = st.itemRemoved ?? "";
+                            string many = st.itemsToRemove != null && st.itemsToRemove.Count > 0 ? string.Join("+", st.itemsToRemove.ToArray()) : "";
+                            string keys = st.keyItemsNeeded != null && st.keyItemsNeeded.Count > 0 ? string.Join("+", st.keyItemsNeeded.ToArray()) : "";
+                            if (!st.needsItem && rm == "" && many == "" && keys == "") continue;
+                            Emit($"ITEMSTAGE {kv.Key} {st.stageID} needs={st.needsItem} removed='{rm}' remove='{many}' keys='{keys}' requires=[{(st.requiresActiveStage != null ? string.Join(",", st.requiresActiveStage.ToArray()) : "")}]");
+                        }
+                    }
+                    Emit("ITEMSTAGES done");
+                    break;
+                }
                 case "spawnpoints":
                 {
                     foreach (var sp in Resources.FindObjectsOfTypeAll<global::DeathRespawnPoint>())
