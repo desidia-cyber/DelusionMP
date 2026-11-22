@@ -80,6 +80,7 @@ namespace DelusionMP.Sync
 
         private sealed class Puppet
         {
+            public bool InCombat;   // the simulating peer's enemy is fighting
             public global::EnemyController Controller;
             public Vector3 TargetPos;
             public float TargetYaw;
@@ -128,6 +129,13 @@ namespace DelusionMP.Sync
 
         private const byte CombatDamage = 0;
         private const byte CombatDeath = 1;
+        private const byte CombatThreat = 2;   // client -> host: the client hit an enemy it simulates
+
+        // True while a peer's hit is being applied here (it is the peer's threat, not ours).
+        private static bool _applyingPeerHit;
+        // When this machine's player last hit each enemy: an enemy taken over after our hits
+        // must fight us (our hits landed on a puppet whose AI never noticed them).
+        private static readonly Dictionary<int, float> _localHitAt = new Dictionary<int, float>(64);
 
         private static readonly HashSet<int> _dead = new HashSet<int>();
         private static int _hitsForwarded, _hitsApplied, _deathsSent, _deathsApplied;
@@ -140,10 +148,23 @@ namespace DelusionMP.Sync
             var s = Session.Instance;
             if (s == null || !s.Connected || LoopGuard.ApplyingRemote) return;
             var c = trig != null ? trig.myController : null;
-            if (c == null) return;
+            if (c == null || _applyingPeerHit) return;
+            _localHitAt[c.GetInstanceID()] = Time.realtimeSinceStartup;
+            // Threat: the host decides who the enemy fights, from damage and closeness.
+            if (IsHost) AddThreat(c.GetInstanceID(), client: false, damage);
             // The simulating peer owns health: hits on a local puppet go to it. The local
             // hit still lands for instant feedback; the owner's stream corrects it.
-            if (!IsPuppet(c)) return;
+            if (!IsPuppet(c))
+            {
+                if (IsClient)
+                {
+                    // Our own simulated enemy: the host still needs the threat to keep it here.
+                    var tw = new Writer();
+                    tw.U8(CombatThreat).Str(KeyFor(ObjectRegistry.Instance, c)).I32(damage);
+                    s.SendReliable(PacketKind.CombatEvent, tw.ToArray());
+                }
+                return;
+            }
             var key = KeyFor(ObjectRegistry.Instance, c);
             var w = new Writer();
             w.U8(CombatDamage).Str(key).I32(damage).F32(piercing).I32(poison).I32(burn).I32(charm).F32(slow).I32(stagger);
@@ -177,15 +198,23 @@ namespace DelusionMP.Sync
                 int dmg = r.I32(); float pierce = r.F32(); int poison = r.I32(); int burn = r.I32();
                 int charm = r.I32(); float slow = r.F32(); int stagger = r.I32();
                 if (_dead.Contains(c.GetInstanceID())) return;
+                if (IsHost) AddThreat(c.GetInstanceID(), client: true, dmg);
                 var trig = go.GetComponentInChildren<global::EnemyDamageTrigger>(true);
                 if (trig == null) return;
                 // Outside LoopGuard: the resulting death must replicate normally.
+                _applyingPeerHit = true;
                 try
                 {
                     trig.ApplyDamage(dmg, pierce, poison, burn, charm, slow, false, true, null, stagger);
                     _hitsApplied++;
                 }
                 catch (Exception e) { Log.Warn($"client hit on {key} failed: {e.Message}"); }
+                finally { _applyingPeerHit = false; }
+            }
+            else if (kind == CombatThreat)
+            {
+                int dmg = r.I32();
+                if (IsHost) AddThreat(c.GetInstanceID(), client: true, dmg);
             }
             else if (kind == CombatDeath)
             {
@@ -280,6 +309,43 @@ namespace DelusionMP.Sync
             return false;
         }
 
+        // ---- aggro: who the enemy fights.
+        //
+        // The machine that simulates an enemy runs the game's own AI, which fights that
+        // machine's player. So "who owns it" is "who it is angry at". The host scores both
+        // players per enemy: damage dealt (x3, decaying, half-life 8 s) plus a closeness bonus
+        // inside 15 m (up to 15). Control moves when the other player's score clearly wins, at most
+        // every 2 s, so a ranged attacker pulls the enemy off the partner and a player who
+        // walks up to it takes it over - without flip-flopping mid-swing.
+        private sealed class Threat { public float Host, Client, At, LastSwitch = -10f; }
+        private static readonly Dictionary<int, Threat> _threat = new Dictionary<int, Threat>(128);
+        private const float ThreatHalfLife = 8f, CloseRange = 15f, CloseWeight = 1f, SwitchHold = 2f, ThreatPerDamage = 3f;
+
+        private static Threat ThreatOf(int id)
+        {
+            if (!_threat.TryGetValue(id, out var t)) { t = new Threat { At = Time.realtimeSinceStartup }; _threat[id] = t; }
+            float now = Time.realtimeSinceStartup, dt = now - t.At;
+            if (dt > 0f)
+            {
+                float k = Mathf.Pow(0.5f, dt / ThreatHalfLife);
+                t.Host *= k; t.Client *= k; t.At = now;
+            }
+            return t;
+        }
+
+        internal static void AddThreat(int id, bool client, float amount)
+        {
+            if (amount <= 0f) return;
+            var t = ThreatOf(id);
+            if (client) t.Client += amount * ThreatPerDamage; else t.Host += amount * ThreatPerDamage;
+        }
+
+        public static string ThreatInfo(global::EnemyController c)
+        {
+            if (c == null || !_threat.TryGetValue(c.GetInstanceID(), out var t)) return "";
+            return $" threat(host={t.Host:F0} client={t.Client:F0})";
+        }
+
         private static byte DecideOwner(global::EnemyController e, bool havePeer, Vector3 peer, Vector3 self)
         {
             int id = e.GetInstanceID();
@@ -289,8 +355,27 @@ namespace DelusionMP.Sync
             {
                 var p = e.transform.position;
                 float dh = Vector3.Distance(p, self), dc = Vector3.Distance(p, peer);
-                if (cur == OwnerHost && dc + Hysteresis < dh) cur = OwnerClient;
-                else if (cur == OwnerClient && dh + Hysteresis < dc) cur = OwnerHost;
+                var t = ThreatOf(id);
+                float sh = t.Host + Mathf.Max(0f, CloseRange - dh) * CloseWeight;
+                float sc = t.Client + Mathf.Max(0f, CloseRange - dc) * CloseWeight;
+                float now = Time.realtimeSinceStartup;
+                bool canSwitch = now - t.LastSwitch >= SwitchHold;
+                byte want = cur;
+                if (sh <= 0.5f && sc <= 0.5f)
+                {
+                    // Nobody near or fighting it: the nearer player simulates (streaming/LOD).
+                    if (cur == OwnerHost && dc + Hysteresis < dh) want = OwnerClient;
+                    else if (cur == OwnerClient && dh + Hysteresis < dc) want = OwnerHost;
+                }
+                else if (cur == OwnerHost && sc > sh * 1.25f + 5f) want = OwnerClient;
+                else if (cur == OwnerClient && sh > sc * 1.25f + 5f) want = OwnerHost;
+                if (want != cur && canSwitch)
+                {
+                    t.LastSwitch = now;
+                    if (sh > 0.5f || sc > 0.5f)
+                        Log.Info($"aggro: {e.gameObject.name} -> {(want == OwnerClient ? "client" : "host")} (score host={sh:F0} client={sc:F0})");
+                    cur = want;
+                }
             }
             _owner[id] = cur;
             return cur;
@@ -380,6 +465,7 @@ namespace DelusionMP.Sync
             try { agent = c.agent; } catch { }
             if (simulate)
             {
+                bool wasFighting = _puppets.TryGetValue(id, out var was) && was.InCombat;
                 _puppetMode.Remove(id);
                 _puppets.Remove(id);
                 // Re-enabling the controller runs the game's enemy setup, which refills
@@ -398,6 +484,19 @@ namespace DelusionMP.Sync
                     c.enabled = true;
                     var det = c.myDetector;
                     if (det != null) { det.enabled = true; det.ResetDetectionLists(); }
+                    // Taken over mid-fight: turn on this machine's player at once instead of
+                    // idling until it happens to see them.
+                    bool provoked = false;
+                    try { provoked = c.hasBeenProvoked; } catch { }
+                    bool hitByUs = _localHitAt.TryGetValue(id, out var hitAt) && Time.realtimeSinceStartup - hitAt < 15f;
+                    if ((wasFighting || provoked || hitByUs) && c.hostileType != global::EnemyController.HostileType.CannotFight)
+                        LoopGuard.Apply(() =>
+                        {
+                            try { if (c.player != null) c.targetEnemyObj = c.player; } catch { }
+                            c.Provoke();
+                            // Provoked alone it keeps patrolling; combat mode makes it come at us.
+                            c.CombatMode(global::EnemyController.CombatModes.InCombat);
+                        });
                 }
                 catch (Exception e) { Log.Debug("enemy resume: " + e.Message); }
                 if (keepHp != int.MinValue)
@@ -512,6 +611,7 @@ namespace DelusionMP.Sync
                 p.TargetPos = pos;
                 p.TargetYaw = yaw;
                 p.LastUpdate = now;
+                p.InCombat = mode == global::EnemyController.CombatModes.InCombat && hostile == global::EnemyController.HostileType.Aggressive;
 
                 LoopGuard.Apply(() =>
                 {

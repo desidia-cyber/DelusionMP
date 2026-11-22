@@ -502,7 +502,7 @@ namespace DelusionMP.Core
                         int hp = -1;
                         try { hp = c.myStats != null ? c.myStats.currentHealth : -1; } catch { }
                         Emit($"ENEMY {key} name={c.gameObject.name} hp={hp} dist={dist:F1} dead={EnemySync.IsDead(c)} " +
-                             $"pos={c.transform.position.x:F1},{c.transform.position.y:F1},{c.transform.position.z:F1}" + EnemySync.PuppetInfo(c));
+                             $"pos={c.transform.position.x:F1},{c.transform.position.y:F1},{c.transform.position.z:F1}" + EnemySync.PuppetInfo(c) + EnemySync.ThreatInfo(c));
                     }
                     Emit("ENEMYSTATS " + EnemySync.Stats);
                     break;
@@ -511,7 +511,7 @@ namespace DelusionMP.Core
                 {
                     // Hit the nearest live enemy exactly as a player weapon does.
                     int dmg = parts.Length > 1 ? int.Parse(parts[1]) : 10;
-                    string want = parts.Length > 2 ? parts[2] : null;
+                    string want = parts.Length > 2 ? parts[2].Replace('+', ' ') : null;
                     foreach (var (key, c, dist) in EnemySync.Nearest(40))
                     {
                         if (EnemySync.IsDead(c)) continue;
@@ -893,6 +893,22 @@ namespace DelusionMP.Core
                         Emit($"BOSS {e.gameObject.name} hp={ch}/{mh} active={e.gameObject.activeInHierarchy} dead={EnemySync.IsDead(e)} puppet={EnemySync.IsPuppet(e)} at {p.x:F1},{p.y:F1},{p.z:F1}{spi} key={EnemySync.KeyFor(reg, e)}");
                     }
                     Emit("BOSSES done");
+                    break;
+                }
+                case "enemyinfo":
+                {
+                    // enemyinfo <key substring, + for space>: the AI's view of the nearest match.
+                    string want = parts.Length > 1 ? parts[1].Replace('+', ' ') : "";
+                    foreach (var (key, c, dist) in EnemySync.Nearest(60))
+                    {
+                        if (key.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                        string tgt = "-", ply = "-";
+                        try { tgt = c.targetEnemyObj != null ? c.targetEnemyObj.name : "-"; } catch { }
+                        try { ply = c.player != null ? c.player.name : "-"; } catch { }
+                        bool en = false; try { en = c.enabled; } catch { }
+                        Emit($"EINFO {c.gameObject.name} enabled={en} mode={c.combatMode} hostile={c.hostileType} provoked={c.hasBeenProvoked} attackedByPlayer={c.attackedByPlayer} target={tgt} player={ply} running={c.isRunning} dist={dist:F1}{EnemySync.PuppetInfo(c)}{EnemySync.ThreatInfo(c)}");
+                        break;
+                    }
                     break;
                 }
                 case "ending":

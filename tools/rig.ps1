@@ -31,7 +31,9 @@ param(
 
     [int]$Count = 2,
     [string]$GameSrc = 'G:\SteamLibrary\steamapps\common\Dread Delusion\windows_content',
-    [int]$Port = 27077
+    [int]$Port = 27077,
+    # launch only: small windows on this desktop instead of private desktops (manual checks)
+    [switch]$Visible
 )
 
 $ErrorActionPreference = 'Stop'
@@ -74,7 +76,8 @@ function Write-LaunchVbs([int]$i, [string]$role) {
     $line = 'CreateObject("WScript.Shell").Run "powershell.exe -NoProfile -ExecutionPolicy Bypass ' +
             '-File ""' + (Join-Path $Root 'tools\launch-game.ps1') + '""' +
             ' -Slot ' + $i + ' -Role ' + $role + ' -Port ' + $Port +
-            ' -GameDir ""' + $game + '"" -Root ""' + $Root + '""", 0, False'
+            ' -GameDir ""' + $game + '"" -Root ""' + $Root + '""' +
+            $(if ($Visible) { ' -Visible' } else { '' }) + '", 0, False'
     Set-Content -LiteralPath $vbs -Value $line -Encoding ASCII
     return $vbs
 }

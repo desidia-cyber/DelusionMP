@@ -23,7 +23,10 @@ param(
     [ValidateSet('host', 'client')][string]$Role = 'host',
     [int]$Port = 27077,
     [Parameter(Mandatory)][string]$GameDir,
-    [string]$Root
+    [string]$Root,
+    # Manual checks only (typing into the chat box needs a focused window): open the game on the
+    # owner's desktop in a small window instead of a private desktop.
+    [switch]$Visible
 )
 
 $ErrorActionPreference = 'Stop'
@@ -60,8 +63,12 @@ public static class DmpLaunch
 
     public static int Start(string exe, string args, string dir, string desktop)
     {
-        IntPtr hd = CreateDesktopW(desktop, IntPtr.Zero, IntPtr.Zero, 0, DESKTOP_ALL_ACCESS, IntPtr.Zero);
-        if (hd == IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error());
+        IntPtr hd = IntPtr.Zero;
+        if (desktop != null)
+        {
+            hd = CreateDesktopW(desktop, IntPtr.Zero, IntPtr.Zero, 0, DESKTOP_ALL_ACCESS, IntPtr.Zero);
+            if (hd == IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error());
+        }
 
         SI si = new SI();
         si.cb = Marshal.SizeOf(typeof(SI));
@@ -74,9 +81,11 @@ public static class DmpLaunch
         if (!CreateProcessW(exe, cmd, IntPtr.Zero, IntPtr.Zero, false, 0, IntPtr.Zero, dir, ref si, out pi))
             throw new Win32Exception(Marshal.GetLastWin32Error());
         CloseHandle(pi.ht); CloseHandle(pi.hp);
-        CloseHandle(hd);
+        if (hd != IntPtr.Zero) CloseHandle(hd);
         return pi.pid;
     }
+
+    [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int cx, int cy, uint flags);
 }
 '@
 
@@ -84,10 +93,11 @@ $exe = Join-Path $GameDir $ExeName
 if (-not (Test-Path -LiteralPath $exe)) { throw "missing executable: $exe" }
 
 $instDir = Split-Path -Parent $GameDir
-$argsLine = "-screen-fullscreen 0 -windowed -screen-width 320 -screen-height 180 " +
+$res = if ($Visible) { '-screen-width 640 -screen-height 360' } else { '-screen-width 320 -screen-height 180' }
+$argsLine = "-screen-fullscreen 0 -windowed $res " +
             "-ddmp-slot=$Slot -ddmp-role=$Role -ddmp-port=$Port -ddmp-name=P$Slot -ddmp-mute"
 
-$procId = [DmpLaunch]::Start($exe, $argsLine, $GameDir, $DesktopName)
+$procId = [DmpLaunch]::Start($exe, $argsLine, $GameDir, $(if ($Visible) { $null } else { $DesktopName }))
 Set-Content -LiteralPath (Join-Path $instDir 'pid.txt') -Value $procId -Encoding ASCII
 Set-Content -LiteralPath (Join-Path $instDir 'cmdline.txt') -Value $argsLine -Encoding ASCII
 
@@ -96,3 +106,15 @@ Start-Process -FilePath 'powershell' -ArgumentList @(
     '-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden',
     '-File', (Join-Path $Root 'tools\quiet-watch.ps1'), '-Image', $ExeName, '-Seconds', '21600'
 ) -WindowStyle Hidden | Out-Null
+
+if ($Visible) {
+    # Side by side: instance 1 on the left, instance 2 on the right.
+    for ($t = 0; $t -lt 120; $t++) {
+        Start-Sleep -Milliseconds 500
+        $p = Get-Process -Id $procId -ErrorAction SilentlyContinue
+        if ($p -and $p.MainWindowHandle -ne [IntPtr]::Zero) {
+            [void][DmpLaunch]::SetWindowPos($p.MainWindowHandle, [IntPtr]::Zero, 20 + ($Slot - 1) * 680, 60, 656, 399, 0x0044)
+            break
+        }
+    }
+}
