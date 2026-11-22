@@ -614,13 +614,93 @@ namespace DelusionMP.Sync
 
         // ---------------------------------------------------------------- text chat
 
+        // Typing: characters come from the Input System's text event (any keyboard layout).
+        // IMGUI's TextField received nothing in this game (it runs the new Input System only).
+        private static bool _textHooked;
+        private static int _openedFrame;
+        private static bool _weLockedPlayer;
+
+        // Typed characters are read from the game window's own WM_CHAR messages (a hook on
+        // the game's thread): exact UTF-16 for any keyboard layout. The Input System's text
+        // event lost everything above 0xFF through the interop bridge ("привет" -> "?@825B").
+        private delegate IntPtr HookProc(int code, IntPtr wParam, IntPtr lParam);
+        [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+        private static extern IntPtr SetWindowsHookExW(int idHook, HookProc fn, IntPtr mod, uint threadId);
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr wParam, IntPtr lParam);
+        [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+        private static extern uint GetCurrentThreadId();
+        private static HookProc _hookProc;   // kept alive: native code holds a pointer to it
+        private static IntPtr _hook;
+
+        private static void HookTextInput()
+        {
+            if (_textHooked) return;
+            _textHooked = true;
+            try
+            {
+                _hookProc = OnGetMessage;
+                // WH_GETMESSAGE on this (the window's) thread only.
+                _hook = SetWindowsHookExW(3, _hookProc, IntPtr.Zero, GetCurrentThreadId());
+                if (_hook == IntPtr.Zero) Game.Log.Warn("chat: message hook failed (" + System.Runtime.InteropServices.Marshal.GetLastWin32Error() + ")");
+                else Game.Log.Info("chat: text input hooked");
+            }
+            catch (Exception e) { Game.Log.Warn("chat: text input hook failed: " + e.Message); }
+        }
+
+        private static IntPtr OnGetMessage(int code, IntPtr wParam, IntPtr lParam)
+        {
+            try
+            {
+                // PM_REMOVE: the message is being taken off the queue (seen once).
+                if (code >= 0 && wParam == (IntPtr)1 && lParam != IntPtr.Zero && _chatOpen)
+                {
+                    // MSG (x64): hwnd @0, message @8, wParam @16.
+                    uint msg = (uint)System.Runtime.InteropServices.Marshal.ReadInt32(lParam, 8);
+                    if (msg == 0x0102)   // WM_CHAR
+                    {
+                        long w = System.Runtime.InteropServices.Marshal.ReadInt64(lParam, 16);
+                        OnTextChar((char)(w & 0xFFFF));
+                    }
+                }
+            }
+            catch { }
+            return CallNextHookEx(_hook, code, wParam, lParam);
+        }
+
+        /// <summary>One typed character (from WM_CHAR).</summary>
+        internal static void OnTextChar(char c)
+        {
+            if (!_chatOpen) return;
+            if (_logChars-- > 0) Game.Log.Info($"chat: char U+{(int)c:X4}");
+            // The key that opened the line arrives as text in the same or the next frame.
+            if (Time.frameCount - _openedFrame <= 1 && VoiceConfig.ChatKey.Length == 1
+                && char.ToUpperInvariant(c) == char.ToUpperInvariant(VoiceConfig.ChatKey[0])) return;
+            if (c == (char)13 || c == (char)10) { SendChat(_chatText); return; }
+            if (c == (char)27) { CloseChat(); return; }
+            if (c == (char)8) { _backspaceByText = Time.frameCount; if (_chatText.Length > 0) _chatText = _chatText.Substring(0, _chatText.Length - 1); return; }
+            if (char.IsControl(c)) return;
+            if (_chatText.Length < 200) _chatText += c;
+        }
+
+        internal static int _backspaceByText = -10;
+        internal static int _logChars = 0;
+
         public static void OpenChat()
         {
             if (_chatOpen) return;
+            HookTextInput();
+            // Only from normal play: the game moves the player only while RUNNING, so the
+            // chat holds the player in PLAYER_DISABLED (the input maps were not enough: the
+            // movement code reads its own copy of the controls).
+            var m = Game.GameRefs.Manager;
+            try { if (m == null || m.CurrentGameState != global::DelusionManager.GameState.RUNNING) return; } catch { return; }
             _chatOpen = true;
             _chatText = "";
+            _openedFrame = Time.frameCount;
             _chatFocusFrames = 3;
             _chatHideAt = Time.realtimeSinceStartup + 3600f;   // history stays visible while typing
+            try { m.CurrentGameState = global::DelusionManager.GameState.PLAYER_DISABLED; _weLockedPlayer = true; } catch (Exception e) { Game.Log.Warn("chat: player lock: " + e.Message); }
             BlockGameInput(true);
         }
 
@@ -635,11 +715,25 @@ namespace DelusionMP.Sync
             _unblockAt = Time.frameCount + 2;
         }
 
+        private static void ReleasePlayer()
+        {
+            if (!_weLockedPlayer) return;
+            _weLockedPlayer = false;
+            try
+            {
+                var m = Game.GameRefs.Manager;
+                // Something else (a cutscene, the partner's dialogue) took over meanwhile: leave it.
+                if (m != null && m.CurrentGameState == global::DelusionManager.GameState.PLAYER_DISABLED)
+                    m.CurrentGameState = global::DelusionManager.GameState.RUNNING;
+            }
+            catch { }
+        }
+
         private static int _unblockAt = -1;
 
         internal static void TickChat()
         {
-            if (_unblockAt > 0 && Time.frameCount >= _unblockAt) { _unblockAt = -1; if (!_chatOpen) BlockGameInput(false); }
+            if (_unblockAt > 0 && Time.frameCount >= _unblockAt) { _unblockAt = -1; if (!_chatOpen) { BlockGameInput(false); ReleasePlayer(); } }
         }
 
         public static void SendChat(string text)
@@ -736,6 +830,7 @@ namespace DelusionMP.Sync
     public sealed class VoiceGuiBehaviour : MonoBehaviour
     {
         private GUIStyle _line, _box;
+        private static float _bsNext;
 
         private void Update()
         {
@@ -748,8 +843,16 @@ namespace DelusionMP.Sync
                     if (GameRefs_InWorld() && Keys.Pressed(VoiceConfig.ChatKey)) VoiceSync.OpenChat();
                     return;
                 }
+                if (!GameRefs_InWorld()) { VoiceSync.CloseChat(); return; }
                 if (Keys.Pressed("Escape")) { VoiceSync.CloseChat(); return; }
-                if (Keys.Pressed("Enter") || Keys.Pressed("NumpadEnter")) VoiceSync.SendChat(VoiceSync.ChatText);
+                if (Keys.Pressed("Enter") || Keys.Pressed("NumpadEnter")) { VoiceSync.SendChat(VoiceSync.ChatText); return; }
+                // Backspace with key repeat (when the text event did not already delete).
+                float now = Time.realtimeSinceStartup;
+                bool fire = false;
+                if (Keys.Pressed("Backspace")) { fire = true; _bsNext = now + 0.45f; }
+                else if (Keys.Held("Backspace") && now >= _bsNext) { fire = true; _bsNext = now + 0.05f; }
+                if (fire && Time.frameCount - VoiceSync._backspaceByText > 1 && VoiceSync.ChatText.Length > 0)
+                    VoiceSync.ChatText = VoiceSync.ChatText.Substring(0, VoiceSync.ChatText.Length - 1);
             }
             catch { }
         }
@@ -794,21 +897,8 @@ namespace DelusionMP.Sync
                         float y = Screen.height - 128f;
                         GUI.Box(new Rect(10f, y - 4f, 540f, 34f), GUIContent.none, _box);
                         GUI.Label(new Rect(18f, y, 50f, 26f), "Say:", _line);
-                        GUI.SetNextControlName("ddmp_chat");
-                        VoiceSync.ChatText = GUI.TextField(new Rect(66f, y, 476f, 26f), VoiceSync.ChatText ?? "", 200);
-                        if (VoiceSync.ChatFocusFrames > 0)
-                        {
-                            GUI.FocusControl("ddmp_chat");
-                            // The key that opened the line may have typed itself into it.
-                            if (VoiceSync.ChatText.Length == 1 && VoiceSync.ChatText.Equals(VoiceConfig.ChatKey, StringComparison.OrdinalIgnoreCase))
-                                VoiceSync.ChatText = "";
-                            VoiceSync.ChatFocusFrames--;
-                        }
-                        var e = Event.current;
-                        if (e != null && e.type == EventType.KeyDown && (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter))
-                        { VoiceSync.SendChat(VoiceSync.ChatText); e.Use(); }
-                        else if (e != null && e.type == EventType.KeyDown && e.keyCode == KeyCode.Escape)
-                        { VoiceSync.CloseChat(); e.Use(); }
+                        bool caret = ((int)(Time.realtimeSinceStartup * 2f)) % 2 == 0;
+                        GUI.Label(new Rect(66f, y, 476f, 26f), (VoiceSync.ChatText ?? "") + (caret ? "_" : " "), _line);
                     }
                 }
                 if (VoiceConfig.VoiceChat && (VoiceSync.Sending || VoiceSync.Hearing))

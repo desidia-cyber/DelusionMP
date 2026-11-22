@@ -918,6 +918,45 @@ namespace DelusionMP.Core
                     Emit("BOSSES done");
                     break;
                 }
+                case "visdump":
+                {
+                    // visdump [radius] [file]: every visible renderer near the player (path),
+                    // written to a file for diffing the two machines' views.
+                    float rad = parts.Length > 1 ? float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture) : 150f;
+                    string file = Path.Combine(BepInEx.Paths.BepInExRootPath, parts.Length > 2 ? parts[2] : "ddmp_vis.txt");
+                    var me = GameRefs.Player != null ? GameRefs.Player.transform.position : Vector3.zero;
+                    var set = new SortedSet<string>(StringComparer.Ordinal);
+                    foreach (var r in Resources.FindObjectsOfTypeAll<Renderer>())
+                    {
+                        try
+                        {
+                            if (r == null || !r.enabled || !r.gameObject.activeInHierarchy || !r.gameObject.scene.IsValid()) continue;
+                            if (Vector3.Distance(r.bounds.center, me) > rad) continue;
+                            var t = r.transform;
+                            // Cut the path at 6 levels: enough to name the building, not every pebble.
+                            var path = ObjectRegistry.HierarchyPath(t);
+                            var segs = path.Split('/');
+                            if (segs.Length > 6) path = string.Join("/", segs, 0, 6);
+                            set.Add(r.gameObject.scene.name + "|" + path);
+                        }
+                        catch { }
+                    }
+                    File.WriteAllLines(file, set);
+                    Emit($"VISDUMP {set.Count} -> {file}");
+                    break;
+                }
+                case "typetest":
+                {
+                    // typetest <text|ENTER|ESC>: text events as the keyboard sends them.
+                    var kb = UnityEngine.InputSystem.Keyboard.current;
+                    string arg = string.Join(" ", parts, 1, parts.Length - 1);
+                    string chars = arg == "ENTER" ? ((char)13).ToString() : arg == "ESC" ? ((char)27).ToString() : arg;
+                    Sync.VoiceSync._logChars = chars.Length;
+                    Emit("TYPETEST codes " + string.Join(",", System.Linq.Enumerable.Select(chars, ch => ((int)ch).ToString("X4"))));
+                    foreach (var ch in chars) Sync.VoiceSync.OnTextChar(ch);   // what the WM_CHAR hook delivers
+                    Emit($"TYPETEST queued {chars.Length} open={Sync.VoiceSync.ChatOpen} text='{Sync.VoiceSync.ChatText}' gs={GameRefs.Manager?.CurrentGameState}");
+                    break;
+                }
                 case "partnertp":
                     Sync.PartnerTeleport.DebugRequest();
                     Emit("PARTNERTP " + (GameRefs.Player != null ? GameRefs.Player.transform.position.ToString("F1") : "-"));

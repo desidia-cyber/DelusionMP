@@ -4,6 +4,7 @@ using DelusionMP.Core;
 using DelusionMP.Game;
 using DelusionMP.Net;
 using HarmonyLib;
+using UnityEngine;
 
 namespace DelusionMP.Sync
 {
@@ -44,6 +45,34 @@ namespace DelusionMP.Sync
         }
 
         public static void Init() { }
+
+        // ---- story toggles after a bulk adoption
+        //
+        // Story objects (the airship, the fortress, quest-stage scenery and NPCs) are switched by
+        // TriggerByFactOrTask, which re-checks on the game's own fact/task events. A joiner that
+        // takes the host's journal, facts and world in bulk gets no such events, so it could miss
+        // objects the host sees until the next region border. Re-run every loaded trigger's own
+        // check shortly after an adoption (debounced).
+        private static float _refreshAt = -1f;
+
+        internal static void RequestStoryRefresh() => _refreshAt = Time.realtimeSinceStartup + 1f;
+
+        private static void TickStoryRefresh()
+        {
+            if (_refreshAt < 0f || Time.realtimeSinceStartup < _refreshAt || !GameRefs.InWorld) return;
+            _refreshAt = -1f;
+            int n = 0;
+            try
+            {
+                foreach (var t in Resources.FindObjectsOfTypeAll<global::TriggerByFactOrTask>())
+                {
+                    if (t == null || !t.gameObject.scene.IsValid() || !t.gameObject.activeInHierarchy) continue;
+                    try { t.CheckTrigger(); n++; } catch { }
+                }
+            }
+            catch (System.Exception e) { Log.Debug("story refresh: " + e.Message); }
+            Log.Info($"story toggles re-checked ({n})");
+        }
 
         /// <summary>True while a hand-over stage runs with lent items (notes are hidden).</summary>
         internal static bool Loaning;
@@ -262,6 +291,7 @@ namespace DelusionMP.Sync
                     LoopGuard.Apply(() => tasks.OnTaskUpdated?.Invoke());
                     ok = LocalStage(tasks, taskID) == stage;
                     Log.Info($"journal {taskID}: added at {stage} ({(ok ? "ok" : "failed")})");
+                    RequestStoryRefresh();
                     return;
                 }
                 catch (Exception e) { Log.Warn($"journal add {taskID}@{stage}: {e.Message}"); }
@@ -316,10 +346,12 @@ namespace DelusionMP.Sync
             try { tasks.RefreshTasksFromDataCore(); } catch { }
             try { LoopGuard.Apply(() => tasks.OnTaskUpdated?.Invoke()); } catch { }
             Log.Info($"journal: matched to the host ({removed} entr(ies) removed, {set} stage(s) set, {added} added)");
+            RequestStoryRefresh();
         }
 
         public static void Tick()
         {
+            TickStoryRefresh();
             if (_journalTruth != null && _pendingJournal.Count == 0 && GameRefs.InWorld) TrimToHost();
             if (_pendingJournal.Count == 0 || !GameRefs.InWorld) return;
             var copy = new List<KeyValuePair<string, int>>(_pendingJournal);

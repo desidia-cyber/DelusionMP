@@ -47,30 +47,53 @@ namespace DelusionMP.Sync
             }
             PlayerSync.TryPeerPose(out _, out float yaw);
 
-            // Behind the partner, on the ground they stand on; their own spot if that misses.
-            var back = Quaternion.Euler(0f, yaw, 0f) * Vector3.back;
-            var dest = peer + Vector3.up * 0.3f;
-            try
-            {
-                var probe = peer + back * 1.3f + Vector3.up * 1.5f;
-                if (Physics.Raycast(probe, Vector3.down, out var hit, 4f, ~0, QueryTriggerInteraction.Ignore)
-                    && !hit.collider.transform.IsChildOf(player.transform))
-                    dest = hit.point + Vector3.up * 0.15f;
-            }
-            catch { }
-
+            var dest = FindSpot(player, peer, yaw);
             float dist = Vector3.Distance(player.transform.position, dest);
             Place(player, dest);
             _readyAt = now + Cooldown;
-            if (dist > FarDistance)
-            {
-                // Let the region stream in before gravity applies.
-                _holding = true;
-                _holdPos = dest;
-                _holdUntil = now + HoldSeconds;
-                SetControl(player, false);
-            }
+            // Always hold briefly so the controller settles onto the floor; far jumps hold
+            // until the region has streamed in and then look for the floor again.
+            _holding = true;
+            _far = dist > FarDistance;
+            _holdPos = dest;
+            _holdUntil = now + (_far ? HoldSeconds : SettleSeconds);
+            SetControl(player, false);
             Log.Info($"teleported to the partner ({dist:F0} m)");
+        }
+
+        private const float SettleSeconds = 0.25f, MaxFloorStep = 1.5f;
+        private static bool _far;
+
+        /// <summary>
+        /// A spot on solid ground next to the partner: behind, beside, then on the partner's own
+        /// spot. Each is probed straight down from above; only floor within 1.5 m of the
+        /// partner's feet counts (not a roof above them, not a level below). The player is put
+        /// 0.5 m above the floor, never inside it.
+        /// </summary>
+        private static Vector3 FindSpot(GameObject player, Vector3 peer, float yaw)
+        {
+            var rot = Quaternion.Euler(0f, yaw, 0f);
+            var offsets = new[] { rot * Vector3.back * 1.3f, rot * Vector3.left * 1.3f, rot * Vector3.right * 1.3f, Vector3.zero };
+            foreach (var off in offsets)
+            {
+                try
+                {
+                    var from = peer + off + Vector3.up * 2.5f;
+                    var hits = Physics.RaycastAll(from, Vector3.down, 6f, ~0, QueryTriggerInteraction.Ignore);
+                    if (hits == null) continue;
+                    float best = float.MaxValue; Vector3 bestPoint = default;
+                    foreach (var h in hits)
+                    {
+                        if (h.collider == null || h.collider.transform.IsChildOf(player.transform)) continue;
+                        if (Mathf.Abs(h.point.y - peer.y) > MaxFloorStep) continue;
+                        float d = Mathf.Abs(h.point.y - peer.y);
+                        if (d < best) { best = d; bestPoint = h.point; }
+                    }
+                    if (best < float.MaxValue) return bestPoint + Vector3.up * 0.5f;
+                }
+                catch { }
+            }
+            return peer + Vector3.up * 0.6f;   // the partner stands there
         }
 
         private static void Hold(float now)
@@ -83,6 +106,12 @@ namespace DelusionMP.Sync
                 return;
             }
             _holding = false;
+            if (_far && PlayerSync.TryPeerVoicePose(out var peer, out bool fresh) && fresh)
+            {
+                // The region is in now: find the floor again (and follow a partner who moved).
+                PlayerSync.TryPeerPose(out _, out float yaw);
+                player.transform.position = FindSpot(player, peer, yaw);
+            }
             SetControl(player, true);
             ResetFall(player);
         }

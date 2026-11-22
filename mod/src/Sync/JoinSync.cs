@@ -276,6 +276,7 @@ namespace DelusionMP.Sync
                 catch (Exception e) { Log.Warn("join: region reload failed: " + e.Message); }
             }
             WorldMirror.ForceRebaselineAll();
+            QuestSync.RequestStoryRefresh();
         }
 
         private static bool Same(byte[] a, byte[] b)

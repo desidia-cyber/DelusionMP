@@ -343,6 +343,7 @@ namespace DelusionMP.Sync
             foreach (var k in bools.Keys) _syncedKeys.Add(k);
             foreach (var k in ints.Keys) _syncedKeys.Add(k);
             Log.Info($"Applied fact snapshot: {bools.Count} bools, {ints.Count} ints");
+            QuestSync.RequestStoryRefresh();
         }
 
         public static (Dictionary<string, bool>, Dictionary<string, int>) DecodeSnapshot(byte[] payload)
