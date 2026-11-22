@@ -219,6 +219,14 @@ namespace DelusionMP.Sync
         {
                 if (so == null) return;
                 if (!TryGetKey(so, out var key)) { unnamed++; return; }
+                // Duplicate identifiers (261 in the shipped data): only the object the registry
+                // resolves the key to is mirrored. The others sent their own states under the
+                // same key, so the peer's object flipped between them twice a second.
+                if (ObjectRegistry.Instance.TryResolve(key, out var owner) && owner != null && owner != so.gameObject)
+                {
+                    _byKey[key] = owner;
+                    return;
+                }
                 seen++;
 
                 object state;
@@ -273,6 +281,7 @@ namespace DelusionMP.Sync
                 // Large states (chests, shops) travel as reliable fragments.
                 session.SendReliableLarge(host ? PacketKind.ObjectState : PacketKind.ObjectRequest, payload);
                 if (host) _sent++; else _requests++;
+                _sentPerKey[key] = _sentPerKey.TryGetValue(key, out var spk) ? spk + 1 : 1;
                 sentThisTick++;
         }
 
@@ -833,6 +842,20 @@ namespace DelusionMP.Sync
                 }
             });
                 }
+
+        private static readonly Dictionary<string, int> _sentPerKey = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        /// <summary>Rig: the objects sent most often (state that keeps changing).</summary>
+        public static IEnumerable<string> TopSent(int n)
+        {
+            var l = new List<KeyValuePair<string, int>>(_sentPerKey);
+            l.Sort((x, y) => y.Value.CompareTo(x.Value));
+            for (int i = 0; i < l.Count && i < n; i++)
+            {
+                string name = _byKey.TryGetValue(l[i].Key, out var go) && go != null ? go.name : "?";
+                yield return $"{l[i].Value}x {name} {l[i].Key}";
+            }
+        }
 
         private static readonly Dictionary<string, float> _localOnlyUntil = new Dictionary<string, float>(StringComparer.Ordinal);
 

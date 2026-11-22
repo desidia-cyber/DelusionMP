@@ -128,7 +128,8 @@ namespace DelusionMP.Game
             try
             {
                 var n = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name ?? "";
-                _menuCached = n.StartsWith("DelusionMenu", StringComparison.Ordinal) || n.StartsWith("DelusionPreBoot", StringComparison.Ordinal);
+                _menuCached = n.StartsWith("DelusionMenu", StringComparison.Ordinal) || n.StartsWith("DelusionPreBoot", StringComparison.Ordinal)
+                              || n.StartsWith("DelusionCredits", StringComparison.Ordinal);
             }
             catch { _menuCached = false; }
             return _menuCached;

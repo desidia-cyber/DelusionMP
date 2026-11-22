@@ -22,7 +22,7 @@ namespace DelusionMP.Sync
     /// </summary>
     public static class CutsceneSync
     {
-        private const byte MsgPlay = 0, MsgSkip = 1;
+        private const byte MsgPlay = 0, MsgSkip = 1, MsgCredits = 2;
         private static int _sent, _played, _skipped, _missing;
         public static string Stats => $"sent={_sent} played={_played} skipped={_skipped} missing={_missing}";
 
@@ -129,10 +129,33 @@ namespace DelusionMP.Sync
             catch { return false; }
         }
 
+        /// <summary>The ending's last line rolls the credits (a scene change). The partner
+        /// stayed in the world without them.</summary>
+        internal static void OnSceneSwitch(string sceneName)
+        {
+            Log.Info($"scene load: FadeAndLoadScene('{sceneName}')");
+            if (string.IsNullOrEmpty(sceneName) || sceneName.IndexOf("Credits", StringComparison.OrdinalIgnoreCase) < 0) return;
+            if (!CanSend()) return;
+            var w = new Writer();
+            w.U8(MsgCredits).Str(sceneName);
+            Session.Instance.SendReliable(PacketKind.Cutscene, w.ToArray());
+            Log.Info("credits -> peer: " + sceneName);
+        }
+
         public static void Apply(byte[] payload)
         {
             var r = new Reader(payload);
             byte kind = r.U8();
+            if (kind == MsgCredits)
+            {
+                string scene = r.Str();
+                LoopGuard.Apply(() =>
+                {
+                    try { global::DelusionSceneControl.Instance?.FadeAndLoadScene(scene); Log.Info("credits <- peer: " + scene); }
+                    catch (Exception e) { Log.Warn("credits: " + e.Message); }
+                });
+                return;
+            }
             if (kind == MsgSkip)
             {
                 LoopGuard.Apply(() =>
@@ -171,6 +194,13 @@ namespace DelusionMP.Sync
         [HarmonyPostfix]
         static void Postfix(bool isFullspeed, bool canSkip, bool blocksRegionLoading)
             => CutsceneSync.OnWorldCinematicStarted(isFullspeed, canSkip, blocksRegionLoading);
+    }
+
+    // The ending's last line switches to the credits scene; the partner follows.
+    [HarmonyPatch(typeof(global::DelusionSceneControl), nameof(global::DelusionSceneControl.FadeAndLoadScene))]
+    internal static class Patch_SceneControl_FadeAndLoadScene
+    {
+        [HarmonyPrefix] static void Prefix(string sceneName) => CutsceneSync.OnSceneSwitch(sceneName);
     }
 
     [HarmonyPatch(typeof(global::DelusionCinematics), nameof(global::DelusionCinematics.TrySkipCinematic))]

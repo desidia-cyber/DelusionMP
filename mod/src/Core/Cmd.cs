@@ -725,6 +725,24 @@ namespace DelusionMP.Core
                     }
                     break;
                 }
+                case "sell":
+                {
+                    // sell <shop name substring> <item id>: sell through the game's own path
+                    global::ShopSpeaker shop = null;
+                    foreach (var sh in Resources.FindObjectsOfTypeAll<global::ShopSpeaker>())
+                        if (sh != null && sh.gameObject.activeInHierarchy && sh.name.IndexOf(parts[1], StringComparison.OrdinalIgnoreCase) >= 0) { shop = sh; break; }
+                    if (shop == null) { Emit("ERR no shop"); break; }
+                    var pinv = GameRefs.Inventory;
+                    var item = pinv?.GetItemFromInvAnyRarity(parts[2]);
+                    if (item == null) { Emit("ERR not in inventory: " + parts[2]); break; }
+                    int before = shop.shopInventory?.Count ?? -1;
+                    shop.Activate();
+                    pinv.SwitchToSell();
+                    pinv.StartSellItem(item);
+                    pinv.FinishSellItem(false);
+                    Emit($"SELL {parts[2]} to {shop.name} stock {before}->{shop.shopInventory?.Count ?? -1} {WorldEventsSync.Stats}");
+                    break;
+                }
                 case "buy":
                 {
                     // buy <shop name substring> <index>: buy through the game's own purchase path
@@ -875,6 +893,44 @@ namespace DelusionMP.Core
                         Emit($"BOSS {e.gameObject.name} hp={ch}/{mh} active={e.gameObject.activeInHierarchy} dead={EnemySync.IsDead(e)} puppet={EnemySync.IsPuppet(e)} at {p.x:F1},{p.y:F1},{p.z:F1}{spi} key={EnemySync.KeyFor(reg, e)}");
                     }
                     Emit("BOSSES done");
+                    break;
+                }
+                case "ending":
+                {
+                    // ending [trigger]: the Cradle's EndingsScene (the ending is a conversation).
+                    bool fire = parts.Length > 1 && parts[1] == "trigger";
+                    int n = 0;
+                    foreach (var es in Resources.FindObjectsOfTypeAll<global::EndingsScene>())
+                    {
+                        if (es == null || !es.gameObject.scene.IsValid()) continue;
+                        n++;
+                        string conv = "-";
+                        try { conv = es.conversationToTrigger != null ? es.conversationToTrigger.gameObject.name : "-"; } catch { }
+                        Emit($"ENDING {ObjectRegistry.HierarchyPath(es.transform)} active={es.gameObject.activeInHierarchy} triggered={es.hasBeenTriggered} conversation={conv}");
+                        if (fire)
+                        {
+                            try { es.TriggerEndings(); Emit("ENDING triggered"); }
+                            catch (Exception e) { Emit("ERR ending: " + e.Message); }
+                        }
+                    }
+                    if (n == 0) Emit("ENDING none loaded");
+                    break;
+                }
+                case "buttons":
+                {
+                    // buttons: active UI buttons (names for "click").
+                    var names = new List<string>();
+                    foreach (var b in Resources.FindObjectsOfTypeAll<global::UnityEngine.UI.Button>())
+                    {
+                        try { if (b != null && b.gameObject.activeInHierarchy && b.interactable) names.Add(b.gameObject.name); } catch { }
+                    }
+                    Emit($"BUTTONS {names.Count}: {string.Join(" | ", names)}");
+                    break;
+                }
+                case "mirrortop":
+                {
+                    foreach (var l in WorldMirror.TopSent(parts.Length > 1 ? int.Parse(parts[1]) : 8)) Emit("MTOP " + l);
+                    Emit("MTOP done");
                     break;
                 }
                 case "god":

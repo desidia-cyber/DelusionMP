@@ -44,3 +44,19 @@ namespace DelusionMP.Game
         }
     }
 }
+
+namespace DelusionMP.Game
+{
+    /// <summary>Logs every game save (when the game saves on its own matters for co-op:
+    /// each player's personal progress lives in their own save).</summary>
+    [HarmonyPatch(typeof(global::DelusionSave), nameof(global::DelusionSave.Save))]
+    internal static class Patch_DelusionSave_SaveLog
+    {
+        private static void Postfix()
+        {
+            string gs = "-";
+            try { gs = GameRefs.Manager != null ? GameRefs.Manager.CurrentGameState.ToString() : "-"; } catch { }
+            Log.Info($"game saved (state={gs})");
+        }
+    }
+}
