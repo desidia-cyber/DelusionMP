@@ -27,7 +27,7 @@ Commands are written to `rig/instance<N>/game/BepInEx/ddmp_cmd.txt`, results app
 
 | System | Direction | How it was checked | Result |
 |---|---|---|---|
-| Handshake | — | client log of a full session | 1 connect / 1 join (was 21 connects and 37 snapshot applies); client *restart* not yet tested |
+| Handshake | — | client log of a full session | 1 connect / 1 join (was 21 connects and 37 snapshot applies) |
 | Story facts | host → client | `setfact COOP_T1_HOST true` | both `bools=55`, identical fingerprint |
 | Story facts | client → host | `setfact COOP_T2_CLIENT true`, `setfact COOP_T2_INT 7` | host has both; fingerprints identical |
 | Inventory facts | per player | 249 item/coin keys excluded | client coins stay 360 while host's go 360 → 363 |
@@ -76,6 +76,35 @@ Commands are written to `rig/instance<N>/game/BepInEx/ddmp_cmd.txt`, results app
 | Far-apart changes across restarts | client → host | client loots in a region the host never loads; both games closed without saving; host relaunched and walks there | the change is in a per-save pending file next to the host's save and is applied on arrival (potion gone) |
 | Host-authoritative join | host → client | host killed; client alone opens a door, sets a fact, starts a quest, raises the story phase 3 → 5; host relaunched | client notices the loss (12 s), rejoins, and adopts the host's world: door back to unlocked, fact removed (identical fingerprint), quest removed from the journal, phase back to 3 |
 | Charm roll in dialogue | host → client | charm note during a shared talk | the same "Charm challenge succeeded. Needed 6." toast on both; screenshot 21 |
+
+### Round 4 (2026-11-22): bosses, ending, interruptions, launcher
+
+| System | Direction | How it was checked | Result |
+|---|---|---|---|
+| Boss: Endless Knight (dungeon elite, 600 hp) | both | killed in the save; host rests a day so it respawns; alternating 50-damage hits from each side | respawned on both; HP identical after every hit (560 → -40); death on both; facts fingerprint equal. The old "540 vs 80" was the test hitting two different knights |
+| Boss: Angel Spawn (1300 hp) | host → client | dead in the save; host respawns it | client copy respawns too; HP identical through its own armour and healing; death on both |
+| Boss: Sculptor | both | `endM_doneLaw` set on the host only | client's Sculptor turns hostile from the fact; HP identical; death on both; facts equal |
+| Boss: Vela | both | `cradle` stage 78 on the host only | quest replicates, hostile Vela on both (client simulates); HP identical; her death advances `cradle` to 82 on both. The old "invulnerable" was the passive Vela |
+| Orlaith (Underlands story stages) | — | stage 8 scene | active on both; she fights the mechs and dies on both |
+| Spiders | both | one spider by exact key | HP identical, kill replicated. The old "HP bounce" was hits landing on different spiders |
+| Enemy hand-over mid-fight | both | damaged mech; each player leaves/re-enters the encounter zone in turn | HP kept through every hand-over (was refilled to max: the zone's spawner toggle was mirrored, and a returning enemy was rebuilt at full health) |
+| Encounter zones | both | host inside, client outside, then client enters | enemies on both, client copies follow the host's; nothing respawns |
+| Joiner's region scenes | client | join, `scenes` | region scene loaded (was empty after the join's region reset until the next border: no local enemies, zones or region objects) |
+| Journal on join | host → client | host has a quest the client never started | entry added at the host's stage (`underlands` -1 → 80; the trigger refused it before) |
+| Client chest / smashable | client → host | client opens a chest and takes the loot; client smashes a crate | host's chest is empty; host's crate state matches |
+| Client sells to a shop | client → host | `sell` | stock pushed; sold items are not part of the shop's saved state, so only the seller's copy lists them |
+| Client-driven dialogue | client → host | client talks to the gatebridge guard, picks a choice | host follows every node and choice; both back to RUNNING |
+| Client restart mid-session | both | client killed; host sets a fact, smashes, advances a quest; client relaunched | rejoins, facts fingerprint equal, quest stage taken over |
+| Host reloads its save mid-session | host → client | `loadsave` with a fact set after the save | both stay connected; the fact the host lost is reset on the client (host's story wins); worlds re-adopted |
+| Death on the airship | client | client dies on deck while the host flies | respawns on the deck and is carried on (was left behind: the respawn cleared the parent) |
+| Death on a lift | client | client dies while both ride a 320 m lift | respawns beside the host on the carriage, arrives at the top with the host |
+| Ending | host → client | `travel cradle`, `ending trigger`, host steps the ending | every node identical (25 steps); both go to the credits (the client stayed in the world before) and both reach the title menu still connected |
+| Duplicate save ids | host → client | `mirrortop` | three doors sharing one id no longer flip the client's door between locked and unlocked twice a second |
+| Voice (final build) | host → client | test signal through `voicetalk` | 200/202 frames played, mean error 69/32768 (mu-law); 2 dropped in the post-join load hitch |
+| Package | — | `tools/package.ps1` | `dist/DelusionMP-Coop.zip` with both launchers, the mod and BepInEx |
+
+Not verifiable on the rig: typing into the chat box with a real keyboard (the rig windows never
+have focus) and Steam tunnel mode (two Steam accounts on two machines).
 
 The three remaining `statedump` differences are a continuously moving sky object
 (`StarOrbit`, sampled a second apart) and two empty trophy stands (`Null_Item` on one side,
@@ -143,12 +172,19 @@ The three remaining `statedump` differences are a continuously moving sky object
   connect. Player-owned data (inventory, coins, stats, position) is kept.
 - **Duplicate identifiers in the shipped data** (e.g. four doors sharing one id) make the
   `statedump` comparison show differences between instances that are not real desyncs.
-- **No in-game host/join UI:** a session is started with command-line options
-  (`-ddmp-role=host|client -ddmp-host=<ip>`), over UDP to a fixed address: LAN, or a VPN such as
-  Tailscale/ZeroTier over the internet. No relay or NAT traversal. A lost peer is detected after
-  12 s and the client rejoins automatically when the host is back.
-- **Never played end to end:** everything above was verified in an early-game save around Pwyll;
-  late-game regions and story beats were exercised only by commands.
+- **Starting a session:** through the launcher (`DelusionMP-Launcher.exe`): LAN/VPN over UDP
+  (the host learns the joiner's address from its first packet), or Steam (lobby found by a
+  shared password or a Steam friend, traffic through Steam; no port forwarding). Steam mode is
+  not verified on the rig. A lost peer is detected after 12 s and the client rejoins
+  automatically when the host is back.
+- **Never played end to end by two people:** late-game regions, bosses and the ending were
+  exercised on the rig by commands (quest stages, facts, travel), not by playing through them.
+- **Moving factory:** if one player reaches it long before the other, the factory jumps to the
+  host's copy when the host arrives (each copy runs on its own until then).
+- **Shop selling:** items sold to a merchant are not saved by the game, so only the seller's copy
+  of the shop lists them for buyback.
+- **Enemies attack the nearer player only** (the player whose machine runs them); control moves
+  to the other player when they get 4 m closer.
 - **Partner body:** the game has no jump/fall clip for humans, so a jumping partner holds a
   mid-stride pose. DarkStar/Pwyll women only load with their regions; until then the partner is
   shown as the main female model and switches when the chosen one appears.
@@ -159,7 +195,5 @@ The three remaining `statedump` differences are a continuously moving sky object
   A player without `deedAirship` cannot take the helm (vanilla rule, inventory is per player).
 - **Fact conflicts:** additive counters now merge; two absolute writes to the same key at the
   same moment are still last-writer-wins (repaired by the 1 Hz fingerprint check).
-- **Transport is UDP to a fixed peer address** (LAN/localhost). No relay/NAT traversal and no
-  host-loss detection.
 - `mod/typecheck/` (the stub compile harness) is stale; the real build against the interop
   assemblies is the authority.

@@ -32,7 +32,7 @@ LAN
 
 VOICE CHAT
   Proximity voice chat is built into the mod, ported from DollsMP's voice design to Unity. The
-  microphone is captured in-game, sent as 20 ms PCM frames over the co-op session, jitter-buffered
+  microphone is captured in-game, sent as 20 ms G.711 mu-law frames (16 kHz) over the co-op session, jitter-buffered
   and played back at the partner's position with distance falloff. The Player page's Chat and
   voice settings are written into the mod config and take effect on the next start:
     ChatEnabled / ChatKey   text chat (T opens, Enter sends, Esc cancels)
