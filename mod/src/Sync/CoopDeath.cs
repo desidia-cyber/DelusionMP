@@ -34,6 +34,7 @@ namespace DelusionMP.Sync
         private const byte MsgDown = 0, MsgUp = 1;
 
         private static bool _localDown, _peerDown;
+        public static bool LocalDown => _localDown;
         private static float _deathAt;
         private static bool _wipeEpisode;
         private static float _respawnDue = -1f;

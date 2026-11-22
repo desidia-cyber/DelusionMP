@@ -50,6 +50,8 @@ namespace DelusionMP
                 "1 = only one player can buy a one-of-a-kind shop item (host decides); 0 = each player may buy their own copy.").Value;
             Sync.CoopDeath.Enabled = Config.Bind("Rules", "DeathDebuffs", true,
                 "Dying while the partner is alive adds a stack that lowers max health/mana/stamina until you rest in a bed.").Value;
+            Sync.PartnerTeleport.Key = Config.Bind("Player", "TeleportToPartnerKey", "F8",
+                "Key that puts you next to your partner (none to disable).").Value;
             Sync.CoopDeath.MaxStacks = Config.Bind("Rules", "MaxStacks", 5, "Most death stacks a player can carry.").Value;
             Sync.CoopDeath.PctPerStack = Config.Bind("Rules", "PercentPerStack", 10f, "Max health/mana/stamina lost per stack, in %.").Value;
             Sync.CoopDeath.RespawnDelay = Config.Bind("Rules", "RespawnDelaySeconds", 8f,
@@ -154,6 +156,7 @@ namespace DelusionMP
                 Perf.Run("player.render", PlayerSync.TickRender);
             }
             Perf.Run("voice", VoiceSync.Tick);
+            Perf.Run("teleport", PartnerTeleport.Tick);
 
             Perf.Run("mirror.pending", WorldMirror.TickPending);
             Perf.Run("join", JoinSync.Tick);

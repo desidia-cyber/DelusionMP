@@ -227,6 +227,7 @@ namespace DelusionMP.Sync
                     _byKey[key] = owner;
                     return;
                 }
+                if (IsPerPlayer(so)) return;   // each player's own loot
                 seen++;
 
                 object state;
@@ -746,6 +747,8 @@ namespace DelusionMP.Sync
                 return;
             }
 
+            if (IsPerPlayerBody(body)) return;   // an older peer's chest/pickup: each player's own
+
             var reg = ObjectRegistry.Instance;
             if (!reg.TryResolve(key, out var go) || go == null)
             {
@@ -842,6 +845,35 @@ namespace DelusionMP.Sync
                 }
             });
                 }
+
+        // ---- per-player loot: chests and loose pickups are each player's own. Mirrored,
+        // the first player emptied them for both (and a quest item found by one was gone for
+        // the other). Each player loots every chest and pickup once; the state lives in each
+        // player's own save. Breakable crates stay shared (the partner's copy rolls its own loot).
+        private static readonly Dictionary<int, bool> _perPlayer = new Dictionary<int, bool>(512);
+
+        internal static bool IsPerPlayer(global::SaveableObject so)
+        {
+            if (so == null) return false;
+            int id = so.GetInstanceID();
+            if (_perPlayer.TryGetValue(id, out var v)) return v;
+            try { v = so.GetComponent<global::ItemChest>() != null || so.GetComponent<global::ItemPickup>() != null; }
+            catch { v = false; }
+            _perPlayer[id] = v;
+            return v;
+        }
+
+        /// <summary>For objects that are not loaded: an encoded state is keyed by component type.</summary>
+        internal static bool IsPerPlayerBody(byte[] body)
+        {
+            if (body == null) return false;
+            try
+            {
+                var d = StateCodec.Describe(body, 64);
+                return d.StartsWith("{\"ItemChest\"", StringComparison.Ordinal) || d.StartsWith("{\"ItemPickup\"", StringComparison.Ordinal);
+            }
+            catch { return false; }
+        }
 
         private static readonly Dictionary<string, int> _sentPerKey = new Dictionary<string, int>(StringComparer.Ordinal);
 

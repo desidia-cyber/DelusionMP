@@ -214,6 +214,7 @@ namespace DelusionMP.Sync
             foreach (var kv in host)
             {
                 if (kv.Value == null) continue;
+                if (WorldMirror.IsPerPlayerBody(kv.Value)) continue;   // chests/pickups: each player's own
                 mine.TryGetValue(kv.Key, out var my);
                 if (my != null && Same(my, kv.Value)) { unchanged++; continue; }
                 Il2CppSystem.Object state;
@@ -236,6 +237,7 @@ namespace DelusionMP.Sync
             foreach (var kv in mine)
             {
                 if (kv.Value == null) continue;
+                if (WorldMirror.IsPerPlayerBody(kv.Value)) continue;   // my own loot stays looted
                 if (!host.TryGetValue(kv.Key, out var hv)) continue;   // unknown to the host
                 if (hv != null) continue;                              // handled above
                 try { if (loaded != null && loaded.ContainsKey(kv.Key)) { loaded.Remove(kv.Key); removed++; } } catch { }

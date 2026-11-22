@@ -64,7 +64,7 @@ public static class DmpLaunch
     public static int Start(string exe, string args, string dir, string desktop)
     {
         IntPtr hd = IntPtr.Zero;
-        if (desktop != null)
+        if (!string.IsNullOrEmpty(desktop))
         {
             hd = CreateDesktopW(desktop, IntPtr.Zero, IntPtr.Zero, 0, DESKTOP_ALL_ACCESS, IntPtr.Zero);
             if (hd == IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error());
@@ -72,7 +72,7 @@ public static class DmpLaunch
 
         SI si = new SI();
         si.cb = Marshal.SizeOf(typeof(SI));
-        si.desktop = desktop;
+        si.desktop = string.IsNullOrEmpty(desktop) ? null : desktop;
         si.flags = 0x1;   // STARTF_USESHOWWINDOW
         si.show = 1;      // SW_SHOWNORMAL, on the invisible desktop
 

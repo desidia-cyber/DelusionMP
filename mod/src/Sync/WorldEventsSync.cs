@@ -619,7 +619,7 @@ namespace DelusionMP.Sync
             });
         }
 
-        // ---- SmashableSpawner: show the smash, never re-roll the loot.
+        // ---- SmashableSpawner: show the smash on the partner, who gets their own loot roll.
         [ThreadStatic] private static bool _smashWasActive;
 
         internal static void OnSmashPre(global::SmashableSpawner s)
@@ -653,12 +653,15 @@ namespace DelusionMP.Sync
                     // Already nullified by the mirror (or smashed here): nothing to show.
                     if (simple == null || !simple.activeSelf || !s.gameObject.activeInHierarchy) { _ignored++; return; }
                     // The visual half of Smash(): swap to the physics pieces and let them
-                    // clear themselves. Loot, might check and save flag stay with the smasher.
+                    // clear themselves. The might check and save flag stay with the smasher.
                     simple.SetActive(false);
                     var rbs = s.rigidBodyObjs;
                     if (rbs != null)
                         for (int i = 0; i < rbs.Length; i++) if (rbs[i] != null) rbs[i].SetActive(true);
                     s.StartCoroutine(s.DelayedDeactivation());
+                    // The partner gets loot too: this copy rolls its own drop (a pickup, so
+                    // it is this player's to take).
+                    try { s.EnableRandomLoot(); } catch (Exception e) { Log.Debug("smash loot: " + e.Message); }
                     _applied++;
                     _last = "smash " + key;
                 }

@@ -918,6 +918,10 @@ namespace DelusionMP.Core
                     Emit("BOSSES done");
                     break;
                 }
+                case "partnertp":
+                    Sync.PartnerTeleport.DebugRequest();
+                    Emit("PARTNERTP " + (GameRefs.Player != null ? GameRefs.Player.transform.position.ToString("F1") : "-"));
+                    break;
                 case "realcut":
                 {
                     // realcut cradle|underlands|fortress: the game's own scripts that start the
