@@ -1461,7 +1461,16 @@ namespace DelusionMP.Core
                     {
                         var (d, l, id) = rows[i];
                         var p = l.transform.position;
-                        Emit($"LIFTSTATE {id} pos={l.liftPosition} moving={l.isMoving} d={d:F0} at={p.x:F1},{p.y:F1},{p.z:F1}");
+                        string car = "-";
+                        try
+                        {
+                            var cp = l.liftCarriage != null ? l.liftCarriage.transform.position : Vector3.zero;
+                            var tp = l.topPos != null ? l.topPos.position : Vector3.zero;
+                            var bp = l.botPos != null ? l.botPos.position : Vector3.zero;
+                            car = $"{cp.x:F1},{cp.y:F1},{cp.z:F1} top={tp.y:F0} bot={bp.y:F0}";
+                        }
+                        catch { }
+                        Emit($"LIFTSTATE {id} pos={l.liftPosition} moving={l.isMoving} d={d:F0} at={p.x:F1},{p.y:F1},{p.z:F1} carriage={car}");
                     }
                     break;
                 }

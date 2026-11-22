@@ -409,6 +409,19 @@ namespace DelusionMP.Sync
 
                 if (!_aboard && onDeck && _remotePiloted) Board(ship);
                 else if (_aboard && (!_remotePiloted || now - _lastDeckHit > 0.6f)) Disembark();
+                else if (_aboard && onDeck)
+                {
+                    // A respawn next to the pilot (or any teleport) clears the player's parent:
+                    // still on the deck but no longer carried, the next ship move dropped them.
+                    bool carried = false;
+                    try { carried = player.transform.IsChildOf(ship.transform); } catch { }
+                    if (!carried)
+                    {
+                        bool ok = false;
+                        try { ok = GameRefs.PlayerActions?.TryReparentPlayer(global::DelusionPlayerActions.ParentPriority.High, ship.gameObject) ?? false; } catch { }
+                        if (ok) Log.Info("airship: re-attached to the deck (parent was cleared)");
+                    }
+                }
             }
 
             // Falls are measured in world space; on a moving deck measure from the deck.
