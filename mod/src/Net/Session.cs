@@ -196,9 +196,17 @@ namespace DelusionMP.Net
             Log.Info("connected to host");
         }
 
+        private float _lastFailNote = -100f;
+
         private void Fail(string reason)
         {
             Log.Error("connection refused: " + reason);
+            // Otherwise the player only sees that nothing happens.
+            if (UnityEngine.Time.realtimeSinceStartup - _lastFailNote > 15f)
+            {
+                _lastFailNote = UnityEngine.Time.realtimeSinceStartup;
+                try { global::DelusionNote.Instance?.StartNewNote(null, "Co-op: " + reason + ". Both players need the same DelusionMP package.", false); } catch { }
+            }
             Close();
         }
 
@@ -651,7 +659,7 @@ namespace DelusionMP.Net
 
     public static class PluginInfo
     {
-        public const string Version = "0.1.0";
+        public const string Version = "0.2.0";
     }
 
     /// <summary>

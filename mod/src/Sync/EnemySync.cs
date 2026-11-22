@@ -130,6 +130,11 @@ namespace DelusionMP.Sync
         private const byte CombatDamage = 0;
         private const byte CombatDeath = 1;
         private const byte CombatThreat = 2;   // client -> host: the client hit an enemy it simulates
+        private const byte CombatAway = 3;     // client -> host: the client entered/left a menu
+
+        // Host: the client is in a menu/panel/dialogue. Client: what it last reported.
+        private static bool _peerAway, _sentAway;
+        private static float _nextAwaySend;
 
         // True while a peer's hit is being applied here (it is the peer's threat, not ours).
         private static bool _applyingPeerHit;
@@ -188,6 +193,13 @@ namespace DelusionMP.Sync
         {
             var r = new Reader(payload);
             byte kind = r.U8();
+            if (kind == CombatAway)
+            {
+                bool away = r.Bool();
+                if (away != _peerAway) Log.Info($"aggro: partner {(away ? "is in a menu" : "is back")}");
+                _peerAway = away;
+                return;
+            }
             string key = r.Str();
             var c = Resolve(key);
             if (c == null) { Log.Warn("combat: unknown enemy " + key); return; }
@@ -369,7 +381,13 @@ namespace DelusionMP.Sync
                 }
                 else if (cur == OwnerHost && sc > sh * 1.25f + 5f) want = OwnerClient;
                 else if (cur == OwnerClient && sh > sc * 1.25f + 5f) want = OwnerHost;
-                if (want != cur && canSwitch)
+                // A player in a menu (time slowed or stopped on their machine) hands their
+                // fights to a partner who is playing, at once; it comes back by score later.
+                bool hostAway = AwayState.LocalAway, clientAway = _peerAway;
+                bool forced = false;
+                if (hostAway && !clientAway && dc < 60f) { want = OwnerClient; forced = cur != OwnerClient; }
+                else if (clientAway && !hostAway) { want = OwnerHost; forced = cur != OwnerHost; }
+                if (want != cur && (canSwitch || forced))
                 {
                     t.LastSwitch = now;
                     if (sh > 0.5f || sc > 0.5f)
@@ -401,6 +419,19 @@ namespace DelusionMP.Sync
 
             if (now < _nextState) return;
             _nextState = now + StateInterval;
+
+            if (IsClient)
+            {
+                bool away = AwayState.LocalAway;
+                if (away != _sentAway || now >= _nextAwaySend)   // repeated: survives reconnects
+                {
+                    _sentAway = away;
+                    _nextAwaySend = now + 5f;
+                    var aw = new Writer();
+                    aw.U8(CombatAway).Bool(away);
+                    s.SendReliable(PacketKind.CombatEvent, aw.ToArray());
+                }
+            }
 
             var reg = ObjectRegistry.Instance;
             if (reg.NeedsRebuild) reg.Rebuild(CurrentScene());

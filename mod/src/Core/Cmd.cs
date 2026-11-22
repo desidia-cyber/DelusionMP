@@ -210,7 +210,7 @@ namespace DelusionMP.Core
                          $"objects={ObjectRegistry.Instance.Count} scene={ObjectRegistry.Instance.CurrentScene} " +
                          $"puppet={Sync.PlayerSync.PuppetInfo} " +
                          $"gs={(GameRefs.Manager != null ? GameRefs.Manager.CurrentGameState.ToString() : "-")} " +
-                         $"active={UnityEngine.SceneManagement.SceneManager.GetActiveScene().name} " +
+                         $"active={UnityEngine.SceneManagement.SceneManager.GetActiveScene().name} ts={Time.timeScale:F2} " +
                          $"uptime={Time.realtimeSinceStartup:F0}s");
                     break;
                 }
@@ -893,6 +893,18 @@ namespace DelusionMP.Core
                         Emit($"BOSS {e.gameObject.name} hp={ch}/{mh} active={e.gameObject.activeInHierarchy} dead={EnemySync.IsDead(e)} puppet={EnemySync.IsPuppet(e)} at {p.x:F1},{p.y:F1},{p.z:F1}{spi} key={EnemySync.KeyFor(reg, e)}");
                     }
                     Emit("BOSSES done");
+                    break;
+                }
+                case "gui":
+                {
+                    // gui pause|panel|off: open the pause menu / inventory panel as the keys do.
+                    var g = global::DelusionGUI.Instance;
+                    if (g == null) { Emit("ERR no gui"); break; }
+                    string what = parts.Length > 1 ? parts[1] : "";
+                    if (what == "pause") g.ToggleMenuCanvas(global::DelusionGUI.MenuState.pause, false);
+                    else if (what == "panel") g.ToggleCharPanelCanvas(global::DelusionGUI.GamePanelState.activePanel);
+                    else { g.ToggleMenuCanvas(global::DelusionGUI.MenuState.inactive, false); g.ToggleCharPanelCanvas(global::DelusionGUI.GamePanelState.inactive); }
+                    Emit($"GUI {what} gs={GameRefs.Manager?.CurrentGameState} ts={Time.timeScale:F2}");
                     break;
                 }
                 case "enemyinfo":

@@ -144,11 +144,11 @@ namespace DelusionMP.Game
                     var m = Manager;
                     if (m == null) return false;
                     var s = m.CurrentGameState;
-                    if (s != global::DelusionManager.GameState.RUNNING
-                        && s != global::DelusionManager.GameState.CINEMATIC
-                        && s != global::DelusionManager.GameState.CINEMATIC_FULLSPEED
-                        && s != global::DelusionManager.GameState.PLAYER_DISABLED
-                        && s != global::DelusionManager.GameState.FORCED_LOOK)
+                    // Menus, panels, dialogue, rolls, rest and books are in the world too: the
+                    // world keeps syncing (they stopped enemy/quest/clock sync, so every
+                    // inventory visit handed enemies to the partner and snapped them back).
+                    if (s == global::DelusionManager.GameState.PREGAME
+                        || s == global::DelusionManager.GameState.SCENE_SWITCH)
                         return false;
                     // The title screen also reports RUNNING with a player object; a host there
                     // must not count as in the world (its story would be empty).
@@ -156,6 +156,35 @@ namespace DelusionMP.Game
                     return Player != null;
                 }
                 catch { return false; }
+            }
+        }
+    }
+
+    public static class AwayState
+    {
+        /// <summary>The local player is in a menu, panel, dialogue, roll, rest or book: the
+        /// game slows or stops time here, so a playing partner should run the enemies.</summary>
+        public static bool LocalAway
+        {
+            get
+            {
+                try
+                {
+                    var m = GameRefs.Manager;
+                    if (m == null) return false;
+                    switch (m.CurrentGameState)
+                    {
+                        case global::DelusionManager.GameState.CHARPANELS:
+                        case global::DelusionManager.GameState.SPEECH:
+                        case global::DelusionManager.GameState.PAUSED:
+                        case global::DelusionManager.GameState.ROLL:
+                        case global::DelusionManager.GameState.REST:
+                        case global::DelusionManager.GameState.BOOK:
+                            return true;
+                    }
+                }
+                catch { }
+                return false;
             }
         }
     }
