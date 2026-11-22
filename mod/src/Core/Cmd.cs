@@ -918,6 +918,30 @@ namespace DelusionMP.Core
                     Emit("BOSSES done");
                     break;
                 }
+                case "realcut":
+                {
+                    // realcut cradle|underlands|fortress: the game's own scripts that start the
+                    // world cutscenes (cutter journeys, Vela's fortress lift).
+                    string what = parts.Length > 1 ? parts[1] : "";
+                    bool done = false;
+                    if (what == "fortress")
+                    {
+                        foreach (var l in Resources.FindObjectsOfTypeAll<global::VelaFortressLift>())
+                            if (l != null && l.gameObject.scene.IsValid()) { Emit($"REALCUT lift active={l.gameObject.activeInHierarchy}"); l.PlayerUse(); done = true; break; }
+                    }
+                    else
+                    {
+                        foreach (var c in Resources.FindObjectsOfTypeAll<global::CutterTransportScript>())
+                        {
+                            if (c == null || !c.gameObject.scene.IsValid()) continue;
+                            Emit($"REALCUT cutter {ObjectRegistry.HierarchyPath(c.transform)} active={c.gameObject.activeInHierarchy}");
+                            if (what == "cradle") c.CradleJourneyBegin(); else c.UnderlandsJourneyBegin();
+                            done = true; break;
+                        }
+                    }
+                    Emit(done ? "REALCUT started" : "REALCUT none loaded");
+                    break;
+                }
                 case "gui":
                 {
                     // gui pause|panel|off: open the pause menu / inventory panel as the keys do.
