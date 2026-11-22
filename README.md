@@ -6,8 +6,8 @@ DreadXP, Unity 2022.3.60f1, IL2CPP), built on the methodology and tooling in
 protocol design from the DollsMP co-op mod.
 
 Status: **playable two-player co-op, verified on a two-instance rig** (story, quests, world
-objects, enemies and bosses, deaths, airship, lifts, dialogue, cutscenes, the ending and
-credits, text chat and proximity voice). It has not yet been played start to finish by two
+objects, enemies and bosses, summons and charm, deaths, airship, lifts, dialogue, cutscenes,
+both endings (banish and merge) on all three karma routes, either player driving, and the credits, text chat and proximity voice). It has not yet been played start to finish by two
 people. `docs/04-VERIFICATION.md` lists what was proven and how; the known limitations are at
 its end.
 
@@ -23,7 +23,8 @@ its end.
    world, story and journal on joining.
 
 In game: **T** opens text chat (Enter sends, Esc cancels); voice is push-to-talk on **V** or
-open-mic, set on the launcher's Player page (takes effect on the next start). Session rules
+open-mic, set on the launcher's Player page (takes effect on the next start). **F8** puts you
+next to your partner. Chests and loose pickups are each player's own: both of you loot each one. Session rules
 (death penalties, respawn at the partner, exclusive shop items) are the host's and are sent to
 the joiner.
 
@@ -132,9 +133,8 @@ bare assembly name (`Assembly-CSharp`, not `.dll`), which is patched in the scri
 ## Not yet verified
 
 - A real playthrough by two people from start to finish (late-game story beats and bosses were
-  reached on the rig through quest stages and travel commands).
-- Typing into the chat box with a physical keyboard (the rig's windows never have focus;
-  `tools/rig.ps1 -Action launch -Visible` opens small visible windows for this check).
+  reached on the rig through quest stages and travel commands; the ending was run through the
+  Angel with mixed region outcomes, not every combination of them).
 - Steam mode (needs two Steam accounts on two machines).
 
 ---

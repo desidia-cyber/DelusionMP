@@ -1,4 +1,4 @@
-# DelusionMP — Verified Status (rig runs, 2026-11-14 / 15)
+# DelusionMP — Verified Status (rig runs, 2026-11-14 … 22)
 
 What is recorded here was **observed in two running Dread Delusion processes** on the rig,
 driven through the mod's control channel. Each claim below says how it was checked.
@@ -34,8 +34,8 @@ Commands are written to `rig/instance<N>/game/BepInEx/ddmp_cmd.txt`, results app
 | Quests | host → client | `taskstage charMentor 20` | client journal `charMentor=20` (replayed through `TaskStageTrigger`) |
 | Quests | client → host | `taskstage pwyllShroom 10` | host journal gains `pwyllShroom=10`; quest facts match |
 | Doors (`DoorsUltimate`) | both | locked→open, unlocked→open, open→closed | both peers end in the same `st8`; screenshots 07/08 |
-| Item pickups | both | each player walks onto a different pickup | pickup inactive on both peers; screenshots 03/04 |
-| Chests | host → client | host `PlayerUse()` on a chest | identical `ItemChest` save state on the client |
+| Item pickups | both | each player walks onto a different pickup | pickup inactive on both peers; screenshots 03/04. **Superseded in round 5:** loose pickups are now each player's own |
+| Chests | host → client | host `PlayerUse()` on a chest | identical `ItemChest` save state on the client. **Superseded in round 5:** chests are now each player's own |
 | Enemies, movement | host → client | 43 puppets, `enemies` on client | puppet within 0–0.7 m of host target, updated every ~0.17 s |
 | Enemies, damage | client → host | client `hitenemy 20` | host HP 56 → 16 (same as client) |
 | Enemies, kills | both | kill from each side | enemy dead on both; no double death |
@@ -91,7 +91,7 @@ Commands are written to `rig/instance<N>/game/BepInEx/ddmp_cmd.txt`, results app
 | Encounter zones | both | host inside, client outside, then client enters | enemies on both, client copies follow the host's; nothing respawns |
 | Joiner's region scenes | client | join, `scenes` | region scene loaded (was empty after the join's region reset until the next border: no local enemies, zones or region objects) |
 | Journal on join | host → client | host has a quest the client never started | entry added at the host's stage (`underlands` -1 → 80; the trigger refused it before) |
-| Client chest / smashable | client → host | client opens a chest and takes the loot; client smashes a crate | host's chest is empty; host's crate state matches |
+| Client chest / smashable | client → host | client opens a chest and takes the loot; client smashes a crate | host's chest is empty; host's crate state matches (chests: superseded in round 5, see below) |
 | Client sells to a shop | client → host | `sell` | stock pushed; sold items are not part of the shop's saved state, so only the seller's copy lists them |
 | Client-driven dialogue | client → host | client talks to the gatebridge guard, picks a choice | host follows every node and choice; both back to RUNNING |
 | Client restart mid-session | both | client killed; host sets a fact, smashes, advances a quest; client relaunched | rejoins, facts fingerprint equal, quest stage taken over |
@@ -109,8 +109,64 @@ Commands are written to `rig/instance<N>/game/BepInEx/ddmp_cmd.txt`, results app
 | World cutscene from its real trigger | host → client | `CutterTransportScript.CradleJourneyBegin` (the cutter journey) | the liftoff cutscene plays on the client, then both travel to the same spot in the Cradle. The shipped game has no walk-in cutscene trigger objects; its four world cutscenes are started by scripts like this one |
 | Version mismatch | — | code review | protocol, mod version (now 0.2.0) and game build are compared on connect; a mismatch is shown as an in-game note |
 
-Not verifiable on the rig: typing into the chat box with a real keyboard (the rig windows never
-have focus) and Steam tunnel mode (two Steam accounts on two machines).
+### Round 5 (2026-11-22): summons, charm, every ending route, loot per player
+
+| System | Direction | How it was checked | Result |
+|---|---|---|---|
+| Loot per player | both | design change, code path | chests and loose pickups are each player's own: never mirrored, never adopted on join; each player loots every one once, so a quest item one player finds is still there for the other. Breakable crates stay shared, and the partner's copy rolls its own loot |
+| F8: to the partner | both | rig `partnertp` (earlier session, commit 69d2495) | stands behind the partner on their floor (probed within 1.5 m of the partner's feet); far jumps wait for the region to stream in |
+| Chat typing, real keyboard | both | played by hand (owner) | characters, Enter, Esc and Backspace work, Cyrillic included |
+| Summon keys | both | both players summon a skeleton | before: both summons had the same key (`summon_Skeleton(Clone)`), so each machine's summon was driven to the partner's, and the client logged "unknown enemy". Now summons never enter the enemy stream |
+| Summon on the partner's screen | both directions | host skeleton, client caster at once | each machine keeps its own summon and shows the partner's as a ghost (same model, its own animator; AI, spawner, self-drain, HUD, facts and colliders stripped); health follows the caster's within 0.2 s; ghosts go when the summon dies (~15 s); screenshots 23/24 |
+| Summon damage | host → client | the host's summon hits a goblin the client simulates | hit forwarded and applied once (HP 56 → 26 on both); it counts as the host's threat, so the goblin moves to the host's machine, where the summon fights it |
+| Summon tallies | — | `summonSkeletonDeaths`, `TotalSummonKills` … | player-owned facts (they were being pushed into the shared story facts) |
+| Charm, partner's enemy | client → host | client charm hit (power 300) on a goblin the host simulates | one roll, on the client; forwarded hits carry no charm power (the host rolled again and filled its own charm slot before); the host's copy is charmed and passive; the goblin is pinned to the client's machine and fights a moth for the client |
+| Charm end | client → host | wait out the charm | ended on both in the same second (`RecoverCharmed` on the charmer is sent); the host's copy is hostile again |
+| Ending, three region fact sets (shortcut) | host → client | rig `ending trigger` (starts the ending conversation directly) with every "harsh", no, or every "merciful" region outcome | 33/33/35 steps, every node **and page** identical, different region branches; both reach the credits. This shortcut skips the karma computation (all `Karma*` facts stayed false), so it tested the region epilogues only |
+| Multi-page dialogue | host → client | the ending's epilogue cards | before: the partner stayed on a node's first page while the driver turned pages (the game swaps pages inside one node without re-processing it). The driver now sends each page |
+| Long strings | both | ending pages over 256 bytes | every string on the wire was cut at 256 bytes, sometimes inside a UTF-8 character; now 1000 bytes, cut on a character boundary, and dialogue messages are fragmented when they exceed one datagram |
+
+The karma score (`EndingsScene.CalculateKarma`, decompiled) starts at 10 and moves with
+`PledgedToInquisition` −5 / `PledgedToLiberation` +5, `godHuntUnion`/`godHuntCult` ∓3,
+`EndlessHope`/`EndlessDestroy` ∓3, `cwk_AidedAphra`/`cwk_AidedReza` ∓3,
+`LluddSacrificed`/`LluddSaved` ∓3, `KilledCaerGodlet`/`SparedCaerGodlet` ∓2 and ∓1 for the End
+Mines crystal, Vierme, the Academy god, the Flesh and the castle duke; below 1 is
+`KarmaOrder`, below 20 `KarmaSelf`, else `KarmaFreedom`. The region epilogues branch on the
+outcome facts, and the karma bucket picks the Oneiric Isles passage (node 72/74/75).
+
+**The game's own path to the ending.** `EndingsScene.OnEnable` hooks `CheckEndingsReady` to the
+dialogue controller's "conversation finished" event. The final choice is in the Angel's
+conversation (`Angel` tree, next to `ENDINGS_CUTSCENE`): *banish it to the Void* or *merge with
+it*. That conversation sets `EndingSequenceStarted`; when it ends, `CheckEndingsReady` computes
+karma and starts the ending conversation (banish and merge are different conversations, nodes 1–65
+and 68–114). Run on the rig with mixed region outcomes:
+
+| Decision | Who talks to the Angel | Region facts (karma) | Result |
+|---|---|---|---|
+| merge | host | Inquisition, odd regions harsh / even merciful (4, SELF) | 47 steps identical (Angel + ending); credits → title menu on both |
+| merge | host | regions 1–5 harsh, 6–10 unset (−4, ORDER) | 47 steps identical; Isles node 72; credits → menu on both |
+| merge | host | Liberation, 1–5 merciful, 6–10 harsh (24, FREEDOM) | identical up to the end of the ending; Isles node 74 |
+| merge | **client** | Liberation, odd merciful / even harsh (16, SELF) | 46 steps identical; the host spectates the Angel and the ending; credits → menu on both |
+| banish | host | Liberation, odd merciful / even harsh (16, SELF) | 43 steps identical; credits → menu on both |
+| banish | host | Liberation, 1–5 merciful, 6–10 harsh (24, FREEDOM) | 46 steps identical; credits → menu on both |
+| banish | **client** | regions 1–5 harsh (−4, ORDER) | 41 steps identical; credits → menu on both |
+
+In every run the spectator's `CheckEndingsReady` did not start a second ending: it joined the
+driver's. The karma bucket and `ending_BanishedAngel`/`ending_MergedAngel` agree on both machines.
+
+**Fixed: the partner's save after the ending.** The driver's game saves right before the credits
+(the finished game: `mainQuest` 150, `cradle` 90, karma, the decision), and loading the credits
+re-reads each machine's save. The spectator followed into the credits without saving, so its save
+stayed before the ending and its facts fell back to that old save (one run showed
+`ending_MergedAngel` from an earlier game after a banish). The spectator now saves first; 40 s
+into the credits both machines hold the same post-ending facts.
+
+**Seen, not caused by co-op:** the moment the ending conversation closes, the game restarts the
+Angel's conversation behind the credits (also with the partner disconnected). Left alone, the
+credits finish and return to the title menu; pressing through that stray conversation during the
+credits can leave the game stuck in the credits (seen only when the rig pressed keys there).
+
+Not verifiable on the rig: Steam tunnel mode (two Steam accounts on two machines).
 
 The three remaining `statedump` differences are a continuously moving sky object
 (`StarOrbit`, sampled a second apart) and two empty trophy stands (`Null_Item` on one side,
@@ -126,6 +182,8 @@ The three remaining `statedump` differences are a continuously moving sky object
 | `proof_20_dialogue_partner_pov.png` | far-away partner watching the conversation from the speaker's eyes |
 | `proof_21_dialogue_charm_both.png` | the charm-roll toast on both screens |
 | `proof_22_avatar_special_weapons.png` | daggers, greatswords, special-quality sword and bow in the partner's hands |
+| `proof_23_summon_ghost_client.png` | client's view: the host's summoned skeleton (a ghost) beside the host's avatar |
+| `proof_24_summon_own_host.png` | host's view: its own summoned skeleton |
 | `avatar_model_options.png` | the female models and outfits a player can choose from |
 | `proof_01_host_sees_client.png` | host's view: the client's avatar 4 m away |
 | `proof_02_client_sees_host.png` | client's view: the host's avatar |
@@ -185,6 +243,20 @@ The three remaining `statedump` differences are a continuously moving sky object
   automatically when the host is back.
 - **Never played end to end by two people:** late-game regions, bosses and the ending were
   exercised on the rig by commands (quest stages, facts, travel), not by playing through them.
+  The ending was run through the game's own path (the Angel) with both decisions, all three
+  karma buckets and either player driving, using mixed region outcomes; not every combination
+  of the ten region outcomes.
+- **A player who dies during a shared conversation** drops out of it (the driver carries on); they
+  rejoin the next one.
+- **Summons:** the partner sees a ghost of each summon that follows the caster's stream; it
+  plays the game's idle/walk blend from a navigation agent that is off, so it glides in its
+  idle pose while moving. A summon fights only on its caster's machine; its hits on the
+  partner's enemies are forwarded and pull them to the caster.
+- **Charm:** the partner's copy of a charmed enemy counts down on its own and may read a
+  different number; the end of the charm is sent by the charmer. While charmed, the enemy is
+  simulated on the charmer's machine.
+- **Loot is per player:** chests and loose pickups are looted once by each player (by design;
+  quest items cannot be taken from the partner). Breakable crates are shared.
 - **Moving factory:** if one player reaches it long before the other, the factory jumps to the
   host's copy when the host arrives (each copy runs on its own until then).
 - **Shop selling:** items sold to a merchant are not saved by the game, so only the seller's copy

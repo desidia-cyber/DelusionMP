@@ -429,6 +429,7 @@ namespace DelusionMP.Net
                 case PacketKind.FactRequest: if (Role == SessionRole.Host) FactSync.ApplyRequest(payload); break;
                 case PacketKind.CombatEvent: EnemySync.ApplyCombat(payload); break;
                 case PacketKind.EnemyState: EnemySync.Apply(payload); break;
+                case PacketKind.SummonState: SummonSync.Apply(payload); break;
                 case PacketKind.PlayerState: PlayerSync.Apply(payload); break;
                 case PacketKind.ClockState: ClockSync.Apply(payload); break;
                 case PacketKind.Snapshot: ApplySnapshot(payload); break;
@@ -460,7 +461,8 @@ namespace DelusionMP.Net
 
         public void SendReliableLarge(PacketKind kind, byte[] payload) => SendFragmented(kind, payload);
 
-        private void SendFragmented(PacketKind kind, byte[] payload)
+        /// <summary>Reliable send of any size: split into Fragment packets past one datagram.</summary>
+        internal void SendFragmented(PacketKind kind, byte[] payload)
         {
             const int chunk = Proto.MaxPayload - 8;
             int total = (payload.Length + chunk - 1) / chunk;
@@ -659,7 +661,7 @@ namespace DelusionMP.Net
 
     public static class PluginInfo
     {
-        public const string Version = "0.2.0";
+        public const string Version = "0.3.0";
     }
 
     /// <summary>

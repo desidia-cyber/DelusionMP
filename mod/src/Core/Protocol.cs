@@ -26,8 +26,9 @@ namespace DelusionMP.Core
         /// <summary>Reliable packets carry a 2-byte ordered-channel sequence before the payload.</summary>
         public const int ReliableOverhead = 2;
 
-        /// Maximum length of any string field on the wire.
-        public const int MaxString = 256;
+        /// Maximum length (UTF-8 bytes) of any string field on the wire. Long dialogue lines
+        /// and ending pages run past 256 bytes; a packet still has to fit MaxPayload.
+        public const int MaxString = 1000;
 
         // ---- flags ----
         public const byte FlagCompressed = 1 << 0;
@@ -83,6 +84,7 @@ namespace DelusionMP.Core
         Rejoin = 57,
         Voice = 58,           // 20 ms of 16 kHz mono mu-law, unreliable
         Rules = 59,           // host's session rules, reliable
+        SummonState = 60,     // the sender's live summons (pose, health), unreliable
     }
 
     public struct Header
@@ -176,7 +178,13 @@ namespace DelusionMP.Core
         {
             if (s == null) { U16(0); return this; }
             var bytes = System.Text.Encoding.UTF8.GetBytes(s);
-            if (bytes.Length > Proto.MaxString) Array.Resize(ref bytes, Proto.MaxString);
+            if (bytes.Length > Proto.MaxString)
+            {
+                // Cut on a character boundary: never inside a multi-byte UTF-8 sequence.
+                int n = Proto.MaxString;
+                while (n > 0 && (bytes[n] & 0xC0) == 0x80) n--;
+                Array.Resize(ref bytes, n);
+            }
             U16((ushort)bytes.Length);
             _buf.AddRange(bytes);
             return this;

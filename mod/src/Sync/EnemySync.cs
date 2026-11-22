@@ -93,6 +93,7 @@ namespace DelusionMP.Sync
         {
             _puppets.Clear(); _dead.Clear(); _index.Clear();
             _owner.Clear(); _hostOwnedAt.Clear(); _clientStateAt.Clear(); _puppetMode.Clear();
+            _charmPin.Clear(); _charmedHere.Clear();
         }
 
         // Enemy keys are usually hierarchy paths (spawned enemies carry no saveable id), so
@@ -113,7 +114,7 @@ namespace DelusionMP.Sync
                 foreach (var e in all)
                 {
                     if (e == null) continue;
-                    try { if (e.gameObject.scene.IsValid()) _index[CachedKey(reg, e)] = e; } catch { }
+                    try { if (e.gameObject.scene.IsValid() && !SummonSync.IsSummon(e)) _index[CachedKey(reg, e)] = e; } catch { }
                 }
             return _index.TryGetValue(key, out c) ? c : null;
         }
@@ -131,6 +132,8 @@ namespace DelusionMP.Sync
         private const byte CombatDeath = 1;
         private const byte CombatThreat = 2;   // client -> host: the client hit an enemy it simulates
         private const byte CombatAway = 3;     // client -> host: the client entered/left a menu
+        private const byte CombatCharm = 4;    // both: this machine's player charmed an enemy (timer, buff)
+        private const byte CombatUncharm = 5;  // both: that charm ended
 
         // Host: the client is in a menu/panel/dialogue. Client: what it last reported.
         private static bool _peerAway, _sentAway;
@@ -153,7 +156,7 @@ namespace DelusionMP.Sync
             var s = Session.Instance;
             if (s == null || !s.Connected || LoopGuard.ApplyingRemote) return;
             var c = trig != null ? trig.myController : null;
-            if (c == null || _applyingPeerHit) return;
+            if (c == null || _applyingPeerHit || SummonSync.IsSummon(c)) return;
             _localHitAt[c.GetInstanceID()] = Time.realtimeSinceStartup;
             // Threat: the host decides who the enemy fights, from damage and closeness.
             if (IsHost) AddThreat(c.GetInstanceID(), client: false, damage);
@@ -172,14 +175,17 @@ namespace DelusionMP.Sync
             }
             var key = KeyFor(ObjectRegistry.Instance, c);
             var w = new Writer();
-            w.U8(CombatDamage).Str(key).I32(damage).F32(piercing).I32(poison).I32(burn).I32(charm).F32(slow).I32(stagger);
+            // Charm power is not forwarded: the charm roll already ran here, on the local hit
+            // (EnemyStats.ApplyCharm rolls a die, shows the note and fills this player's
+            // charm slot). Its result follows as CombatCharm instead of a second roll there.
+            w.U8(CombatDamage).Str(key).I32(damage).F32(piercing).I32(poison).I32(burn).I32(0).F32(slow).I32(stagger);
             s.SendReliable(PacketKind.CombatEvent, w.ToArray());
             _hitsForwarded++;
         }
 
         internal static void OnDeath(global::EnemyController c, bool killedByPlayer)
         {
-            if (c == null) return;
+            if (c == null || SummonSync.IsSummon(c)) return;
             _dead.Add(c.GetInstanceID());
             var s = Session.Instance;
             if (s == null || !s.Connected || LoopGuard.ApplyingRemote) return;
@@ -222,6 +228,12 @@ namespace DelusionMP.Sync
                 }
                 catch (Exception e) { Log.Warn($"client hit on {key} failed: {e.Message}"); }
                 finally { _applyingPeerHit = false; }
+            }
+            else if (kind == CombatCharm || kind == CombatUncharm)
+            {
+                int timer = kind == CombatCharm ? r.I32() : 0;
+                int buff = kind == CombatCharm ? r.I32() : 0;
+                ApplyCharmState(c, kind == CombatCharm, timer, buff);
             }
             else if (kind == CombatThreat)
             {
@@ -280,6 +292,108 @@ namespace DelusionMP.Sync
         {
             if (c != null) _dead.Remove(c.GetInstanceID());
             ForgetHealth(c);
+        }
+
+        // ------------------------------------------------------------------ charm
+        //
+        // EnemyStats.ApplyCharm (a hit with charm power) rolls on the hitter's machine; on
+        // success GetCharmed sets isCharmed (a countdown) and maybe isBuffed, puts the enemy in
+        // the local player's single charm slot (DelusionPlayerSpell.CharmEnemy, which frees the
+        // previous one) and shows the note and the summon HUD. Only the state moves to the
+        // partner: their copy gets the same countdown, nothing in their charm slot, no note.
+        // The host pins the enemy to the charmer's machine while it lasts (DecideOwner).
+
+        // host: who charmed each enemy (OwnerHost/OwnerClient)
+        private static readonly Dictionary<int, byte> _charmPin = new Dictionary<int, byte>();
+        // both: enemies this machine's player charmed (their end is sent from here)
+        private static readonly HashSet<int> _charmedHere = new HashSet<int>();
+        private static int _charmsSent, _charmsApplied;
+        public static string CharmStats => $"charmsSent={_charmsSent} charmsApplied={_charmsApplied} pinned={_charmPin.Count} charmedHere={_charmedHere.Count}";
+
+        private static global::EnemyController ControllerOf(global::EnemyStats st)
+        {
+            var c = st.GetComponent<global::EnemyController>();
+            return c != null ? c : st.GetComponentInParent<global::EnemyController>();
+        }
+
+        internal static void OnLocalCharm(global::EnemyStats st)
+        {
+            if (st == null || LoopGuard.ApplyingRemote) return;
+            var c = ControllerOf(st);
+            if (c == null || SummonSync.IsSummon(c)) return;
+            int id = c.GetInstanceID();
+            _charmedHere.Add(id);
+            if (IsHost) _charmPin[id] = OwnerHost;
+            var s = Session.Instance;
+            if (s == null || !s.Connected) return;
+            int timer = 0, buff = 0;
+            try { timer = st.isCharmed; buff = st.isBuffed; } catch { }
+            var w = new Writer();
+            w.U8(CombatCharm).Str(KeyFor(ObjectRegistry.Instance, c)).I32(timer).I32(buff);
+            s.SendReliable(PacketKind.CombatEvent, w.ToArray());
+            _charmsSent++;
+            Log.Info($"charm: {c.gameObject.name} charmed here ({timer})");
+        }
+
+        internal static void OnLocalUncharm(global::EnemyStats st)
+        {
+            if (st == null || LoopGuard.ApplyingRemote) return;
+            var c = ControllerOf(st);
+            if (c == null) return;
+            int id = c.GetInstanceID();
+            if (!_charmedHere.Remove(id)) return;   // not ours: the charmer sends the end
+            if (IsHost) _charmPin.Remove(id);
+            var s = Session.Instance;
+            if (s == null || !s.Connected) return;
+            var w = new Writer();
+            w.U8(CombatUncharm).Str(KeyFor(ObjectRegistry.Instance, c));
+            s.SendReliable(PacketKind.CombatEvent, w.ToArray());
+            Log.Info($"charm: {c.gameObject.name} charm ended here");
+        }
+
+        private static void ApplyCharmState(global::EnemyController c, bool charmed, int timer, int buff)
+        {
+            int id = c.GetInstanceID();
+            var st = c.myStats;
+            if (st == null) return;
+            if (charmed)
+            {
+                // The partner's charm replaces ours on this enemy, if we had one.
+                _charmedHere.Remove(id);
+                if (IsHost) _charmPin[id] = OwnerClient;
+                LoopGuard.Apply(() =>
+                {
+                    try
+                    {
+                        st.isCharmed = Math.Max(timer, 1);
+                        if (buff > 0) st.isBuffed = buff;
+                    }
+                    catch (Exception e) { Log.Debug("charm apply: " + e.Message); }
+                });
+                _charmsApplied++;
+                Log.Info($"charm: {c.gameObject.name} charmed by the partner ({timer})");
+            }
+            else
+            {
+                if (IsHost) _charmPin.Remove(id);
+                if (_charmedHere.Contains(id)) return;   // we charmed it since: ours stands
+                LoopGuard.Apply(() =>
+                {
+                    try { if (st.isCharmed > 0) { st.isCharmed = 0; st.RecoverCharmed(); } }
+                    catch (Exception e) { Log.Debug("uncharm apply: " + e.Message); }
+                });
+                Log.Info($"charm: {c.gameObject.name} charm ended on the partner's side");
+            }
+        }
+
+        /// <summary>True when an attacker fights on this machine's player's side: one of our
+        /// summons, or an enemy we simulate that is charmed. Its hits count as ours.</summary>
+        internal static bool IsLocalAlly(global::EnemyController a)
+        {
+            if (a == null) return false;
+            if (SummonSync.IsLocalSummon(a)) return true;
+            if (SummonSync.IsSummon(a) || IsPuppet(a)) return false;
+            try { return a.IsCharmed(); } catch { return false; }
         }
 
         // ------------------------------------------------------------------ ownership
@@ -387,6 +501,14 @@ namespace DelusionMP.Sync
                 bool forced = false;
                 if (hostAway && !clientAway && dc < 60f) { want = OwnerClient; forced = cur != OwnerClient; }
                 else if (clientAway && !hostAway) { want = OwnerHost; forced = cur != OwnerHost; }
+                // A charmed enemy follows and fights for the player who charmed it, so it is
+                // simulated on that player's machine for as long as the charm lasts.
+                if (_charmPin.TryGetValue(id, out var pin))
+                {
+                    int left = 0; try { left = e.myStats != null ? e.myStats.isCharmed : 0; } catch { }
+                    if (left > 0) { forced = cur != pin; want = pin; }
+                    else _charmPin.Remove(id);
+                }
                 if (want != cur && (canSwitch || forced))
                 {
                     t.LastSwitch = now;
@@ -684,7 +806,9 @@ namespace DelusionMP.Sync
                 var list = new List<global::EnemyController>(all != null ? all.Length : 0);
                 if (all != null)
                     foreach (var e in all)
-                        if (e != null && e.gameObject.scene.IsValid()) list.Add(e);   // skip prefab assets
+                        // Prefab assets are skipped, and so are summons: they are the caster's
+                        // alone (SummonSync), and their keys are the same on both machines.
+                        if (e != null && e.gameObject.scene.IsValid() && !SummonSync.IsSummon(e)) list.Add(e);
                 _enemyCache = list.ToArray();
             }
             return _enemyCache;
@@ -730,9 +854,10 @@ namespace DelusionMP.Sync
     {
         [HarmonyPrefix]
         static void Prefix(global::EnemyDamageTrigger __instance, int damage, float piercing, int poisonTimer,
-                           int burnTimer, int charmPower, float slowMultiplier, bool isPlayer, int staggerLevel)
+                           int burnTimer, int charmPower, float slowMultiplier, bool isPlayer,
+                           global::EnemyController agressorController, int staggerLevel)
         {
-            if (isPlayer)
+            if (isPlayer || EnemySync.IsLocalAlly(agressorController))
                 EnemySync.OnPlayerHit(__instance, damage, piercing, poisonTimer, burnTimer, charmPower, slowMultiplier, staggerLevel);
         }
     }
@@ -744,11 +869,27 @@ namespace DelusionMP.Sync
     {
         [HarmonyPrefix]
         static void Prefix(global::EnemyDamageTrigger __instance, int damage, int poisonTimer, int burnTimer,
-                           int charmPower, float slowMultiplier, bool isPlayer, int staggerLevel)
+                           int charmPower, float slowMultiplier, bool isPlayer,
+                           global::EnemyController agressorController, int staggerLevel)
         {
-            if (isPlayer)
+            if (isPlayer || EnemySync.IsLocalAlly(agressorController))
                 EnemySync.OnPlayerHit(__instance, damage, 0f, poisonTimer, burnTimer, charmPower, slowMultiplier, staggerLevel);
         }
+    }
+
+    // The charm roll succeeded on this machine (see EnemySync, charm).
+    [HarmonyPatch(typeof(global::EnemyStats), "GetCharmed")]
+    internal static class Patch_EnemyStats_GetCharmed
+    {
+        [HarmonyPostfix]
+        static void Postfix(global::EnemyStats __instance) => EnemySync.OnLocalCharm(__instance);
+    }
+
+    [HarmonyPatch(typeof(global::EnemyStats), nameof(global::EnemyStats.RecoverCharmed))]
+    internal static class Patch_EnemyStats_RecoverCharmed
+    {
+        [HarmonyPostfix]
+        static void Postfix(global::EnemyStats __instance) => EnemySync.OnLocalUncharm(__instance);
     }
 
     [HarmonyPatch(typeof(global::EnemyController), nameof(global::EnemyController.OnDeath))]

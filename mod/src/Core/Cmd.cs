@@ -488,8 +488,9 @@ namespace DelusionMP.Core
                 }
                 case "hier":
                 {
-                    var root = parts.Length > 1 && parts[1] == "puppet"
-                        ? GameObject.Find("DelusionMP_RemotePuppet") : GameRefs.Player;
+                    // hier [puppet|<root object name>]
+                    var root = parts.Length > 1 && parts[1] == "puppet" ? GameObject.Find("DelusionMP_RemotePuppet")
+                             : parts.Length > 1 ? GameObject.Find(parts[1]) : GameRefs.Player;
                     if (root == null) { Emit("HIER none"); break; }
                     DumpHier(root.transform, 0);
                     break;
@@ -507,21 +508,89 @@ namespace DelusionMP.Core
                     Emit("ENEMYSTATS " + EnemySync.Stats);
                     break;
                 }
+                case "summon":
+                {
+                    // summon <0-4> [charm]: cast the summon spell (Skeleton/Archer/Shield/Caster/Spider).
+                    var sp = global::DelusionPlayerSpell.Instance;
+                    if (sp == null || parts.Length < 2) { Emit("ERR summon <type> [charm]"); break; }
+                    bool ok = sp.SpellSummon((global::DelusionPlayerSpell.SummonType)int.Parse(parts[1]), parts.Length > 2 && parts[2] == "charm");
+                    Emit($"SUMMON {parts[1]} ok={ok}");
+                    break;
+                }
+                case "summons":
+                {
+                    // summons: the player's summon spawners, what they hold, and the charmed enemy.
+                    var sp = global::DelusionPlayerSpell.Instance;
+                    if (sp == null) { Emit("SUMMONS no spell manager"); break; }
+                    var list = sp.summonSpawners;
+                    int cnt = list != null ? list.Count : 0;
+                    for (int k = 0; k < cnt; k++)
+                    {
+                        var es = list[k];
+                        if (es == null) { Emit($"SUMMONS {k} null"); continue; }
+                        var ec = es.enemyController;
+                        int hp = -1; try { hp = ec != null && ec.myStats != null ? ec.myStats.currentHealth : -1; } catch { }
+                        Emit($"SUMMONS {k} spawner={ObjectRegistry.HierarchyPath(es.transform)} active={es.gameObject.activeInHierarchy} spawnerActive={es.spawnerActive} " +
+                             $"enemy={(ec != null ? ObjectRegistry.HierarchyPath(ec.transform) : "-")} enemyActive={(ec != null && ec.gameObject.activeInHierarchy)} hp={hp} " +
+                             $"key={(ec != null ? EnemySync.KeyFor(ObjectRegistry.Instance, ec) : "-")} scene={(ec != null ? ec.gameObject.scene.name : "-")} " +
+                             $"hostile={(ec != null ? ec.hostileType.ToString() : "-")}");
+                    }
+                    var refs = sp.summonReferences;
+                    if (refs != null) foreach (var rf in refs) if (rf != null) Emit($"SUMMONREF {rf.type} prefab={(rf.summonPrefab != null ? rf.summonPrefab.name : "-")} prefix={rf.namePoolPrefix}");
+                    var ch = sp.charmed;
+                    foreach (var gl in SummonSync.Describe()) Emit("GHOST " + gl);
+                    Emit("SUMMONSYNC " + SummonSync.Stats);
+                    Emit($"SUMMONS count={cnt} charmed={(ch != null ? ObjectRegistry.HierarchyPath(ch.transform) + " hostile=" + ch.hostileType : "-")}");
+                    break;
+                }
+                case "looksummon":
+                {
+                    // looksummon: face our first live summon, or else the partner's first ghost.
+                    Vector3? at = null;
+                    var sl = global::DelusionPlayerSpell.Instance?.summonSpawners;
+                    if (sl != null) for (int k = 0; k < sl.Count && at == null; k++)
+                        if (sl[k] != null && sl[k].enemyController != null && sl[k].enemyController.gameObject.activeInHierarchy) at = sl[k].enemyController.transform.position;
+                    if (at == null) at = SummonSync.FirstGhostPosition();
+                    if (at == null) { Emit("ERR no summon or ghost"); break; }
+                    LookAt(at.Value + Vector3.up * 0.9f);
+                    Emit($"LOOKSUMMON {at.Value}");
+                    break;
+                }
+                case "charmnear":
+                {
+                    // charmnear: charm the nearest live enemy through the game's own CharmEnemy.
+                    var sp = global::DelusionPlayerSpell.Instance;
+                    var near = EnemySync.Nearest(1);
+                    if (sp == null || near.Count == 0) { Emit("ERR charmnear"); break; }
+                    sp.CharmEnemy(near[0].c);
+                    Emit($"CHARMNEAR {near[0].key} hostile={near[0].c.hostileType}");
+                    break;
+                }
                 case "hitenemy":
                 {
-                    // Hit the nearest live enemy exactly as a player weapon does.
+                    // hitenemy [dmg] [key substring|-] [charm power] [summon]: hit the nearest live
+                    // enemy exactly as a player weapon does ("summon": as our first summon does).
                     int dmg = parts.Length > 1 ? int.Parse(parts[1]) : 10;
-                    string want = parts.Length > 2 ? parts[2].Replace('+', ' ') : null;
+                    string want = parts.Length > 2 && parts[2] != "-" ? parts[2].Replace('+', ' ') : null;
+                    int charmPow = parts.Length > 3 ? int.Parse(parts[3]) : 0;
+                    global::EnemyController byWho = null;
+                    if (parts.Length > 4 && parts[4] == "summon")
+                    {
+                        var sl = global::DelusionPlayerSpell.Instance?.summonSpawners;
+                        if (sl != null) for (int k = 0; k < sl.Count && byWho == null; k++) if (sl[k] != null && sl[k].enemyController != null && sl[k].enemyController.gameObject.activeInHierarchy) byWho = sl[k].enemyController;
+                        if (byWho == null) { Emit("ERR no live summon"); break; }
+                    }
                     foreach (var (key, c, dist) in EnemySync.Nearest(40))
                     {
-                        if (EnemySync.IsDead(c)) continue;
+                        if (EnemySync.IsDead(c) || SummonSync.IsSummon(c)) continue;
                         if (want != null && key.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0) continue;
                         var trig = c.GetComponentInChildren<global::EnemyDamageTrigger>(true);
                         if (trig == null) continue;
                         int before = c.myStats != null ? c.myStats.currentHealth : -1;
-                        trig.ApplyDamage(dmg, 0f, 0, 0, 0, 1f, false, true, null, 0);
+                        trig.ApplyDamage(dmg, 0f, 0, 0, charmPow, 1f, false, byWho == null, byWho, 0);
                         int after = c.myStats != null ? c.myStats.currentHealth : -1;
-                        Emit($"HIT {key} {before}->{after} dist={dist:F1}");
+                        int ch = -1; try { ch = c.myStats != null ? c.myStats.isCharmed : -1; } catch { }
+                        Emit($"HIT {key} {before}->{after} dist={dist:F1} charmed={ch} by={(byWho != null ? "summon" : "player")} {EnemySync.CharmStats}");
                         break;
                     }
                     break;
@@ -1008,6 +1077,16 @@ namespace DelusionMP.Core
                         try { tgt = c.targetEnemyObj != null ? c.targetEnemyObj.name : "-"; } catch { }
                         try { ply = c.player != null ? c.player.name : "-"; } catch { }
                         bool en = false; try { en = c.enabled; } catch { }
+                        string charmInfo = "";
+                        try
+                        {
+                            var st = c.myStats;
+                            charmInfo = $" follow={c.followType} followTarget={(c.followTarget != null ? c.followTarget.name : "-")} friend={(c.targetFriendObj != null ? c.targetFriendObj.name : "-")} " +
+                                        $"charmed={(st != null ? st.isCharmed : -1)} buffed={(st != null ? st.isBuffed : -1)} isCharmed()={c.IsCharmed()} faction={c.myFaction} friendlyToPlayer={c.alwaysFriendlyToPlayer} " +
+                                        $"hostileToPlayer={c.IsHostileToPlayer()} graph={(c.graphInstance != null ? c.graphInstance.name : "-")}";
+                        }
+                        catch (Exception ce) { charmInfo = " charmInfoErr=" + ce.Message; }
+                        Emit($"EINFO{charmInfo}");
                         Emit($"EINFO {c.gameObject.name} enabled={en} mode={c.combatMode} hostile={c.hostileType} provoked={c.hasBeenProvoked} attackedByPlayer={c.attackedByPlayer} target={tgt} player={ply} running={c.isRunning} dist={dist:F1}{EnemySync.PuppetInfo(c)}{EnemySync.ThreatInfo(c)}");
                         break;
                     }
@@ -1015,8 +1094,12 @@ namespace DelusionMP.Core
                 }
                 case "ending":
                 {
-                    // ending [trigger]: the Cradle's EndingsScene (the ending is a conversation).
+                    // ending [trigger|check]: the Cradle's EndingsScene (the ending is a conversation).
+                    // "trigger" starts the conversation only; "check" is the game's own path
+                    // (CheckEndingsReady: with EndingSequenceStarted set it computes the karma
+                    // facts, then starts the conversation).
                     bool fire = parts.Length > 1 && parts[1] == "trigger";
+                    bool check = parts.Length > 1 && parts[1] == "check";
                     int n = 0;
                     foreach (var es in Resources.FindObjectsOfTypeAll<global::EndingsScene>())
                     {
@@ -1029,6 +1112,11 @@ namespace DelusionMP.Core
                         {
                             try { es.TriggerEndings(); Emit("ENDING triggered"); }
                             catch (Exception e) { Emit("ERR ending: " + e.Message); }
+                        }
+                        if (check)
+                        {
+                            try { es.CheckEndingsReady(); Emit("ENDING checked"); }
+                            catch (Exception e) { Emit("ERR ending check: " + e.Message); }
                         }
                     }
                     if (n == 0) Emit("ENDING none loaded");
@@ -1334,7 +1422,9 @@ namespace DelusionMP.Core
                         foreach (var npc in all)
                         {
                             if (npc == null || !npc.gameObject.activeInHierarchy || npc.dialogueTree == null) continue;
-                            if (npc.name.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0
+                            // "=Tree" matches that tree name exactly.
+                            if (want.StartsWith("=")) { if (npc.dialogueTree.name != want.Substring(1)) continue; }
+                            else if (npc.name.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0
                                 && npc.dialogueTree.name.IndexOf(want, StringComparison.OrdinalIgnoreCase) < 0) continue;
                             float d = Vector3.Distance(npc.transform.position, me.transform.position);
                             if (d < bd) { bd = d; best = npc; }
@@ -1353,7 +1443,7 @@ namespace DelusionMP.Core
                 case "dlg":
                 {
                     var c = global::DelusionDialogueNEW.Instance?.DialogueController;
-                    Emit($"DLG {DialogueSync.Stats} state={GameRefs.Manager?.CurrentGameState}");
+                    Emit($"DLG {DialogueSync.Stats} {DialogueSync.PageStats} state={GameRefs.Manager?.CurrentGameState}");
                     if (c != null && c.currentNode != null)
                     {
                         Emit($"  NODE {DialogueSync.NodeIndex(c.tree, c.currentNode)} name={c.GetNPCName()} text={c.GetCurrentNodeText()}");
@@ -1839,7 +1929,20 @@ namespace DelusionMP.Core
                 if (c == null) continue;
                 var n = c.GetIl2CppType().Name;
                 var r = c.TryCast<Renderer>();
-                if (r != null) n += r.enabled ? "+" : "-";
+                if (r != null)
+                {
+                    n += r.enabled ? "+" : "-";
+                    try
+                    {
+                        var m = r.sharedMaterial;
+                        n += $"(vis={r.isVisible} shader={(m != null && m.shader != null ? m.shader.name : "-")} mat={(m != null ? m.name : "-")})";
+                    }
+                    catch { }
+                }
+                var an = c.TryCast<Animator>();
+                if (an != null) n += $"(enabled={an.enabled} ctrl={(an.runtimeAnimatorController != null ? an.runtimeAnimatorController.name : "-")})";
+                var bh = c.TryCast<Behaviour>();
+                if (bh != null && r == null && an == null && !bh.enabled) n += "-off";
                 names.Add(n);
             }
             Emit($"HIER {new string(' ', depth * 2)}{t.name} active={t.gameObject.activeSelf} layer={t.gameObject.layer} [{string.Join(",", names)}]");

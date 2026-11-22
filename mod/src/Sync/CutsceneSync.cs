@@ -151,6 +151,12 @@ namespace DelusionMP.Sync
                 string scene = r.Str();
                 LoopGuard.Apply(() =>
                 {
+                    // The ending's driver saves right before the credits (the finished game:
+                    // ending, karma, story facts), and loading the credits re-reads each
+                    // machine's save. Without the same save here the partner's file stayed
+                    // before the ending, and its facts fell back to it.
+                    try { GameRefs.Save?.Save(); Log.Info("credits: saved before following the partner"); }
+                    catch (Exception e) { Log.Warn("credits save: " + e.Message); }
                     try { global::DelusionSceneControl.Instance?.FadeAndLoadScene(scene); Log.Info("credits <- peer: " + scene); }
                     catch (Exception e) { Log.Warn("credits: " + e.Message); }
                 });

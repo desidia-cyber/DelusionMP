@@ -176,6 +176,7 @@ namespace DelusionMP
                 }
                 Perf.Run("enemies", EnemySync.Tick);
             }
+            Perf.Run("summons", SummonSync.Tick);
 
             // World objects are replicated whenever a session is live. They do not need
             // a spawned player: region scenes carry doors, lifts and pickups before the

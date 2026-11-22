@@ -95,7 +95,11 @@ namespace DelusionMP.Sync
         public static bool IsPlayerOwned(string key)
         {
             Seed();
-            return _playerOwned.Contains(key);
+            if (_playerOwned.Contains(key)) return true;
+            // The summoner's own tallies (summonSkeletonDeaths, summonSpiderDiedOfBuffDamage,
+            // TotalSummonKills ...): written by the summons' death code on the caster's
+            // machine, read by no quest or trigger. Personal stats, like totalPlayerDeaths.
+            return key.StartsWith("summon", StringComparison.Ordinal) || key == "TotalSummonKills";
         }
 
         /// <summary>Called by every SetFact observer: learns keys written by inventory code

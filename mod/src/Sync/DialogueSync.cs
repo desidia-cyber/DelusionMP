@@ -31,6 +31,11 @@ namespace DelusionMP.Sync
     {
         private const byte MsgStart = 0, MsgNode = 1, MsgText = 2, MsgChoice = 3, MsgCharm = 4, MsgEnd = 5;
         private const byte MsgGiftItem = 6, MsgGiftCoin = 7;
+        // A node with several pages ("extended text": the ending's epilogue cards, long
+        // speeches) turns pages without leaving the node or re-processing it: the game's
+        // SkipToNextTreeNode only bumps m_extendedTextID and its coroutine swaps the text.
+        // The spectator's own skip is blocked, so the driver sends each page.
+        private const byte MsgPage = 8;
         private const float PovDistance = 12f;
 
         private static bool _spectating;
@@ -64,7 +69,8 @@ namespace DelusionMP.Sync
             }
         }
 
-        private static void Send(Writer w) => Session.Instance.SendReliable(PacketKind.Dialogue, w.ToArray());
+        // Long lines with their choices can pass one datagram: fragmented when they do.
+        private static void Send(Writer w) => Session.Instance.SendFragmented(PacketKind.Dialogue, w.ToArray());
 
         // ------------------------------------------------------------------ identity
 
@@ -153,7 +159,6 @@ namespace DelusionMP.Sync
             catch { }
             w.U8(MsgText).Str(Clip(text, 900)).Str(Clip(name, 60)).U8((byte)Math.Min(choices.Count, 8));
             for (int i = 0; i < choices.Count && i < 8; i++) w.Str(Clip(choices[i], 120));
-            if (w.Length > Proto.MaxPayload - 8) return;   // very long pages: the node replay already shows them
             Send(w);
         }
 
@@ -263,6 +268,7 @@ namespace DelusionMP.Sync
                     case MsgEnd: ApplyEnd(); break;
                     case MsgGiftItem: ApplyGiftItem(r.Str(), r.I32(), r.I32()); break;
                     case MsgGiftCoin: ApplyGiftCoin(r.I32()); break;
+                    case MsgPage: ApplyPage(r.I32(), r.I32(), r.Str()); break;
                 }
             }
             catch (Exception e) { Log.Warn($"dialogue apply {kind} failed: {e.Message}"); }
@@ -391,6 +397,54 @@ namespace DelusionMP.Sync
             catch (Exception e) { Log.Debug("dialogue text override: " + e.Message); }
         }
 
+        // ---- pages of one node
+
+        // driver: the node and text last seen, to notice a page turn
+        private static int _drvNode = int.MinValue;
+        private static string _drvText;
+        private static int _pagesSent, _pagesApplied;
+        public static string PageStats => $"pagesSent={_pagesSent} pagesApplied={_pagesApplied}";
+
+        /// <summary>Driver, per frame: a new page of the same node goes to the spectator.</summary>
+        private static void DriverTick()
+        {
+            var s = Session.Instance;
+            if (s == null || !s.Connected || _spectating) { _drvNode = int.MinValue; return; }
+            var c = Ctrl;
+            if (c == null || c.currentNode == null) { _drvNode = int.MinValue; return; }
+            string text; int page;
+            try { text = c.GetCurrentNodeText() ?? ""; page = c.m_extendedTextID; }
+            catch { return; }
+            int node = NodeIndex(c.tree, c.currentNode);
+            if (node != _drvNode) { _drvNode = node; _drvText = text; return; }   // a node change has its own messages
+            if (text == _drvText) return;
+            _drvText = text;
+            // Any change inside one node is a page turn (pages count from 0, the node's own
+            // text being the one before them).
+            var w = new Writer();
+            w.U8(MsgPage).I32(node).I32(page).Str(Clip(text, 900));
+            Send(w);
+            _pagesSent++;
+        }
+
+        private static void ApplyPage(int node, int page, string text)
+        {
+            if (!_spectating) return;
+            var c = Ctrl;
+            if (c == null || c.currentNode == null) return;
+            if (NodeIndex(c.tree, c.currentNode) != node) { Log.Debug($"dialogue page {page} for node {node}: not on it"); return; }
+            try
+            {
+                c.m_extendedTextID = page;
+                c.m_curNodeText = text;
+                c.m_curNodeProgressingText = text;
+                LoopGuard.Apply(() => c.OnDialogueChanged?.Invoke());
+                c.SkipTreeTextProgression();
+                _pagesApplied++;
+            }
+            catch (Exception e) { Log.Debug("dialogue page: " + e.Message); }
+        }
+
         private static void ApplyChoice(int visibleIndex)
         {
             if (!_spectating) return;
@@ -438,6 +492,7 @@ namespace DelusionMP.Sync
         /// <summary>Per frame: drop out if the session or the conversation vanished.</summary>
         public static void Tick()
         {
+            DriverTick();
             if (!_spectating) return;
             var s = Session.Instance;
             bool lost = s == null || !s.Connected;

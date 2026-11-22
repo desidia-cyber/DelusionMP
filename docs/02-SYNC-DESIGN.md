@@ -191,6 +191,11 @@ many private field writes; a 100 ms scan of ~4 500 objects is negligible.
 **Ordering:** `ObjectState{ objectKey, payload }` with a monotonically increasing event id.
 The client applies in id order; anything older than the last applied id is dropped.
 
+**Loot is per player (as built).** `ItemChest` and loose `ItemPickup` objects are excluded from
+the mirror and from the join adoption: each player loots each one once, from their own save, so a
+quest item one player picks up is still there for the other. Breakable crates
+(`SmashableSpawner`) stay shared; the partner's copy of a smash rolls its own loot.
+
 ### 3.4 Doors
 
 `DoorsUltimate.st8` (`DoorState`: `unlocked 0, locked 1, open 2, smashed 3, midClose 4,
@@ -245,6 +250,21 @@ EnemyEvent{ spawnerKey, kind: Killed|Spawned|Provoked|Respawned }
 Because bosses are ordinary `EnemyController`s (see §4.5 of the RE doc), boss fights need
 no separate code path — only the scripted cutscene triggers around them.
 
+**Summons (as built, `SummonSync`).** `DelusionPlayerSpell.SpellSummon` instantiates a prefab
+(`summon_Skeleton(Clone)` …: an `EnemySpawner` with an `EnemyController`) at the scene root; it
+has no save identity and the same hierarchy key on both machines, so summons never enter the
+enemy stream. The caster streams `SummonState{ id, prefab, pos, yaw, hp }` at 5 Hz; the partner
+shows a ghost built from the same prefab with the AI, spawner, `SummonSelfDamage`,
+`SummonMonitor`, `SkeletonFacts`, `QuestObject` and colliders removed and its `EnemyAnimator`
+woken. A summon's hit on an enemy the partner simulates is forwarded like the caster's own hit
+(and counts as the caster's threat), so the enemy moves to the caster's machine.
+
+**Charm (as built).** `EnemyStats.ApplyCharm` rolls a die; `GetCharmed` sets `isCharmed` (a
+countdown) and puts the enemy in the local player's single charm slot
+(`DelusionPlayerSpell.CharmEnemy`). The roll happens only on the hitter's machine: forwarded hits
+carry charm power 0, and `CombatEvent{Charm, key, timer, buff}` / `{Uncharm, key}` move the
+state. The host pins a charmed enemy to the charmer's machine until the charm ends.
+
 ### 3.7 Player puppets
 
 Each client sends, at 20 Hz:
@@ -273,6 +293,11 @@ Melee and projectiles are the jitter-prone part. Keep it simple:
   locally; damage resolves on the target owner.
 
 ### 3.9 Dialogue and dice rolls
+
+*As built, conversations are shared (`DialogueSync`): the driver streams node changes, choices,
+charm rolls and the end; the spectator follows with the game's own controller. A node with
+several pages turns them inside the node (`SkipToNextTreeNode` bumps `m_extendedTextID`), so
+the driver also sends each page. The original plan below kept dialogue local.*
 
 Local only. The `DialogueTree` / `DelusionDialogueController` / `DelusionDiceRoll` UI stays
 per-client. Only effects cross:
