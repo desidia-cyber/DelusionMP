@@ -28,6 +28,8 @@ namespace DelusionMP
         public static string HostAddress = "127.0.0.1";
         public static bool Mute;
         public static bool Offline;
+        /// <summary>True when -ddmp-role was explicitly supplied on the command line (rig/CLI).</summary>
+        public static bool HasCliRole;
         /// <summary>-ddmp-trace: write state-codec breadcrumbs (native crash hunting only).</summary>
         public static bool TraceCodec;
         public static int Slot;
@@ -49,14 +51,17 @@ namespace DelusionMP
                     else map[a.Substring(6, eq - 6)] = a.Substring(eq + 1);
                 }
 
-                if (map.TryGetValue("role", out var role))
+                HasCliRole = map.TryGetValue("role", out var role);
+                if (HasCliRole)
                     Role = role.Equals("client", StringComparison.OrdinalIgnoreCase)
                         ? SessionRole.Client : SessionRole.Host;
                 if (map.TryGetValue("port", out var port) && int.TryParse(port, out var p) && p > 0) Port = p;
                 if (map.TryGetValue("slot", out var slot) && int.TryParse(slot, out var sl)) Slot = sl;
                 if (map.TryGetValue("host", out var host) && !string.IsNullOrWhiteSpace(host)) HostAddress = host;
                 if (map.TryGetValue("name", out var name) && !string.IsNullOrWhiteSpace(name)) PlayerName = name;
-                Offline = map.ContainsKey("offline");
+                // When launched normally (without -ddmp-role), stay idle until the player
+                // starts Host or Join from the native in-game Co-op menu.
+                Offline = map.ContainsKey("offline") || !HasCliRole;
                 TraceCodec = map.ContainsKey("trace");
                 Mute = map.ContainsKey("mute");
             }
@@ -64,7 +69,7 @@ namespace DelusionMP
             {
                 Log.Warn("command line parse failed: " + e.Message);
             }
-            Log.Info($"bootstrap role={Role} port={Port} host={HostAddress} name={PlayerName} " +
+            Log.Info($"bootstrap cliRole={HasCliRole} role={Role} port={Port} host={HostAddress} name={PlayerName} " +
                      $"slot={Slot} mute={Mute} offline={Offline}");
         }
 

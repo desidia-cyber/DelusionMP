@@ -19,26 +19,32 @@ namespace DelusionMP.Game
     [HarmonyPatch(typeof(UnityEngine.Application), "get_persistentDataPath")]
     internal static class Patch_PersistentDataPath
     {
-        private static string _cache;
-        private static bool _resolved;
+        internal static string OriginalPath = "";
+        private static string _coopPath = "";
+        private static bool _logged;
 
         private static void Postfix(ref string __result)
         {
             try
             {
-                if (!_resolved)
+                if (string.IsNullOrEmpty(OriginalPath) && !string.IsNullOrEmpty(__result))
                 {
-                    _resolved = true;
-                    int slot = Bootstrap.Slot;
-                    if (slot <= 0) _cache = "";
-                    else
-                    {
-                        var parent = Path.GetDirectoryName(__result);
-                        _cache = Path.Combine(parent ?? __result, "Dread Delusion MP" + slot);
-                    }
-                    Log.Info($"persistentDataPath{(string.IsNullOrEmpty(_cache) ? " (unmodified) " : " -> " + _cache)}");
+                    OriginalPath = __result;
+                    var parent = Path.GetDirectoryName(__result);
+                    int slot = Bootstrap.Slot > 0 ? Bootstrap.Slot : 1;
+                    _coopPath = Path.Combine(parent ?? __result, "Dread Delusion MP" + slot);
                 }
-                if (!string.IsNullOrEmpty(_cache)) __result = _cache;
+
+                bool redirect = Bootstrap.Slot > 0 || Core.CoopManager.CoopSaveActive;
+                if (redirect && !string.IsNullOrEmpty(_coopPath))
+                {
+                    if (!_logged)
+                    {
+                        _logged = true;
+                        Log.Info("persistentDataPath -> " + _coopPath);
+                    }
+                    __result = _coopPath;
+                }
             }
             catch (Exception e) { Log.Debug("persistentDataPath patch: " + e.Message); }
         }

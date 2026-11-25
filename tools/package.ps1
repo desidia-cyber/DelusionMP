@@ -1,20 +1,21 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Build a shareable DelusionMP co-op package (both players unzip the same folder).
+    Build a shareable, exe-free DelusionMP co-op package (drop-in DLL mod).
 
 .DESCRIPTION
-    dist\DelusionMP-Coop\
-        DelusionMP-Launcher.exe      launcher window
-        DelusionMP-Coop.exe          launcher without a window (uses DelusionMP-Coop.ini)
-        DelusionMP-Share-Logs.cmd    packs logs for a bug report
-        README.txt
-        mod\DelusionMP.dll           the mod (the same Debug build the rig tests)
-        tools\bepinex-payload\       BepInEx 6 IL2CPP + pre-generated interop for this game build
+    Assembles dist\DelusionMP-Coop\ (and dist\DelusionMP-Coop.zip) with ZERO .exe files:
+        winhttp.dll                  BepInEx Doorstop proxy DLL
+        doorstop_config.ini          Doorstop configuration
+        .doorstop_version            Doorstop metadata
+        dotnet\                      .NET 6 runtime DLLs for BepInEx 6 IL2CPP
+        BepInEx\core\                BepInEx 6 IL2CPP core DLLs
+        BepInEx\unity-libs\          Unity core libraries (BepInEx generates BepInEx\interop\ on first launch)
+        BepInEx\plugins\DelusionMP.dll   The DelusionMP co-op mod (with native main menu UI & Steam P2P)
+        README.txt                   Drop-in install & play instructions
 
-    The BepInEx payload is gitignored (140 MB). It is taken from tools\bepinex-payload, or from
-    the launcher worktree (..\delusionMP-launcher\tools\bepinex-payload) when absent here.
-    A zip is written next to the folder.
+    Players unzip the contents straight into <Dread Delusion>\windows_content\ and launch
+    Dread Delusion normally (from Steam or directly).
 
 .EXAMPLE
     ./tools/package.ps1
@@ -23,7 +24,8 @@
 [CmdletBinding()]
 param(
     [switch]$NoBuild,
-    [string]$Configuration = 'Debug',
+    [string]$Configuration = 'Release',
+    [string]$GameDir = '',
     [string]$Out = ''
 )
 
@@ -33,47 +35,75 @@ if (-not $Out) { $Out = Join-Path $Root 'dist\DelusionMP-Coop' }
 
 function Step($t) { Write-Host "=== $t ===" -ForegroundColor Cyan }
 
-$cargo = Join-Path $env:USERPROFILE '.cargo\bin\cargo.exe'
+# Locate a game dir with BepInEx/interop for building if not explicitly passed
+if (-not $GameDir) {
+    $candidates = @(
+        (Join-Path $Root 'rig\instance1\game'),
+        'G:\Freespace\delusionMP\rig\instance1\game'
+    )
+    foreach ($c in $candidates) {
+        if (Test-Path (Join-Path $c 'BepInEx\interop\Assembly-CSharp.dll')) {
+            $GameDir = $c
+            break
+        }
+    }
+}
+
 if (-not $NoBuild) {
-    Step 'build mod'
-    dotnet build (Join-Path $Root 'mod\DelusionMP.csproj') -c $Configuration -v:q -nologo
+    Step 'build DelusionMP.dll (no .exe launchers)'
+    $buildArgs = @('build', (Join-Path $Root 'mod\DelusionMP.csproj'), '-c', $Configuration, '-v:q', '-nologo')
+    if ($GameDir) { $buildArgs += "-p:GameDir=$GameDir" }
+    & dotnet @buildArgs
     if ($LASTEXITCODE -ne 0) { throw 'mod build failed' }
-    Step 'build launchers'
-    if (-not (Test-Path $cargo)) { $cargo = 'cargo' }
-    Push-Location $Root
-    try {
-        & $cargo build --release -p delusionmp-launcher -p delusionmp-launcher-gui
-        if ($LASTEXITCODE -ne 0) { throw 'launcher build failed' }
-    } finally { Pop-Location }
 }
 
 $dll = Join-Path $Root "mod\bin\$Configuration\DelusionMP.dll"
-$exeCli = Join-Path $Root 'target\release\DelusionMP-Coop.exe'
-$exeGui = Join-Path $Root 'target\release\DelusionMP-Launcher.exe'
-foreach ($f in @($dll, $exeCli, $exeGui)) { if (-not (Test-Path $f)) { throw "missing $f (build first)" } }
+if (-not (Test-Path $dll)) { throw "missing $dll (build first)" }
 
-$payload = Join-Path $Root 'tools\bepinex-payload'
-if (-not (Test-Path (Join-Path $payload 'BepInEx\core'))) {
-    $payload = Join-Path (Split-Path -Parent $Root) 'delusionMP-launcher\tools\bepinex-payload'
+# Locate BepInEx 6 IL2CPP payload (with pre-generated interop)
+$payloadCandidates = @(
+    (Join-Path $Root 'tools\bepinex-payload'),
+    (Join-Path (Split-Path -Parent $Root) 'delusionMP-launcher\tools\bepinex-payload'),
+    'G:\Freespace\delusionMP\dist\DelusionMP-Coop\tools\bepinex-payload'
+)
+$payload = ''
+foreach ($p in $payloadCandidates) {
+    if (Test-Path (Join-Path $p 'BepInEx\core')) { $payload = $p; break }
 }
-if (-not (Test-Path (Join-Path $payload 'BepInEx\core'))) {
+if (-not $payload) {
     throw 'no BepInEx payload: put BepInEx 6 IL2CPP (with interop generated for this game) in tools\bepinex-payload'
 }
 
-Step "assemble $Out"
+Step "assemble $Out (exe-free drop-in mod)"
 if (Test-Path $Out) { Remove-Item $Out -Recurse -Force }
-New-Item -ItemType Directory -Force (Join-Path $Out 'mod') | Out-Null
-New-Item -ItemType Directory -Force (Join-Path $Out 'tools') | Out-Null
-Copy-Item $exeCli, $exeGui $Out
-Copy-Item $dll (Join-Path $Out 'mod')
-Copy-Item (Join-Path $Root 'tools\coop-package\*') $Out
-# robocopy follows the junction and copies real files; exit codes below 8 are success.
-robocopy $payload (Join-Path $Out 'tools\bepinex-payload') /E /NFL /NDL /NJH /NJS /NP | Out-Null
+New-Item -ItemType Directory -Force $Out | Out-Null
+
+# Copy BepInEx + Doorstop payload directly to root of release folder so it can be
+# extracted straight into <Dread Delusion>\windows_content\.
+# Exclude BepInEx\interop (auto-generated by BepInEx on first launch from the user's own
+# GameAssembly.dll — smaller zip, resilient to game patches, and avoids AV false positives
+# on generated IL2CPP interop stubs).
+robocopy $payload $Out /E /NFL /NDL /NJH /NJS /NP /XD interop cache /XF *.exe *.cmd *.bat *.ps1 *.vbs *.zip *.7z *.rar delusionmp.coop.cfg DelusionMP.dll LogOutput.log ErrorLog.log | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "payload copy failed ($LASTEXITCODE)" }
+
+# Install our freshly built DelusionMP.dll into BepInEx\plugins
+$pluginsDir = Join-Path $Out 'BepInEx\plugins'
+New-Item -ItemType Directory -Force $pluginsDir | Out-Null
+Copy-Item $dll (Join-Path $pluginsDir 'DelusionMP.dll') -Force
+
+# README.txt
+Copy-Item (Join-Path $Root 'tools\coop-package\README.txt') (Join-Path $Out 'README.txt') -Force
+
+# Hard guarantee: zero executables, scripts, or nested archives anywhere in the release package
+$forbidden = Get-ChildItem $Out -Recurse -File -Include *.exe,*.cmd,*.bat,*.ps1,*.vbs,*.com,*.msi,*.zip,*.7z,*.rar -ErrorAction SilentlyContinue
+if ($forbidden) {
+    $names = ($forbidden | ForEach-Object { $_.FullName }) -join ', '
+    throw "Release package must not contain executables, scripts, or nested archives, found: $names"
+}
 
 $zip = "$Out.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
-Compress-Archive -Path $Out -DestinationPath $zip
+Compress-Archive -Path (Join-Path $Out '*') -DestinationPath $zip
 $mb = [math]::Round((Get-Item $zip).Length / 1MB, 1)
-Write-Host "  [ok] $Out" -ForegroundColor Green
+Write-Host "  [ok] $Out (0 .exe files)" -ForegroundColor Green
 Write-Host "  [ok] $zip ($mb MB)" -ForegroundColor Green
