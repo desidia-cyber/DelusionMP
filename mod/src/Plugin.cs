@@ -110,6 +110,7 @@ namespace DelusionMP
                 string gs = "-";
                 try { gs = GameRefs.Manager != null ? GameRefs.Manager.CurrentGameState.ToString() : "-"; } catch { }
                 DelusionMP.Game.Log.Info($"inWorld={inWorld} (state={gs} active={UnityEngine.SceneManagement.SceneManager.GetActiveScene().name} player={havePlayer})");
+                if (!inWorld) CoopManager.SyncSaveModeOnTitle();
             }
             if (session.Connected && havePlayer)
             {

@@ -160,9 +160,29 @@ namespace DelusionMP.Core
         {
             if (Bootstrap.Slot > 0) return; // CLI -ddmp-slot always wins
             if (CoopSaveActive == on) return;
+            // Never switch persistentDataPath while a save is loaded in-world: doing so would
+            // redirect the next autosave into the other folder and overwrite the wrong slot.
+            // SyncSaveModeOnTitle() applies the desired mode once the player returns to the Title Screen.
+            if (GameRefs.InWorld)
+            {
+                Log.Info($"coop save isolation switch to {(on ? "Dread Delusion MP1" : "Singleplayer")} deferred until Title Screen");
+                return;
+            }
+            if (on)
+            {
+                try { Patch_PersistentDataPath.EnsureCoopDirectoryExists(); } catch { }
+            }
             CoopSaveActive = on;
             Log.Info($"coop save isolation: {(on ? "Dread Delusion MP1" : "Singleplayer")}");
             try { global::DelusionMenu.Instance?.RefreshSaveButtons(); } catch { }
+        }
+
+        /// <summary>Applies any deferred save-folder switch once the player is back on the Title Screen.</summary>
+        public static void SyncSaveModeOnTitle()
+        {
+            if (Bootstrap.Slot > 0 || Bootstrap.HasCliRole || GameRefs.InWorld) return;
+            bool want = IsActive && CoopConfig.SeparateCoopSaves.Value;
+            SetCoopSaveMode(want);
         }
     }
 }

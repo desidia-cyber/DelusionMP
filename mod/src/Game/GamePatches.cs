@@ -21,23 +21,63 @@ namespace DelusionMP.Game
     {
         internal static string OriginalPath = "";
         private static string _coopPath = "";
+        private static int _coopSlot;
         private static bool _logged;
+
+        /// <summary>Ensure OriginalPath has been captured even before the game first queries persistentDataPath.</summary>
+        internal static void EnsureInitialized()
+        {
+            if (string.IsNullOrEmpty(OriginalPath))
+            {
+                try { _ = UnityEngine.Application.persistentDataPath; } catch { }
+            }
+        }
+
+        internal static string GetCoopPath()
+        {
+            EnsureInitialized();
+            if (string.IsNullOrEmpty(OriginalPath)) return "";
+            int slot = Bootstrap.Slot > 0 ? Bootstrap.Slot : 1;
+            if (string.IsNullOrEmpty(_coopPath) || _coopSlot != slot)
+            {
+                var parent = Path.GetDirectoryName(OriginalPath);
+                _coopPath = Path.Combine(parent ?? OriginalPath, "Dread Delusion MP" + slot);
+                _coopSlot = slot;
+                _logged = false;
+            }
+            return _coopPath;
+        }
+
+        internal static void EnsureCoopDirectoryExists()
+        {
+            var path = GetCoopPath();
+            if (!string.IsNullOrEmpty(path) && !Directory.Exists(path))
+                Directory.CreateDirectory(path);
+        }
 
         private static void Postfix(ref string __result)
         {
             try
             {
                 if (string.IsNullOrEmpty(OriginalPath) && !string.IsNullOrEmpty(__result))
-                {
                     OriginalPath = __result;
-                    var parent = Path.GetDirectoryName(__result);
-                    int slot = Bootstrap.Slot > 0 ? Bootstrap.Slot : 1;
-                    _coopPath = Path.Combine(parent ?? __result, "Dread Delusion MP" + slot);
-                }
 
                 bool redirect = Bootstrap.Slot > 0 || Core.CoopManager.CoopSaveActive;
-                if (redirect && !string.IsNullOrEmpty(_coopPath))
+                if (redirect && !string.IsNullOrEmpty(OriginalPath))
                 {
+                    int slot = Bootstrap.Slot > 0 ? Bootstrap.Slot : 1;
+                    if (string.IsNullOrEmpty(_coopPath) || _coopSlot != slot)
+                    {
+                        var parent = Path.GetDirectoryName(OriginalPath);
+                        _coopPath = Path.Combine(parent ?? OriginalPath, "Dread Delusion MP" + slot);
+                        _coopSlot = slot;
+                        _logged = false;
+                    }
+                    // Unity guarantees the default persistentDataPath exists on disk, so the game's
+                    // SaveFile() opens files directly without creating the folder first. Make sure
+                    // the isolated co-op folder exists before returning it.
+                    if (!Directory.Exists(_coopPath))
+                        Directory.CreateDirectory(_coopPath);
                     if (!_logged)
                     {
                         _logged = true;

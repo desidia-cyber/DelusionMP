@@ -603,6 +603,11 @@ namespace DelusionMP.UI
             {
                 CoopConfig.SeparateCoopSaves.Value = on;
                 CoopConfig.Save();
+                if (GameRefs.InWorld)
+                {
+                    SetNote("Saved. Save folder switch takes effect after returning to the Title Screen.");
+                    return;
+                }
                 if (CoopManager.IsActive) CoopManager.SetCoopSaveMode(on);
                 SetNote(on ? "Co-op saves stored in Dread Delusion MP1 (single-player untouched)."
                            : "Using your main single-player save folder for co-op.");
@@ -886,9 +891,16 @@ namespace DelusionMP.UI
         {
             if (CoopManager.StartHost())
             {
-                SetNote(GameRefs.InWorld
-                    ? "Hosting started! Your partner can join now."
-                    : "Hosting started! Click 'Load Save' to enter the world.");
+                if (GameRefs.InWorld)
+                {
+                    SetNote(!CoopManager.CoopSaveActive && CoopConfig.SeparateCoopSaves.Value
+                        ? "Hosting started! Using current save (return to Title Screen to use Co-op saves)."
+                        : "Hosting started! Your partner can join now.");
+                }
+                else
+                {
+                    SetNote("Hosting started! Click 'Load Save' to enter the world.");
+                }
             }
             else
             {
@@ -901,9 +913,16 @@ namespace DelusionMP.UI
         {
             if (CoopManager.StartJoin())
             {
-                SetNote(GameRefs.InWorld
-                    ? "Joining host..."
-                    : "Connecting... Click 'Load Save' (any save) to enter the host's world.");
+                if (GameRefs.InWorld)
+                {
+                    SetNote(!CoopManager.CoopSaveActive && CoopConfig.SeparateCoopSaves.Value
+                        ? "Joining host... Using current save (return to Title Screen to use Co-op saves)."
+                        : "Joining host...");
+                }
+                else
+                {
+                    SetNote("Connecting... Click 'Load Save' (any save) to enter the host's world.");
+                }
             }
             else
             {
@@ -915,7 +934,9 @@ namespace DelusionMP.UI
         private static void OnClickDisconnect()
         {
             CoopManager.StopSession();
-            SetNote("Co-op session stopped (singleplayer mode).");
+            SetNote(GameRefs.InWorld && CoopManager.CoopSaveActive
+                ? "Co-op session stopped. Still saving to Co-op folder until you return to the Title Screen."
+                : "Co-op session stopped (singleplayer mode).");
             RefreshLiveStatus();
         }
 

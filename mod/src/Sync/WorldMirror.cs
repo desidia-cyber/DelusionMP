@@ -993,6 +993,9 @@ namespace DelusionMP.Sync
                     return;
                 }
                 var tmp = path + ".tmp";
+                var dir = System.IO.Path.GetDirectoryName(tmp);
+                if (!string.IsNullOrEmpty(dir) && !System.IO.Directory.Exists(dir))
+                    System.IO.Directory.CreateDirectory(dir);
                 using (var bw = new System.IO.BinaryWriter(System.IO.File.Create(tmp)))
                 {
                     bw.Write(0x444D5031);

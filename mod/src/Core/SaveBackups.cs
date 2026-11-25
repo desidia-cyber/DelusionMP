@@ -31,20 +31,17 @@ namespace DelusionMP.Core
         public static string BackupsRoot =>
             Path.Combine(BepInEx.Paths.BepInExRootPath, "save-backups");
 
-        public static string SingleplayerSaveDir =>
-            Patch_PersistentDataPath.OriginalPath;
-
-        public static string CoopSaveDir
+        public static string SingleplayerSaveDir
         {
             get
             {
-                var orig = Patch_PersistentDataPath.OriginalPath;
-                if (string.IsNullOrEmpty(orig)) return "";
-                var parent = Path.GetDirectoryName(orig);
-                int slot = Bootstrap.Slot > 0 ? Bootstrap.Slot : 1;
-                return Path.Combine(parent ?? orig, "Dread Delusion MP" + slot);
+                Patch_PersistentDataPath.EnsureInitialized();
+                return Patch_PersistentDataPath.OriginalPath;
             }
         }
+
+        public static string CoopSaveDir =>
+            Patch_PersistentDataPath.GetCoopPath();
 
         private static ulong Fnv64(byte[] data)
         {
