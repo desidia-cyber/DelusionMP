@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using DelusionMP.Core;
@@ -97,12 +98,28 @@ namespace DelusionMP.Net
                 for (int i = 1; i < rawArgs.Length; i++)
                     psi.ArgumentList.Add(rawArgs[i]);
 
+                // Strip Doorstop's inherited anti-recursion env vars (DOORSTOP_INITIALIZED / DOORSTOP_DISABLE)
+                // so BepInEx loads in the restarted process, plus Steam parent-launch vars.
+                var toRemove = new List<string>();
+                foreach (string k in psi.Environment.Keys)
+                {
+                    if (k.StartsWith("DOORSTOP_", StringComparison.OrdinalIgnoreCase)
+                        || k.Equals("SteamOverlayGameId", StringComparison.OrdinalIgnoreCase)
+                        || k.Equals("SteamAppUser", StringComparison.OrdinalIgnoreCase)
+                        || k.Equals("STEAM_COMPAT_APP_ID", StringComparison.OrdinalIgnoreCase))
+                        toRemove.Add(k);
+                }
+                foreach (var k in toRemove)
+                    psi.Environment.Remove(k);
+
                 // Override Steam launcher environment variables so steam_api64.dll binds to appId
                 psi.Environment["SteamAppId"] = appId.ToString();
                 psi.Environment["SteamGameId"] = appId.ToString();
-                psi.Environment.Remove("SteamOverlayGameId");
 
-                Log.Info($"steam: restarting {exe} with SteamAppId={appId}");
+                // Shut down our current Steam session cleanly before spawning the new AppID process
+                try { if (Steamworks.SteamClient.IsValid) Steamworks.SteamClient.Shutdown(); } catch { }
+
+                Log.Info($"steam: restarting {exe} with SteamAppId={appId} (cleared {toRemove.Count} inherited env vars)");
                 Process.Start(psi);
                 Application.Quit();
                 return true;
