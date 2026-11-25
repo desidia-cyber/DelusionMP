@@ -87,6 +87,7 @@ namespace DelusionMP
             // Each subsystem is timed and isolated (Perf.Run): a fault in one no longer skips
             // every system after it for that frame.
             Perf.Run("net.pump", () => session.Pump());
+            Perf.Run("steam.cb", Net.SteamHooks.EnsureCallbacksPumped);
             Perf.Run("bootstrap", Bootstrap.Tick);
             Perf.Run("ui.menu", UI.NativeCoopMenu.Tick);
             Perf.Run("cmd", Cmd.Tick);

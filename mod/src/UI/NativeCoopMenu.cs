@@ -53,6 +53,8 @@ namespace DelusionMP.UI
         private static GameObject _hostBtnObj;
         private static GameObject _joinBtnObj;
         private static GameObject _disconnectBtnObj;
+        private static GameObject _restartAppBtnObj;
+        private static Text _restartAppBtnLabel;
 
         // Session tab dynamic fields
         private static GameObject _steamGroup;
@@ -565,6 +567,12 @@ namespace DelusionMP.UI
                     CoopConfig.SteamIdentity.Value = toSw ? "spacewar" : "game";
                     CoopConfig.Save();
                     RefreshSessionFields();
+                    RefreshLiveStatus();
+                    if (SteamTransport.IsAppIdMismatched(toSw, out uint activeId))
+                    {
+                        string target = toSw ? "Spacewar (480)" : "Dread Delusion (1574240)";
+                        SetNote($"Currently running as AppID {activeId}. Click 'Restart as {target}' to switch.");
+                    }
                 });
 
             // Row 5 (Steam): Lobby code preview / Scan Friends button
@@ -619,6 +627,9 @@ namespace DelusionMP.UI
             _hostBtnObj = CreateNativeButton(right, "HostSession_Btn", "Host Session", new Vector2(0f, 0.80f), new Vector2(1f, 0.98f), 22, OnClickHost);
             _joinBtnObj = CreateNativeButton(right, "JoinSession_Btn", "Join Session", new Vector2(0f, 0.59f), new Vector2(1f, 0.77f), 22, OnClickJoin);
             _disconnectBtnObj = CreateNativeButton(right, "Disconnect_Btn", "Stop Session", new Vector2(0f, 0.38f), new Vector2(1f, 0.56f), 20, OnClickDisconnect);
+            _restartAppBtnObj = CreateNativeButton(right, "RestartSteamApp_Btn", "Restart as Spacewar", new Vector2(0f, 0.38f), new Vector2(1f, 0.56f), 17, OnClickRestartSteamApp);
+            _restartAppBtnLabel = _restartAppBtnObj.GetComponentInChildren<Text>(true);
+            _restartAppBtnObj.SetActive(false);
 
             var friendsBox = MakeRect("FriendsBox", right, new Vector2(0f, 0f), new Vector2(1f, 0.35f));
             var fbBg = friendsBox.gameObject.AddComponent<Image>();
@@ -940,6 +951,14 @@ namespace DelusionMP.UI
             RefreshLiveStatus();
         }
 
+        private static void OnClickRestartSteamApp()
+        {
+            bool toSw = CoopConfig.SteamIdentity.Value.Equals("spacewar", StringComparison.OrdinalIgnoreCase);
+            uint targetId = toSw ? SteamTransport.AppIdSpacewar : SteamTransport.AppIdGame;
+            if (!SteamHooks.RestartWithAppId(targetId, out string err))
+                SetNote(err);
+        }
+
         private static void OnClickLoadSave()
         {
             if (GameRefs.InWorld) { Close(); return; }
@@ -1031,6 +1050,16 @@ namespace DelusionMP.UI
 
             if (_disconnectBtnObj != null)
                 _disconnectBtnObj.SetActive(active);
+
+            if (_restartAppBtnObj != null)
+            {
+                bool isSteam = !CoopConfig.Network.Value.Equals("lan", StringComparison.OrdinalIgnoreCase);
+                bool wantSw = CoopConfig.SteamIdentity.Value.Equals("spacewar", StringComparison.OrdinalIgnoreCase);
+                bool showRestart = !active && isSteam && SteamTransport.IsAppIdMismatched(wantSw, out _);
+                _restartAppBtnObj.SetActive(showRestart);
+                if (showRestart && _restartAppBtnLabel != null)
+                    _restartAppBtnLabel.text = wantSw ? "Restart as Spacewar" : "Restart as Dread Delusion";
+            }
 
             if (_loadSaveBtn != null)
                 _loadSaveBtn.SetActive(!GameRefs.InWorld && active);
@@ -1429,12 +1458,27 @@ namespace DelusionMP.UI
         private static bool Prefix()
         {
             if (!NativeCoopMenu.IsOpen) return true;
-            // If typing inside an InputField, unfocus it first instead of closing the menu
+            // Dread Delusion binds both Escape and Backspace to CancelMenuInput.
+            // While typing in an InputField, swallow Backspace without unfocusing so it edits text;
+            // only Escape/gamepad-cancel unfocuses the field (and a second press closes the menu).
             try
             {
                 var sel = EventSystem.current?.currentSelectedGameObject;
-                if (sel != null && sel.GetComponent<InputField>() != null)
+                var input = sel != null ? sel.GetComponentInParent<InputField>() : null;
+                if (input != null && input.isFocused)
                 {
+                    bool backspace = Input.GetKey(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.Backspace);
+                    if (!backspace)
+                    {
+                        try
+                        {
+                            var kb = UnityEngine.InputSystem.Keyboard.current;
+                            if (kb != null && (kb.backspaceKey.isPressed || kb.backspaceKey.wasPressedThisFrame))
+                                backspace = true;
+                        }
+                        catch { }
+                    }
+                    if (backspace) return false;
                     EventSystem.current.SetSelectedGameObject(null);
                     return false;
                 }
