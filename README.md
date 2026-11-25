@@ -14,19 +14,22 @@ its end.
 ## Playing
 
 1. Build the package once: `./tools/package.ps1` writes `dist/DelusionMP-Coop.zip`
-   (launchers, the mod, BepInEx). Both players use the **same** package; a different mod
-   version is refused with an in-game note.
-2. Each player unzips it and runs `DelusionMP-Launcher.exe`: pick host or join, LAN or Steam,
-   a name and the game folder, then **Launch**. The launcher prepares a separate co-op copy of
-   the game (your normal saves are untouched; co-op saves live in `Dread Delusion MP1`).
-3. The host loads or starts a game; the joiner loads any save and is brought to the host's
+   (**zero `.exe` files** — BepInEx 6 IL2CPP + `DelusionMP.dll` only). Both players use the
+   **same** package; a different mod version is refused with an in-game note.
+2. Each player unzips it directly into `<Dread Delusion>\windows_content\` and launches
+   Dread Delusion normally (from Steam or directly).
+3. Click **Co-op** in the native Title Screen menu: configure your name, Steam (password lobby
+   or Steam friends) or LAN, session rules, avatar, voice chat, and co-op save backups, then
+   click **Host Session** or **Join Session**. Co-op saves are isolated in `Dread Delusion MP1`
+   by default so your single-player saves remain untouched.
+4. The host loads or starts a game; the joiner loads any save and is brought to the host's
    world, story and journal on joining.
 
 In game: **T** opens text chat (Enter sends, Esc cancels); voice is push-to-talk on **V** or
-open-mic, set on the launcher's Player page (takes effect on the next start). **F8** puts you
-next to your partner. Chests and loose pickups are each player's own: both of you loot each one. Session rules
-(death penalties, respawn at the partner, exclusive shop items) are the host's and are sent to
-the joiner.
+open-mic, configurable live in **Co-op -> Player & Voice** (accessible from both the Title
+Screen and Pause Menu). **F8** puts you next to your partner. Chests and loose pickups are each
+player's own: both of you loot each one. Session rules (death penalties, respawn at the partner,
+exclusive shop items) are the host's and are sent to the joiner.
 
 ---
 

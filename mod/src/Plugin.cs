@@ -35,47 +35,7 @@ namespace DelusionMP
             Game.Log.Bind(Log);
             Game.Log.Info($"DelusionMP {DelusionMP.Net.PluginInfo.Version} loading");
 
-            // How this player looks to the partner (sent to them on connect).
-            var model = Config.Bind("Avatar", "Model", "fbx_UnionWomen",
-                "Character model your partner sees you as. Female models: fbx_UnionWomen (dressable, " +
-                "see Outfit), fbx_DarkStarWomen, fbx_PwyllWomen. See docs/screenshots/avatar_model_options.png.");
-            var outfit = Config.Bind("Avatar", "Outfit", "thief",
-                "Outfit for fbx_UnionWomen: a preset (thief, civilianA, civilianB, civilianC, soldier, " +
-                "inquisitor, cultist) or a comma-separated list of part names.");
-            Sync.RemoteAvatar.SetLocalLook(model.Value, outfit.Value);
-
-            // Co-op death rules (one player down: respawn by the partner with a debuff until a
-            // rest; both down: the game's own death and enemies return).
-            Sync.WorldEventsSync.ExclusiveUniqueBuys = Config.Bind("Rules", "ExclusiveUniqueShopItems", false,
-                "1 = only one player can buy a one-of-a-kind shop item (host decides); 0 = each player may buy their own copy.").Value;
-            Sync.CoopDeath.Enabled = Config.Bind("Rules", "DeathDebuffs", true,
-                "Dying while the partner is alive adds a stack that lowers max health/mana/stamina until you rest in a bed.").Value;
-            Sync.PartnerTeleport.Key = Config.Bind("Player", "TeleportToPartnerKey", "F8",
-                "Key that puts you next to your partner (none to disable).").Value;
-            Sync.CoopDeath.MaxStacks = Config.Bind("Rules", "MaxStacks", 5, "Most death stacks a player can carry.").Value;
-            Sync.CoopDeath.PctPerStack = Config.Bind("Rules", "PercentPerStack", 10f, "Max health/mana/stamina lost per stack, in %.").Value;
-            Sync.CoopDeath.RespawnDelay = Config.Bind("Rules", "RespawnDelaySeconds", 8f,
-                "Seconds a player stays down when the partner is alive (the window in which a second death is a party wipe).").Value;
-            Sync.CoopDeath.RespawnAtPartner = Config.Bind("Rules", "RespawnAtPartner", true,
-                "Get up next to the partner instead of at the nearest respawn point (when the partner is alive).").Value;
-
-            // Local chat and proximity voice. The launcher writes these into this config file.
-            VoiceConfig.ChatEnabled = Config.Bind("Voice", "ChatEnabled", true,
-                "1 = the chat key opens a text line; partner lines are still shown when off.").Value;
-            VoiceConfig.ChatKey = Config.Bind("Voice", "ChatKey", "T", "Key that opens the chat line.").Value;
-            VoiceConfig.VoiceChat = Config.Bind("Voice", "VoiceChat", true,
-                "1 = proximity voice chat: you hear your partner and can talk; 0 = off.").Value;
-            VoiceConfig.VoiceMode = Config.Bind("Voice", "VoiceMode", 0,
-                "0 = hold the key to talk, 1 = always on (silence is gated out).").Value;
-            VoiceConfig.VoiceKey = Config.Bind("Voice", "VoiceKey", "V", "Push-to-talk key.").Value;
-            VoiceConfig.VoiceRangeM = Config.Bind("Voice", "VoiceRangeM", 80,
-                "Partner's voice fades to nothing at this many metres; 0 = no proximity.").Value;
-            VoiceConfig.VoiceVolumePct = Config.Bind("Voice", "VoiceVolumePct", 100,
-                "How loud your partner's voice is, in %.").Value;
-            VoiceConfig.VoiceMicPct = Config.Bind("Voice", "VoiceMicPct", 100,
-                "How loud your microphone is sent, in %.").Value;
-            VoiceConfig.VoiceAwayPct = Config.Bind("Voice", "VoiceAwayPct", 40,
-                "Partner's volume while they are away, in %; ignored when VoiceRangeM is 0.").Value;
+            CoopConfig.Bind(Config);
 
             BuildInfo.Compute();
             ObjectRegistry.Instance.Invalidate();
@@ -128,6 +88,7 @@ namespace DelusionMP
             // every system after it for that frame.
             Perf.Run("net.pump", () => session.Pump());
             Perf.Run("bootstrap", Bootstrap.Tick);
+            Perf.Run("ui.menu", UI.NativeCoopMenu.Tick);
             Perf.Run("cmd", Cmd.Tick);
 
             // Both sides need the identity table: the client resolves incoming object

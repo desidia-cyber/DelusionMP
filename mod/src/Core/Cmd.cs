@@ -309,6 +309,19 @@ namespace DelusionMP.Core
                     Emit("GO StartNormalMode");
                     break;
                 }
+                case "coopui":
+                {
+                    string sub = parts.Length > 1 ? parts[1] : "open";
+                    if (sub == "open") { UI.NativeCoopMenu.Open(GameRefs.InWorld); Emit("COOPUI open"); }
+                    else if (sub == "close") { UI.NativeCoopMenu.Close(); Emit("COOPUI close"); }
+                    else if (sub == "tab" && parts.Length > 2 && int.TryParse(parts[2], out int ti))
+                    {
+                        UI.NativeCoopMenu.SelectTab(ti);
+                        Emit("COOPUI tab " + ti);
+                    }
+                    else Emit($"COOPUI open={UI.NativeCoopMenu.IsOpen} status={CoopManager.StatusSummary}");
+                    break;
+                }
                 case "menu":
                 {
                     // The title screen runs through Unity UI buttons; invoking their onClick
