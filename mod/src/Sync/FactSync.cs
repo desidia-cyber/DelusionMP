@@ -67,7 +67,8 @@ namespace DelusionMP.Sync
 
         private static readonly HashSet<string> _playerOwned = new HashSet<string>(StringComparer.Ordinal)
         {
-            "playerCoin", "playerPicks", "picksNotFull", "totalPlayerDeaths", CoopDeath.StackFact,
+            "playerCoin", "playerPicks", "picksNotFull", "PicksFull", "LastSavedMasterRegion",
+            "PlayerEnticeLevel", "totalPlayerDeaths", CoopDeath.StackFact,
         };
         private static bool _seededFromItems;
         [ThreadStatic] private static int _ownerDepth;
@@ -94,6 +95,7 @@ namespace DelusionMP.Sync
 
         public static bool IsPlayerOwned(string key)
         {
+            if (string.IsNullOrWhiteSpace(key)) return true;
             Seed();
             if (_playerOwned.Contains(key)) return true;
             // The summoner's own tallies (summonSkeletonDeaths, summonSpiderDiedOfBuffDamage,

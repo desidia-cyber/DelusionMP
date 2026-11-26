@@ -29,6 +29,7 @@ namespace DelusionMP.Net
     {
         public const uint AppIdGame = 1574240;
         public const uint AppIdSpacewar = 480;
+        public const string SteamClosedMessage = "Steam is not running. Please open Steam and sign in, or switch Network to LAN.";
 
         private const int FriendImmediate = 0x04;
         private const int SendUnreliableNoNagle = 1; // k_nSteamNetworkingSend_UnreliableNoNagle
@@ -75,6 +76,23 @@ namespace DelusionMP.Net
                 uint fp = SteamHooks.ActiveFacepunchAppId;
                 if (fp != 0) return fp;
                 return SteamApi.TryQueryActiveAppId();
+            }
+        }
+
+        /// <summary>True when Steam is running (either already initialized in-process or the Steam desktop client is active).</summary>
+        public static bool IsSteamRunning()
+        {
+            if (SteamHooks.IsFacepunchActive || SteamApi.TryQueryActiveAppId() != 0)
+                return true;
+            if (SteamApi.TryIsSteamRunning(out bool running))
+                return running;
+            try
+            {
+                return Process.GetProcessesByName("steam").Length > 0;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -134,6 +152,11 @@ namespace DelusionMP.Net
         internal static void OnFacepunchCallback(int callbackId, IntPtr data, int size)
         {
             if (_activeConsumers <= 0 || data == IntPtr.Zero) return;
+            if (callbackId == 703) // SteamAPICallCompleted_t (ProcessResult is inlined into ProcessCallback by IL2CPP)
+            {
+                OnFacepunchResult(data, size);
+                return;
+            }
             if (callbackId == 1221 && size >= 0xC0) // SteamNetConnectionStatusChangedCallback_t
             {
                 try
@@ -155,17 +178,19 @@ namespace DelusionMP.Net
             {
                 ulong call = (ulong)Marshal.ReadInt64(data, 0);
                 int cb = Marshal.ReadInt32(data, 8);
+                int paramSize = Marshal.ReadInt32(data, 12);
                 if (cb != 513 && cb != 510 && cb != 504) return;
+                if (paramSize <= 0 || paramSize > 4096) return;
                 int pipe = getPipe();
                 if (pipe == 0) return;
-                IntPtr resBuf = Marshal.AllocHGlobal(256);
+                IntPtr resBuf = Marshal.AllocHGlobal(Math.Max(paramSize, 32));
                 try
                 {
-                    if (callResult(pipe, call, resBuf, 256, cb, out bool failed) && !failed)
+                    if (callResult(pipe, call, resBuf, paramSize, cb, out bool failed) && !failed)
                     {
-                        if (cb == 513) SharedLobbyCreated.Enqueue((Marshal.ReadInt32(resBuf, 0), (ulong)Marshal.ReadInt64(resBuf, 8)));
-                        else if (cb == 510) SharedLobbyMatches.Enqueue((uint)Marshal.ReadInt32(resBuf, 0));
-                        else if (cb == 504) SharedLobbyEntered.Enqueue(((ulong)Marshal.ReadInt64(resBuf, 0), Marshal.ReadInt32(resBuf, 16)));
+                        if (cb == 513 && paramSize >= 16) SharedLobbyCreated.Enqueue((Marshal.ReadInt32(resBuf, 0), (ulong)Marshal.ReadInt64(resBuf, 8)));
+                        else if (cb == 510 && paramSize >= 4) SharedLobbyMatches.Enqueue((uint)Marshal.ReadInt32(resBuf, 0));
+                        else if (cb == 504 && paramSize >= 20) SharedLobbyEntered.Enqueue(((ulong)Marshal.ReadInt64(resBuf, 0), Marshal.ReadInt32(resBuf, 16)));
                     }
                     else if (failed)
                     {
@@ -250,11 +275,16 @@ namespace DelusionMP.Net
         {
             error = "";
             var list = new List<(ulong, string)>();
+            if (!IsSteamRunning())
+            {
+                error = SteamClosedMessage;
+                return list;
+            }
             SteamApi api = null;
             try
             {
                 api = SteamApi.AttachOrInit(useSpacewar);
-                if (api == null) { error = "Steam is not running or steam_api64.dll was not found."; return list; }
+                if (api == null) { error = SteamClosedMessage; return list; }
                 var ev = new SteamEvents();
                 api.Pump(ev);
                 list = api.GetFriendsInGame();
@@ -864,6 +894,24 @@ namespace DelusionMP.Net
                 throw new Exception("steam_api64.dll not found in game folder.");
             }
 
+            public static bool TryIsSteamRunning(out bool running)
+            {
+                running = false;
+                try
+                {
+                    var mod = GetModuleHandleW("steam_api64.dll");
+                    if (mod == IntPtr.Zero) mod = FindOrLoadSteamDll();
+                    var p = GetProcAddress(mod, "SteamAPI_IsSteamRunning");
+                    if (p == IntPtr.Zero) return false;
+                    running = Marshal.GetDelegateForFunctionPointer<InitFn>(p)();
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
             public static uint TryQueryActiveAppId()
             {
                 try
@@ -964,6 +1012,14 @@ namespace DelusionMP.Net
                 }
                 else
                 {
+                    var isRunningPtr = GetProcAddress(mod, "SteamAPI_IsSteamRunning");
+                    if (isRunningPtr != IntPtr.Zero)
+                    {
+                        bool steamUp = Marshal.GetDelegateForFunctionPointer<InitFn>(isRunningPtr)();
+                        if (!steamUp)
+                            throw new Exception(SteamClosedMessage);
+                    }
+
                     Environment.SetEnvironmentVariable("SteamAppId", wantAppId.ToString());
                     Environment.SetEnvironmentVariable("SteamGameId", wantAppId.ToString());
 
@@ -979,9 +1035,9 @@ namespace DelusionMP.Net
                             if (r != 0)
                             {
                                 string detail = Marshal.PtrToStringUTF8(errBuf) ?? "";
-                                throw new Exception(r == 2
-                                    ? "Steam client is not running or not logged in."
-                                    : $"Steam init failed ({r}{(detail.Length > 0 ? ": " + detail : "")}).");
+                                if (r == 2 || detail.IndexOf("not running", StringComparison.OrdinalIgnoreCase) >= 0)
+                                    throw new Exception(SteamClosedMessage);
+                                throw new Exception("Could not connect to Steam. Make sure Steam is open and signed in, or switch Network to LAN.");
                             }
                         }
                         finally { Marshal.FreeHGlobal(errBuf); }
@@ -989,7 +1045,8 @@ namespace DelusionMP.Net
                     else
                     {
                         var init = Sym<InitFn>(mod, "SteamAPI_Init");
-                        if (!init()) throw new Exception("SteamAPI_Init failed. Is Steam running and logged in?");
+                        if (!init())
+                            throw new Exception("Could not connect to Steam. Make sure Steam is open and signed in, or switch Network to LAN.");
                     }
                     api._weInitialized = true;
                     api.ActiveAppId = wantAppId;
@@ -1170,17 +1227,21 @@ namespace DelusionMP.Net
                             {
                                 ulong call = (ulong)Marshal.ReadInt64(m.Param, 0);
                                 int cb = Marshal.ReadInt32(m.Param, 8);
-                                if (_callResult(_pipe, call, resBuf, 256, cb, out bool failed) && !failed)
+                                int paramSize = Marshal.ReadInt32(m.Param, 12);
+                                if (paramSize > 0 && paramSize <= 256)
                                 {
-                                    if (cb == 513) ev.Created = (Marshal.ReadInt32(resBuf, 0), (ulong)Marshal.ReadInt64(resBuf, 8));
-                                    else if (cb == 510) ev.Matches = (uint)Marshal.ReadInt32(resBuf, 0);
-                                    else if (cb == 504) ev.Entered = ((ulong)Marshal.ReadInt64(resBuf, 0), Marshal.ReadInt32(resBuf, 16));
-                                }
-                                else if (failed)
-                                {
-                                    if (cb == 513) ev.Created = (-1, 0);
-                                    else if (cb == 510) ev.Matches = 0;
-                                    else if (cb == 504) ev.Entered = (0, -1);
+                                    if (_callResult(_pipe, call, resBuf, paramSize, cb, out bool failed) && !failed)
+                                    {
+                                        if (cb == 513 && paramSize >= 16) ev.Created = (Marshal.ReadInt32(resBuf, 0), (ulong)Marshal.ReadInt64(resBuf, 8));
+                                        else if (cb == 510 && paramSize >= 4) ev.Matches = (uint)Marshal.ReadInt32(resBuf, 0);
+                                        else if (cb == 504 && paramSize >= 20) ev.Entered = ((ulong)Marshal.ReadInt64(resBuf, 0), Marshal.ReadInt32(resBuf, 16));
+                                    }
+                                    else if (failed)
+                                    {
+                                        if (cb == 513) ev.Created = (-1, 0);
+                                        else if (cb == 510) ev.Matches = 0;
+                                        else if (cb == 504) ev.Entered = (0, -1);
+                                    }
                                 }
                             }
                             else if (m.Id == 1221 && m.Param != IntPtr.Zero && m.Size >= 0xC0)

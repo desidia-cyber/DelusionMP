@@ -36,6 +36,7 @@ namespace DelusionMP.Sync
         // SkipToNextTreeNode only bumps m_extendedTextID and its coroutine swaps the text.
         // The spectator's own skip is blocked, so the driver sends each page.
         private const byte MsgPage = 8;
+        private const byte MsgProxTrigger = 9;
         private const float PovDistance = 12f;
 
         private static bool _spectating;
@@ -269,6 +270,7 @@ namespace DelusionMP.Sync
                     case MsgGiftItem: ApplyGiftItem(r.Str(), r.I32(), r.I32()); break;
                     case MsgGiftCoin: ApplyGiftCoin(r.I32()); break;
                     case MsgPage: ApplyPage(r.I32(), r.I32(), r.Str()); break;
+                    case MsgProxTrigger: ApplyProxTrigger(r.Str()); break;
                 }
             }
             catch (Exception e) { Log.Warn($"dialogue apply {kind} failed: {e.Message}"); }
@@ -330,6 +332,9 @@ namespace DelusionMP.Sync
             }
             _lastNodeIdx = NodeIndex(c.tree, c.currentNode);
             _rootPending = true;
+            // Mark any ProximityDialogueTrigger targeting this NPC as already triggered on the
+            // spectator so walking into the same trigger zone afterward never replays the script.
+            if (_speakerNpc != null) MarkProxTriggersFor(_speakerNpc);
 
             // Far from the driver: watch through their eyes.
             var player = GameRefs.Player;
@@ -425,6 +430,61 @@ namespace DelusionMP.Sync
             w.U8(MsgPage).I32(node).I32(page).Str(Clip(text, 900));
             Send(w);
             _pagesSent++;
+        }
+
+        internal static void OnProxTriggerActivated(global::ProximityDialogueTrigger trig)
+        {
+            if (trig == null || !CanSend()) return;
+            try
+            {
+                string key = EnemySync.KeyFor(ObjectRegistry.Instance, trig);
+                if (string.IsNullOrEmpty(key)) return;
+                var w = new Writer();
+                w.U8(MsgProxTrigger).Str(key);
+                Session.Instance.SendReliable(PacketKind.Dialogue, w.ToArray());
+                Log.Info("dialogue -> peer: proximity trigger consumed " + key);
+            }
+            catch { }
+        }
+
+        private static void ApplyProxTrigger(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return;
+            try
+            {
+                var reg = ObjectRegistry.Instance;
+                var all = Resources.FindObjectsOfTypeAll<global::ProximityDialogueTrigger>();
+                if (all == null) return;
+                foreach (var t in all)
+                {
+                    if (t == null || !t.gameObject.scene.IsValid()) continue;
+                    if (EnemySync.KeyFor(reg, t) == key)
+                    {
+                        t.hasBeenTriggered = true;
+                        Log.Info("dialogue <- peer: marked proximity trigger consumed " + key);
+                        return;
+                    }
+                }
+            }
+            catch (Exception e) { Log.Debug("prox trigger apply: " + e.Message); }
+        }
+
+        private static void MarkProxTriggersFor(global::NPCBase npc)
+        {
+            if (npc == null) return;
+            try
+            {
+                var all = Resources.FindObjectsOfTypeAll<global::ProximityDialogueTrigger>();
+                if (all == null) return;
+                IntPtr ptr = npc.Pointer;
+                foreach (var t in all)
+                {
+                    if (t == null || !t.gameObject.scene.IsValid()) continue;
+                    if (t.conversationToTrigger != null && t.conversationToTrigger.Pointer == ptr)
+                        t.hasBeenTriggered = true;
+                }
+            }
+            catch { }
         }
 
         private static void ApplyPage(int node, int page, string text)
@@ -768,5 +828,12 @@ namespace DelusionMP.Sync
     internal static class Patch_NPC_ChangePlayerCoin
     {
         [HarmonyPostfix] static void Postfix(string amtString) => DialogueSync.OnChangePlayerCoin(amtString);
+    }
+
+    [HarmonyPatch(typeof(global::ProximityDialogueTrigger), "Activate")]
+    internal static class Patch_ProximityDialogueTrigger_Activate
+    {
+        [HarmonyPostfix]
+        static void Postfix(global::ProximityDialogueTrigger __instance) => DialogueSync.OnProxTriggerActivated(__instance);
     }
 }

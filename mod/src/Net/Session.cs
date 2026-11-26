@@ -205,6 +205,7 @@ namespace DelusionMP.Net
             if (UnityEngine.Time.realtimeSinceStartup - _lastFailNote > 15f)
             {
                 _lastFailNote = UnityEngine.Time.realtimeSinceStartup;
+                try { UI.CoopNotifications.Show("Co-op: " + reason + ". Both players need the same DelusionMP package.", UI.ToastKind.Error, 7.5f); } catch { }
                 try { global::DelusionNote.Instance?.StartNewNote(null, "Co-op: " + reason + ". Both players need the same DelusionMP package.", false); } catch { }
             }
             Close();
@@ -536,7 +537,7 @@ namespace DelusionMP.Net
                 var r = new Reader(payload);
                 uint sentAt = (uint)r.I32();
                 string fp = r.Str();
-                if (Role == SessionRole.Host && fp != FactSync.Fingerprint())
+                if (Role == SessionRole.Host && !string.IsNullOrEmpty(fp) && fp != FactSync.Fingerprint())
                 {
                     // Rate-limit: a peer that legitimately carries local-only facts would
                     // otherwise make every ping trigger a snapshot.
@@ -654,7 +655,7 @@ namespace DelusionMP.Net
         {
             var w = new Writer();
             w.I32((int)UnityEngine.Time.realtimeSinceStartup);
-            w.Str(FactSync.Fingerprint());
+            w.Str(GameRefs.InWorld ? FactSync.Fingerprint() : "");
             SendUnreliable(PacketKind.Ping, w.ToArray());
         }
     }
@@ -673,6 +674,9 @@ namespace DelusionMP.Net
         /// <summary>SHA-256 of GameAssembly.dll, computed at load.</summary>
         public static string GameAssemblyHash = "";
 
+        /// <summary>Short 8-char uppercase hex build ID derived from DelusionMP.dll's SHA-256.</summary>
+        public static string ModBuildId = "00000000";
+
         public static void Compute()
         {
             try
@@ -688,6 +692,26 @@ namespace DelusionMP.Net
             {
                 Log.Warn("could not hash GameAssembly.dll: " + e.Message);
                 GameAssemblyHash = "unknown";
+            }
+
+            try
+            {
+                var dllPath = typeof(BuildInfo).Assembly.Location;
+                if (!string.IsNullOrEmpty(dllPath) && System.IO.File.Exists(dllPath))
+                {
+                    using var sha = System.Security.Cryptography.SHA256.Create();
+                    using var fs = System.IO.File.OpenRead(dllPath);
+                    ModBuildId = Convert.ToHexString(sha.ComputeHash(fs)).Substring(0, 8);
+                }
+                else if (GameAssemblyHash.Length >= 8)
+                {
+                    ModBuildId = GameAssemblyHash.Substring(0, 8);
+                }
+                Log.Info($"DelusionMP v{PluginInfo.Version} -- build {ModBuildId}");
+            }
+            catch (Exception e)
+            {
+                Log.Warn("could not hash DelusionMP.dll: " + e.Message);
             }
         }
     }

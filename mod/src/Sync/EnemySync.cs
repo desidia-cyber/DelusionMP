@@ -68,7 +68,7 @@ namespace DelusionMP.Sync
                 if (st != null && st.currentHealth > w.hp)
                 {
                     int was = st.currentHealth;
-                    LoopGuard.Apply(() => Priv.SetProp(st, "currentHealth", w.hp));
+                    LoopGuard.Apply(() => st.currentHealth = w.hp);
                     Log.Info($"enemy {e.gameObject.name}: back in play at {was} hp, kept the fight's {w.hp}");
                 }
             }
@@ -83,7 +83,10 @@ namespace DelusionMP.Sync
             public bool InCombat;   // the simulating peer's enemy is fighting
             public global::EnemyController Controller;
             public Vector3 TargetPos;
+            public Vector3 LastPos;
             public float TargetYaw;
+            public float Speed;
+            public global::EnemyController.CombatModes CombatMode;
             public float LastUpdate;
         }
 
@@ -134,6 +137,47 @@ namespace DelusionMP.Sync
         private const byte CombatAway = 3;     // client -> host: the client entered/left a menu
         private const byte CombatCharm = 4;    // both: this machine's player charmed an enemy (timer, buff)
         private const byte CombatUncharm = 5;  // both: that charm ended
+        private const byte CombatAnim = 6;     // simulating peer -> puppet: attack/spell/bow/stagger/block anim
+
+        internal enum EnemyAnimKind : byte
+        {
+            Attack1 = 0, Attack2 = 1, AttackStrong = 2, Taunt = 3,
+            ReadyBow = 4, FireBow = 5, ReadySpell = 6, FireSpell = 7,
+            CancelRanged = 8, DrinkPotion = 9, Damage = 10, Stagger = 11,
+            GuardBreak = 12, Parry = 13, Block = 14, WeaponOut = 15, WeaponAway = 16,
+        }
+
+        internal static void OnAnimEvent(global::EnemyAnimator anim, EnemyAnimKind kind, byte arg = 0)
+        {
+            if (anim == null || LoopGuard.ApplyingRemote) return;
+            var s = Session.Instance;
+            if (s == null || !s.Connected) return;
+            global::EnemyController c = null;
+            try { c = anim.controller ?? anim.GetComponent<global::EnemyController>() ?? anim.GetComponentInParent<global::EnemyController>(); } catch { }
+            if (c == null || SummonSync.IsSummon(c) || IsPuppet(c)) return;
+            var key = CachedKey(ObjectRegistry.Instance, c);
+            if (string.IsNullOrEmpty(key)) return;
+            var w = new Writer();
+            w.U8(CombatAnim).Str(key).U8((byte)kind).U8(arg);
+            s.SendUnreliable(PacketKind.CombatEvent, w.ToArray());
+        }
+
+        internal static void DrivePuppetAnimator(global::EnemyAnimator anim)
+        {
+            if (anim == null) return;
+            global::EnemyController c = null;
+            try { c = anim.controller; } catch { }
+            if (c == null || !IsPuppet(c)) return;
+            if (!_puppets.TryGetValue(c.GetInstanceID(), out var pp)) return;
+            try
+            {
+                var a = anim.animator;
+                if (a == null) return;
+                float pct = pp.Speed < 0.15f ? 0f : (c.isRunning || pp.Speed > 3.5f ? 1f : Mathf.Clamp(pp.Speed / 4.5f, 0.25f, 0.7f));
+                a.SetFloat("speedPercent", pct, 0.1f, Time.deltaTime);
+            }
+            catch { }
+        }
 
         // Host: the client is in a menu/panel/dialogue. Client: what it last reported.
         private static bool _peerAway, _sentAway;
@@ -240,6 +284,41 @@ namespace DelusionMP.Sync
                 int dmg = r.I32();
                 if (IsHost) AddThreat(c.GetInstanceID(), client: true, dmg);
             }
+            else if (kind == CombatAnim)
+            {
+                var animKind = (EnemyAnimKind)r.U8();
+                byte arg = r.U8();
+                if (!IsPuppet(c) || _dead.Contains(c.GetInstanceID())) return;
+                var anim = c.myAnim;
+                if (anim == null) return;
+                LoopGuard.Apply(() =>
+                {
+                    try
+                    {
+                        switch (animKind)
+                        {
+                            case EnemyAnimKind.Attack1: anim.OnAttack(); break;
+                            case EnemyAnimKind.Attack2: anim.OnAttackTwo(); break;
+                            case EnemyAnimKind.AttackStrong: anim.OnAttackStrong(); break;
+                            case EnemyAnimKind.Taunt: anim.OnAttackTaunt(); break;
+                            case EnemyAnimKind.ReadyBow: anim.OnReadyBow(); break;
+                            case EnemyAnimKind.FireBow: anim.OnFireBow(); break;
+                            case EnemyAnimKind.ReadySpell: anim.OnReadySpell((global::EnemyCombat.SpellType)arg); break;
+                            case EnemyAnimKind.FireSpell: anim.OnFireSpell(); break;
+                            case EnemyAnimKind.CancelRanged: anim.OnCancelRanged(); break;
+                            case EnemyAnimKind.DrinkPotion: anim.OnDrinkPotion(); break;
+                            case EnemyAnimKind.Damage: anim.OnDamage(); break;
+                            case EnemyAnimKind.Stagger: anim.Stagger(); break;
+                            case EnemyAnimKind.GuardBreak: anim.GuardBreak(); break;
+                            case EnemyAnimKind.Parry: anim.ActivateParry(); break;
+                            case EnemyAnimKind.Block: anim.SetBlocking(arg != 0); break;
+                            case EnemyAnimKind.WeaponOut: anim.WeaponOut(); break;
+                            case EnemyAnimKind.WeaponAway: anim.WeaponAway(); break;
+                        }
+                    }
+                    catch (Exception e) { Log.Debug($"puppet anim {animKind}: {e.Message}"); }
+                });
+            }
             else if (kind == CombatDeath)
             {
                 bool byPlayer = r.Bool();
@@ -248,7 +327,7 @@ namespace DelusionMP.Sync
                 {
                     try
                     {
-                        if (c.myStats != null) Priv.SetProp(c.myStats, "currentHealth", 0);
+                        if (c.myStats != null) c.myStats.currentHealth = 0;
                         c.OnDeath(byPlayer);
                         _deathsApplied++;
                     }
@@ -529,14 +608,20 @@ namespace DelusionMP.Sync
             if (s == null || !s.Connected) return;
             float now = Time.realtimeSinceStartup;
 
+            float dt = Mathf.Max(Time.deltaTime, 0.001f);
             foreach (var pp in _puppets.Values)
             {
                 if (pp.Controller == null) continue;
-                if (now - pp.LastUpdate > 0.5f) continue;   // owner went quiet: freeze, don't extrapolate
+                if (now - pp.LastUpdate > 0.5f) { pp.Speed = Mathf.Lerp(pp.Speed, 0f, 0.25f); continue; }   // owner went quiet: freeze, don't extrapolate
                 var t = pp.Controller.transform;
-                t.position = Vector3.Lerp(t.position, pp.TargetPos, 0.35f);
+                var prevPos = t.position;
+                var nextPos = Vector3.Lerp(prevPos, pp.TargetPos, 0.35f);
+                t.position = nextPos;
                 var ea = t.eulerAngles;
                 t.rotation = Quaternion.Euler(ea.x, Mathf.LerpAngle(ea.y, pp.TargetYaw, 0.35f), ea.z);
+                float horiz = new Vector2(nextPos.x - prevPos.x, nextPos.z - prevPos.z).magnitude / dt;
+                pp.Speed = Mathf.Lerp(pp.Speed, horiz, 0.25f);
+                pp.LastPos = nextPos;
             }
 
             if (now < _nextState) return;
@@ -657,7 +742,7 @@ namespace DelusionMP.Sync
                     try
                     {
                         if (c.myStats != null && c.myStats.currentHealth != keepHp)
-                            LoopGuard.Apply(() => Priv.SetProp(c.myStats, "currentHealth", keepHp));
+                            LoopGuard.Apply(() => c.myStats.currentHealth = keepHp);
                     }
                     catch (Exception e) { Log.Debug("enemy resume hp: " + e.Message); }
                 }
@@ -773,7 +858,17 @@ namespace DelusionMP.Sync
                         c.hostileType = hostile;
                         c.isRunning = running;
                         c.hasBeenProvoked = provoked;
-                        if (c.myStats != null) Priv.SetProp(c.myStats, "currentHealth", hp);
+                        if (p.CombatMode != mode)
+                        {
+                            p.CombatMode = mode;
+                            c.combatMode = mode;
+                            if (c.myAnim != null)
+                            {
+                                if (mode == global::EnemyController.CombatModes.InCombat) c.myAnim.WeaponOut();
+                                else c.myAnim.WeaponAway();
+                            }
+                        }
+                        if (c.myStats != null) c.myStats.currentHealth = hp > 0 ? hp : 1;
                     }
                     catch (Exception e) { Log.Debug($"puppet apply failed: {e.Message}"); }
                 });
@@ -833,6 +928,29 @@ namespace DelusionMP.Sync
 
         internal static string KeyFor(ObjectRegistry reg, Component c)
         {
+            // Spawned enemies carry no SaveableObject of their own and their scene sibling index
+            // depends on runtime spawn order; keying by their static EnemySpawner guarantees a
+            // stable 1-to-1 identity across both machines even when multiple identical enemies
+            // are nearby.
+            var ec = c as global::EnemyController;
+            if (ec != null)
+            {
+                try
+                {
+                    var sp = ec.mySpawner;
+                    if (sp != null)
+                    {
+                        var spSave = sp.GetComponent<global::SaveableObject>();
+                        if (spSave != null)
+                        {
+                            var sid = spSave.GetUniqueIdentifier();
+                            if (!string.IsNullOrEmpty(sid)) return reg.CurrentScene + "|spawner:" + sid;
+                        }
+                        return reg.CurrentScene + "|#spawner/" + ObjectRegistry.HierarchyPath(sp.transform);
+                    }
+                }
+                catch { }
+            }
             var saveable = c.GetComponent<global::SaveableObject>();
             if (saveable != null)
             {
@@ -939,4 +1057,44 @@ namespace DelusionMP.Sync
             return false;
         }
     }
+
+    // Drive puppet locomotion (speedPercent) after EnemyAnimator.Update reads zero agent velocity.
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), "Update")]
+    internal static class Patch_EnemyAnimator_Update
+    {
+        [HarmonyLib.HarmonyPostfix]
+        static void Postfix(global::EnemyAnimator __instance) => EnemySync.DrivePuppetAnimator(__instance);
+    }
+
+    // Replicate combat/action animations from the simulating peer to the puppet.
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.OnAttack))]
+    internal static class Patch_EnemyAnim_Attack1 { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.Attack1); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.OnAttackTwo))]
+    internal static class Patch_EnemyAnim_Attack2 { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.Attack2); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.OnAttackStrong))]
+    internal static class Patch_EnemyAnim_AttackStrong { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.AttackStrong); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.OnAttackTaunt))]
+    internal static class Patch_EnemyAnim_Taunt { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.Taunt); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.OnReadyBow))]
+    internal static class Patch_EnemyAnim_ReadyBow { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.ReadyBow); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.OnFireBow))]
+    internal static class Patch_EnemyAnim_FireBow { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.FireBow); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.OnReadySpell))]
+    internal static class Patch_EnemyAnim_ReadySpell { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance, global::EnemyCombat.SpellType spellType) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.ReadySpell, (byte)(int)spellType); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.OnFireSpell))]
+    internal static class Patch_EnemyAnim_FireSpell { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.FireSpell); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.OnCancelRanged))]
+    internal static class Patch_EnemyAnim_CancelRanged { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.CancelRanged); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.OnDrinkPotion))]
+    internal static class Patch_EnemyAnim_DrinkPotion { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.DrinkPotion); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.OnDamage))]
+    internal static class Patch_EnemyAnim_Damage { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.Damage); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), "Stagger")]
+    internal static class Patch_EnemyAnim_Stagger { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.Stagger); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.GuardBreak))]
+    internal static class Patch_EnemyAnim_GuardBreak { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.GuardBreak); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), "ActivateParry")]
+    internal static class Patch_EnemyAnim_Parry { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.Parry); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.SetBlocking))]
+    internal static class Patch_EnemyAnim_Block { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance, bool value) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.Block, value ? (byte)1 : (byte)0); }
 }

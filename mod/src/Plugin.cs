@@ -90,6 +90,8 @@ namespace DelusionMP
             Perf.Run("steam.cb", Net.SteamHooks.EnsureCallbacksPumped);
             Perf.Run("bootstrap", Bootstrap.Tick);
             Perf.Run("ui.menu", UI.NativeCoopMenu.Tick);
+            Perf.Run("ui.toast", UI.CoopNotifications.Tick);
+            Perf.Run("bugmark", Core.BugMarker.Tick);
             Perf.Run("cmd", Cmd.Tick);
 
             // Both sides need the identity table: the client resolves incoming object
@@ -171,6 +173,8 @@ namespace DelusionMP
         {
             try { DelusionMP.Sync.DialogueSync.LateTick(); }
             catch (System.Exception e) { DelusionMP.Game.Log.Debug("late tick: " + e.Message); }
+            try { DelusionMP.Core.Choreo.LateTick(); }
+            catch { }
         }
     }
 

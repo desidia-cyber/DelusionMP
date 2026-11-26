@@ -228,6 +228,7 @@ namespace DelusionMP.Sync
                     return;
                 }
                 if (IsPerPlayer(so)) return;   // each player's own loot
+                if (IsTypedOnly(so)) return;   // synced exclusively via typed fast paths (avoids RestoreState double-animations)
                 seen++;
 
                 object state;
@@ -315,7 +316,7 @@ namespace DelusionMP.Sync
         // those directly as well. The generic mirror still covers everything else.
 
         // LiftMove (3) was the old motion replay; it is retired (ignored on receipt).
-        private enum TypedKind : byte { DoorUltimate = 0, Door = 1, Lift = 2, LiftMove = 3, LiftActivate = 4 }
+        private enum TypedKind : byte { DoorUltimate = 0, Door = 1, Lift = 2, LiftMove = 3, LiftActivate = 4, DoorVert = 5 }
 
         // Lift typed value: liftPosition (0..3) | LiftMovingBit. liftPosition already uses 2/3
         // for MovingDown/MovingUp, so the moving flag needs its own bit.
@@ -344,9 +345,10 @@ namespace DelusionMP.Sync
                                  w.ToArray());
 
         // Doors and lifts only change with region streaming; their lists and keys are cached
-        // (refreshed every 3 s) instead of three full object searches per sweep.
+        // (refreshed every 3 s) instead of four full object searches per sweep.
         private static (global::DoorsUltimate c, string key)[] _doorsU = new (global::DoorsUltimate, string)[0];
         private static (global::DoorsDelusion c, string key)[] _doorsP = new (global::DoorsDelusion, string)[0];
+        private static (global::DoorsDelusionVert c, string key)[] _doorsV = new (global::DoorsDelusionVert, string)[0];
         private static (global::DelusionLift c, string key)[] _liftsC = new (global::DelusionLift, string)[0];
         private static float _typedListsAt = -10f;
         private static string _typedListsScene;
@@ -375,6 +377,7 @@ namespace DelusionMP.Sync
             _typedListsScene = scene;
             _doorsU = KeyedList<global::DoorsUltimate>(scene);
             _doorsP = KeyedList<global::DoorsDelusion>(scene);
+            _doorsV = KeyedList<global::DoorsDelusionVert>(scene);
             _liftsC = KeyedList<global::DelusionLift>(scene);
         }
 
@@ -388,6 +391,7 @@ namespace DelusionMP.Sync
                     if (d == null) continue;
                     int st;
                     try { st = (int)d.GetSt8(); } catch { continue; }
+                    if (IsQuiet(key) && (st == (int)global::DoorState.midOpen || st == (int)global::DoorState.midClose)) continue;
                     if (!TypedChanged(session, key, st)) continue;
                     var w = new Writer();
                     w.U8((byte)TypedKind.DoorUltimate).Str(key).I32(st);
@@ -398,10 +402,31 @@ namespace DelusionMP.Sync
                 {
                     if (d == null) continue;
                     int open;
-                    try { open = d.isOpen ? 1 : 0; } catch { continue; }
+                    try
+                    {
+                        if (IsQuiet(key) && d.isAnimating) continue;
+                        open = d.isOpen ? 1 : 0;
+                    }
+                    catch { continue; }
                     if (!TypedChanged(session, key, open)) continue;
                     var w = new Writer();
                     w.U8((byte)TypedKind.Door).Str(key).I32(open);
+                    SendTyped(session, w);
+                }
+
+            foreach (var (d, key) in _doorsV)
+                {
+                    if (d == null) continue;
+                    int open;
+                    try
+                    {
+                        if (IsQuiet(key) && d.IsAnimating()) continue;
+                        open = d.isOpen ? 1 : 0;
+                    }
+                    catch { continue; }
+                    if (!TypedChanged(session, key, open)) continue;
+                    var w = new Writer();
+                    w.U8((byte)TypedKind.DoorVert).Str(key).I32(open);
                     SendTyped(session, w);
                 }
 
@@ -468,11 +493,20 @@ namespace DelusionMP.Sync
                         case TypedKind.Door:
                         {
                             var d = go.GetComponent<global::DoorsDelusion>();
-                            if (d == null) break;
+                            if (d == null || d.isAnimating) break;
                             if (value != 0 && d.IsClosed())
                                 d.OpenDoor(PlayerSync.PuppetTransform ?? GameRefs.Player?.transform);
                             else if (value == 0 && !d.IsClosed())
                                 d.StartClose();
+                            break;
+                        }
+                        case TypedKind.DoorVert:
+                        {
+                            var d = go.GetComponent<global::DoorsDelusionVert>();
+                            if (d == null) break;
+                            bool wantOpen = value != 0;
+                            if (d.isOpen != wantOpen && !d.IsAnimating())
+                                d.SetDoor(wantOpen, false);
                             break;
                         }
                         case TypedKind.Lift:
@@ -489,6 +523,18 @@ namespace DelusionMP.Sync
                         }
                         case TypedKind.LiftMove:
                             break;   // retired motion replay
+                    }
+                    // Keep the generic SaveableObject hash in step so ProcessBody does not echo
+                    // an ObjectState/RestoreState back on top of the typed transition.
+                    var so = go.GetComponent<global::SaveableObject>();
+                    if (so != null)
+                    {
+                        try
+                        {
+                            var st = so.CaptureState();
+                            _hashes[key] = st == null ? NullHash : Hash(StateCodec.Encode(st));
+                        }
+                        catch { }
                     }
                     _applied++;
                     _lastApply = "typed " + key;
@@ -804,6 +850,40 @@ namespace DelusionMP.Sync
                 return;
             }
 
+            // Objects handled exclusively by typed fast paths (lifts, vertical grates) must not
+            // also run RestoreState, which replays animations or snaps mid-motion.
+            if (IsTypedOnly(so))
+            {
+                _hashes[key] = Hash(body);
+                MarkQuiet(key);
+                return;
+            }
+
+            // Idempotency guard: if this object already holds the exact same serialized state
+            // (e.g. from a typed transition, a synced fact trigger, or a host echo of our own
+            // action), skip RestoreState so it does not replay close/open/pull animations twice.
+            ulong incomingHash = Hash(body);
+            try
+            {
+                var curState = so.CaptureState();
+                if (curState != null && Hash(StateCodec.Encode(curState)) == incomingHash)
+                {
+                    _hashes[key] = incomingHash;
+                    MarkQuiet(key);
+                    return;
+                }
+            }
+            catch { }
+
+            // Avoid interrupting or replaying an active door animation via RestoreState:
+            // typed door sync already drives open/close transitions smoothly.
+            if (IsDoorAnimating(go))
+            {
+                _hashes[key] = incomingHash;
+                MarkQuiet(key);
+                return;
+            }
+
             // Rebuild the sender's state object here and let the game's RestoreState apply
             // it. The local capture is not used: an untouched object captures null, which is
             // precisely the common case (the peer changed something this side never did).
@@ -851,6 +931,38 @@ namespace DelusionMP.Sync
         // the other). Each player loots every chest and pickup once; the state lives in each
         // player's own save. Breakable crates stay shared (the partner's copy rolls its own loot).
         private static readonly Dictionary<int, bool> _perPlayer = new Dictionary<int, bool>(512);
+        private static readonly Dictionary<int, bool> _typedOnly = new Dictionary<int, bool>(512);
+
+        internal static bool IsTypedOnly(global::SaveableObject so)
+        {
+            if (so == null) return false;
+            int id = so.GetInstanceID();
+            if (_typedOnly.TryGetValue(id, out var v)) return v;
+            try { v = so.GetComponent<global::DelusionLift>() != null || so.GetComponent<global::DoorsDelusionVert>() != null; }
+            catch { v = false; }
+            _typedOnly[id] = v;
+            return v;
+        }
+
+        private static bool IsDoorAnimating(GameObject go)
+        {
+            if (go == null) return false;
+            try
+            {
+                var dd = go.GetComponent<global::DoorsDelusion>();
+                if (dd != null && dd.isAnimating) return true;
+                var du = go.GetComponent<global::DoorsUltimate>();
+                if (du != null)
+                {
+                    var st = du.GetSt8();
+                    if (st == global::DoorState.midOpen || st == global::DoorState.midClose) return true;
+                }
+                var db = go.GetComponent<global::DoorsDelusionBridge>();
+                if (db != null && db.isAnimating) return true;
+            }
+            catch { }
+            return false;
+        }
 
         internal static bool IsPerPlayer(global::SaveableObject so)
         {

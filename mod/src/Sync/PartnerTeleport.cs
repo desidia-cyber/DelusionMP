@@ -5,14 +5,14 @@ using UnityEngine;
 namespace DelusionMP.Sync
 {
     /// <summary>
-    /// A key (F8 by default, [Player] TeleportToPartnerKey) puts the local player next to the
+    /// A key (F5 by default, [Player] TeleportToPartnerKey) puts the local player next to the
     /// partner: just behind them, on the ground they stand on. Far jumps hold the player still
     /// for a moment so the destination region can stream in (no falling through an empty world),
     /// and the fall tracker is reset so the drop is not fall damage.
     /// </summary>
     public static class PartnerTeleport
     {
-        public static string Key = "F8";
+        public static string Key = "F5";
         private const float Cooldown = 5f, FarDistance = 150f, HoldSeconds = 2f;
 
         private static float _readyAt, _holdUntil;

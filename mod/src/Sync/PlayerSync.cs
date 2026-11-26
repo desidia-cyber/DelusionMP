@@ -72,11 +72,17 @@ namespace DelusionMP.Sync
             return null;
         }
         private static float _nextLook;
+        public static string PartnerName { get; private set; } = "Partner";
 
         public static void ApplyLook(byte[] payload)
         {
             var r = new Reader(payload);
             string model = r.Str(), outfit = r.Str();
+            if (r.Remaining > 0)
+            {
+                string pname = r.Str();
+                if (!string.IsNullOrWhiteSpace(pname)) PartnerName = pname;
+            }
             if (RemoteAvatar.ApplyPartnerLook(model, outfit) && _puppet != null) DestroyPuppet();
         }
         private static string _frameKey;
@@ -269,12 +275,12 @@ namespace DelusionMP.Sync
 
             Session.Instance.SendUnreliable(PacketKind.PlayerState, w.ToArray());
 
-            // Our chosen look, every few seconds (tiny; survives a lost packet and reconnects).
+            // Our chosen look + display name, every few seconds (tiny; survives a lost packet and reconnects).
             if (Time.realtimeSinceStartup >= _nextLook)
             {
                 _nextLook = Time.realtimeSinceStartup + 3f;
                 var lw = new Writer();
-                lw.Str(RemoteAvatar.LocalModel).Str(RemoteAvatar.LocalOutfit);
+                lw.Str(RemoteAvatar.LocalModel).Str(RemoteAvatar.LocalOutfit).Str(Bootstrap.PlayerName ?? "Partner");
                 Session.Instance.SendUnreliable(PacketKind.PlayerLoadout, lw.ToArray());
             }
         }

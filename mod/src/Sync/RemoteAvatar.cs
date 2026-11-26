@@ -669,7 +669,9 @@ namespace DelusionMP.Sync
         };
         private static UnityEngine.Playables.PlayableGraph _clipGraph;
         private static bool _clipActive;
-        private static float _clipEnd;
+        private static float _clipElapsed;
+        private static float _clipDuration;
+        private static float _hitWeight;
 
         private static AnimationClip FindClip(string name)
         {
@@ -693,7 +695,8 @@ namespace DelusionMP.Sync
                 _anim.speed = 1f;
                 UnityEngine.Playables.AnimationPlayableUtilities.PlayClip(_anim, clip, out _clipGraph);
                 _clipActive = true;
-                _clipEnd = Time.realtimeSinceStartup + clip.length;
+                _clipElapsed = 0f;
+                _clipDuration = Math.Max(clip.length, 0.2f);
                 Log.Info($"avatar: playing {clipName} ({clip.length:F2}s) graphValid={_clipGraph.IsValid()} playing={_clipGraph.IsPlaying()} outputs={_clipGraph.GetOutputCount()}");
                 return true;
             }
@@ -717,7 +720,7 @@ namespace DelusionMP.Sync
                 if (_anim != null && _savedCtrl != null)
                 {
                     _anim.runtimeAnimatorController = _savedCtrl;
-                    _anim.CrossFadeInFixedTime("Locomotion", 0f, 0);
+                    _anim.CrossFadeInFixedTime("Locomotion", 0.15f, 0);
                 }
             }
             catch { }
@@ -745,9 +748,20 @@ namespace DelusionMP.Sync
         public static void Animate(in AvatarState streamed, float speed, float dt)
         {
             if (!Ready) return;
+            var curInput = Override.HasValue ? Override.Value : streamed;
             if (_clipActive)
             {
-                if (Time.realtimeSinceStartup < _clipEnd) { try { UpdateEquipment(Override ?? streamed); } catch { } _prev = Override ?? streamed; return; }
+                // Track scaled game time (matching PlayableGraph's DirectorUpdateMode.GameTime)
+                // so hitstop/menus/slowmo never cut a swing clip short prematurely.
+                _clipElapsed += Time.deltaTime;
+                bool nextCombo = (curInput.WeaponState == 9 && (_prev.WeaponState != 9 || curInput.Attack != _prev.Attack))
+                                 || (curInput.Attack == 6 && _prev.Attack != 6);
+                if (!nextCombo && _clipElapsed < _clipDuration)
+                {
+                    try { UpdateEquipment(curInput); } catch { }
+                    _prev = curInput;
+                    return;
+                }
                 StopClip();
             }
             TryUpgradeController();
@@ -773,10 +787,16 @@ namespace DelusionMP.Sync
                     else return;
                 }
 
-                // Hit reaction (additive layer).
+                // Hit reaction (additive layer): play full reaction, then fade weight smoothly out.
                 if (s.Health < prev.Health && prev.Health > 0)
                 {
+                    _hitWeight = 1f;
                     try { _anim.SetLayerWeight(1, 1f); _anim.Play("TakeDamage", 1, 0f); } catch { }
+                }
+                else if (_hitWeight > 0f)
+                {
+                    _hitWeight = Mathf.Max(0f, _hitWeight - dt * 1.8f);
+                    try { _anim.SetLayerWeight(1, _hitWeight); } catch { }
                 }
 
                 bool drawn = Drawn(s) || Casting(s);
@@ -800,7 +820,7 @@ namespace DelusionMP.Sync
                 else if (s.SpellState == 1 && prev.SpellState != 1) shot = "SpellStart";
                 else if (s.SpellState == 3 && prev.SpellState != 3) shot = "SpellFire1";
 
-                if (_clipActive && Time.realtimeSinceStartup >= _clipEnd) StopClip();
+                if (_clipActive && _clipElapsed >= _clipDuration) StopClip();
 
                 if (shot != null)
                 {

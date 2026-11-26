@@ -57,6 +57,7 @@ namespace DelusionMP.Core
         };
 
         private static ConfigFile _cfg;
+        private static float _nextBroadcast;
 
         // [Connection]
         public static ConfigEntry<string> PlayerName;
@@ -76,6 +77,7 @@ namespace DelusionMP.Core
 
         // [Player]
         public static ConfigEntry<string> TeleportKey;
+        public static ConfigEntry<string> BugMarkKey;
 
         // [Rules] (host-authoritative)
         public static ConfigEntry<bool> ExclusiveUniqueShopItems;
@@ -129,8 +131,17 @@ namespace DelusionMP.Core
                 "Outfit preset for fbx_UnionWomen (thief, civilianA/B/C, soldier, inquisitor, cultist) or custom part list.");
 
             // [Player]
-            TeleportKey = cfg.Bind("Player", "TeleportToPartnerKey", "F8",
+            TeleportKey = cfg.Bind("Player", "TeleportToPartnerKey", "F5",
                 "Key that puts you next to your partner (none to disable).");
+            BugMarkKey = cfg.Bind("Player", "BugMarkKey", "F8",
+                "Key that writes a bug marker into the log (none to disable).");
+            // Migrate older configs whose default TeleportToPartnerKey was F8 so it doesn't collide with BugMarkKey.
+            if (TeleportKey.Value.Equals("F8", StringComparison.OrdinalIgnoreCase) &&
+                BugMarkKey.Value.Equals("F8", StringComparison.OrdinalIgnoreCase))
+            {
+                TeleportKey.Value = "F5";
+                try { cfg.Save(); } catch { }
+            }
 
             // [Rules]
             ExclusiveUniqueShopItems = cfg.Bind("Rules", "ExclusiveUniqueShopItems", false,
@@ -193,6 +204,7 @@ namespace DelusionMP.Core
 
             RemoteAvatar.SetLocalLook(AvatarModel.Value, AvatarOutfit.Value);
             PartnerTeleport.Key = TeleportKey.Value;
+            BugMarker.Key = BugMarkKey.Value;
 
             WorldEventsSync.ExclusiveUniqueBuys = ExclusiveUniqueShopItems.Value;
             CoopDeath.Enabled = DeathDebuffs.Value;
@@ -227,8 +239,9 @@ namespace DelusionMP.Core
                 }
 
                 var s = Session.Instance;
-                if (s != null && s.Connected)
+                if (s != null && s.Connected && UnityEngine.Time.realtimeSinceStartup >= _nextBroadcast)
                 {
+                    _nextBroadcast = UnityEngine.Time.realtimeSinceStartup + 0.35f;
                     if (s.Role == SessionRole.Host)
                         RulesSync.Send(s);
                     try { WorldEventsSync.SendJoinState(); } catch { }
@@ -256,7 +269,8 @@ namespace DelusionMP.Core
         {
             AvatarModel.Value = "fbx_UnionWomen";
             AvatarOutfit.Value = "thief";
-            TeleportKey.Value = "F8";
+            TeleportKey.Value = "F5";
+            BugMarkKey.Value = "F8";
             ChatEnabled.Value = true;
             ChatKey.Value = "T";
             VoiceChat.Value = true;

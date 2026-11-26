@@ -69,7 +69,23 @@ namespace DelusionMP.Core
                 bool useSteam = CoopConfig.Network.Value.Equals("steam", StringComparison.OrdinalIgnoreCase);
                 if (useSteam)
                 {
+                    if (!SteamTransport.IsSteamRunning())
+                    {
+                        LastError = SteamTransport.SteamClosedMessage;
+                        Log.Warn("coop host blocked: " + LastError);
+                        UI.CoopNotifications.Show("Co-op Error: " + LastError, UI.ToastKind.Error, 7.5f);
+                        return false;
+                    }
                     bool sw = CoopConfig.SteamIdentity.Value.Equals("spacewar", StringComparison.OrdinalIgnoreCase);
+                    if (SteamTransport.IsAppIdMismatched(sw, out uint activeId))
+                    {
+                        string curName = activeId == SteamTransport.AppIdSpacewar ? "Spacewar (480)" : $"Dread Delusion ({activeId})";
+                        string wantName = sw ? "Spacewar (480)" : "Dread Delusion (1574240)";
+                        LastError = $"Game is running as {curName}. Click 'Restart as {wantName}' to switch.";
+                        Log.Warn("coop host blocked: " + LastError);
+                        UI.CoopNotifications.Show(LastError, UI.ToastKind.Warning, 7f);
+                        return false;
+                    }
                     string pw = CoopConfig.SteamUsePassword.Value ? CoopConfig.SteamPassword.Value : "";
                     var t = new SteamTransport(isHost: true, useSpacewar: sw, password: pw, wantPartner: "");
                     ActiveSteam = t;
@@ -112,7 +128,23 @@ namespace DelusionMP.Core
                 bool useSteam = CoopConfig.Network.Value.Equals("steam", StringComparison.OrdinalIgnoreCase);
                 if (useSteam)
                 {
+                    if (!SteamTransport.IsSteamRunning())
+                    {
+                        LastError = SteamTransport.SteamClosedMessage;
+                        Log.Warn("coop join blocked: " + LastError);
+                        UI.CoopNotifications.Show("Co-op Error: " + LastError, UI.ToastKind.Error, 7.5f);
+                        return false;
+                    }
                     bool sw = CoopConfig.SteamIdentity.Value.Equals("spacewar", StringComparison.OrdinalIgnoreCase);
+                    if (SteamTransport.IsAppIdMismatched(sw, out uint activeId))
+                    {
+                        string curName = activeId == SteamTransport.AppIdSpacewar ? "Spacewar (480)" : $"Dread Delusion ({activeId})";
+                        string wantName = sw ? "Spacewar (480)" : "Dread Delusion (1574240)";
+                        LastError = $"Game is running as {curName}. Click 'Restart as {wantName}' to switch.";
+                        Log.Warn("coop join blocked: " + LastError);
+                        UI.CoopNotifications.Show(LastError, UI.ToastKind.Warning, 7f);
+                        return false;
+                    }
                     string pw = CoopConfig.SteamUsePassword.Value ? CoopConfig.SteamPassword.Value : "";
                     string partner = CoopConfig.SteamUsePassword.Value ? "" : CoopConfig.SteamPartner.Value;
                     var t = new SteamTransport(isHost: false, useSpacewar: sw, password: pw, wantPartner: partner);

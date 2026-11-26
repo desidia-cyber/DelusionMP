@@ -184,14 +184,4 @@ namespace DelusionMP.Net
                 SteamTransport.OnFacepunchCallback((int)msg.Type, msg.Data, msg.DataSize);
         }
     }
-
-    [HarmonyPatch(typeof(Steamworks.Dispatch), "ProcessResult")]
-    internal static class Patch_SteamDispatch_ProcessResult
-    {
-        private static void Prefix(Steamworks.Dispatch.CallbackMsg_t msg)
-        {
-            SteamHooks.LastDispatchTick = Environment.TickCount64;
-            SteamTransport.OnFacepunchResult(msg.Data, msg.DataSize);
-        }
-    }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using DelusionMP.Core;
 using DelusionMP.Net;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using UnityEngine;
 
 namespace DelusionMP.Sync
@@ -102,7 +103,7 @@ namespace DelusionMP.Sync
         private const int ConcealMax = 5;           // 100 ms
         private const int Lead = 1600;              // keep ~100 ms written ahead of the playhead
         private const int Guard = 6400;             // and keep the 400 ms after it silent
-        private static readonly float[] Silence = new float[Frame];
+        private static readonly Il2CppStructArray<float> Silence = new Il2CppStructArray<float>(Frame);
 
         private static readonly object Gate = new object();
         private static readonly Dictionary<ushort, short[]> Incoming = new Dictionary<ushort, short[]>();
@@ -117,13 +118,22 @@ namespace DelusionMP.Sync
         private static float _lastHeard = -10f;
 
         private static string _device;
+        private static string _deviceLabel;
         private static AudioClip _mic;
-        private static float[] _micBuf;
+        // Must be an Il2CppStructArray<float>: passing a managed float[] to AudioClip.GetData
+        // creates a temporary IL2CPP copy that native code fills and discards, leaving float[] all zeros.
+        private static Il2CppStructArray<float> _micBuf;
+        private static int _micSamples;
+        private static int _micChannels = 1;
+        private static int _micFreq = Rate;
+        private static double _resampleAcc;
         private static int _micPos;
         private static bool _micWarned;
+        private static float _lastRms;
 
         private static AudioClip _outClip;
         private static AudioSource _source;
+        private static Il2CppStructArray<float> _outFrame;
         private static int _writePos;
         private static bool _playing;
         private static float _outGain = 1f;
@@ -159,7 +169,7 @@ namespace DelusionMP.Sync
 
         public static string Stats =>
             $"voice={(VoiceConfig.VoiceChat ? "on" : "off")} mode={(VoiceConfig.VoiceMode == 1 ? "open" : "ptt:" + VoiceConfig.VoiceKey)} " +
-            $"mic={(_testIn != null ? "test-file" : _device ?? "none")} sending={_wasSending} hearing={Hearing} " +
+            $"mic={(_testIn != null ? "test-file" : _deviceLabel ?? "none")} freq={_micFreq} ch={_micChannels} rms={_lastRms:F4} sending={_wasSending} hearing={Hearing} " +
             $"sent={_sent} recv={_recv} played={_played} concealed={_concealed} dropped={_dropped} buffered={Incoming.Count} " +
             $"gain={_outGain:F2} spatial={(_source != null ? _source.spatialBlend : -1):F0} " +
             $"head={(_source != null ? _source.timeSamples : -1)} playing={(_source != null && _source.isPlaying)} listenerPause={AudioListener.pause} " +
@@ -267,6 +277,7 @@ namespace DelusionMP.Sync
                     sum += v * v;
                 }
                 float rms = (float)Math.Sqrt(sum / Frame);
+                _lastRms = rms;
                 // Always-on mode: a noise gate with a 400 ms hangover, like the DollsMP sidecar.
                 if (VoiceConfig.VoiceMode == 1 && rms > 0.008f) _gateUntil = now + 0.4f;
 
@@ -364,23 +375,65 @@ namespace DelusionMP.Sync
                         if (!_micWarned) { Game.Log.Warn("no microphone found: voice is receive-only"); _micWarned = true; }
                         return false;
                     }
-                    _device = devices[0];
+                    // Passing null selects the OS default recording device instead of hardcoding devices[0].
+                    _device = null;
+                    _deviceLabel = devices[0] + " (default)";
                     _mic = Microphone.Start(_device, true, 1, Rate);
-                    _micBuf = new float[_mic != null ? _mic.samples : Rate];
+                    if (_mic == null)
+                    {
+                        _device = devices[0];
+                        _deviceLabel = _device;
+                        _mic = Microphone.Start(_device, true, 1, Rate);
+                    }
+                    if (_mic == null)
+                    {
+                        if (!_micWarned) { Game.Log.Warn("microphone failed to start"); _micWarned = true; }
+                        return false;
+                    }
+                    _micSamples = Math.Max(1, _mic.samples);
+                    _micChannels = Math.Max(1, _mic.channels);
+                    _micFreq = _mic.frequency > 0 ? _mic.frequency : Rate;
+                    _resampleAcc = 0.0;
+                    _micBuf = new Il2CppStructArray<float>(_micSamples * _micChannels);
                     _micPos = Microphone.GetPosition(_device);
-                    Game.Log.Info($"microphone open: {_device} ({_mic?.frequency} Hz)");
+                    Game.Log.Info($"microphone open: {_deviceLabel} ({_micFreq} Hz, {_micChannels} ch, {_micSamples} samples)");
                 }
-                int len = _micBuf.Length;
+                int len = _micSamples;
                 int pos = Microphone.GetPosition(_device);
                 int delta = pos - _micPos;
                 if (delta < 0) delta += len;
                 if (delta <= 0) return true;
                 _mic.GetData(_micBuf, 0);
+                double step = (double)Rate / _micFreq;
                 for (int i = 0; i < delta; i++)
                 {
                     int idx = _micPos + i;
                     if (idx >= len) idx -= len;
-                    Capture.Enqueue(_micBuf[idx]);
+                    float sample;
+                    if (_micChannels == 1)
+                    {
+                        sample = _micBuf[idx];
+                    }
+                    else
+                    {
+                        float acc = 0f;
+                        int baseIdx = idx * _micChannels;
+                        for (int c = 0; c < _micChannels; c++) acc += _micBuf[baseIdx + c];
+                        sample = acc / _micChannels;
+                    }
+                    if (_micFreq == Rate)
+                    {
+                        Capture.Enqueue(sample);
+                    }
+                    else
+                    {
+                        _resampleAcc += step;
+                        while (_resampleAcc >= 1.0)
+                        {
+                            Capture.Enqueue(sample);
+                            _resampleAcc -= 1.0;
+                        }
+                    }
                 }
                 _micPos = pos;
                 // Never let a stalled consumer build up seconds of delay.
@@ -397,10 +450,16 @@ namespace DelusionMP.Sync
 
         private static void StopMic()
         {
-            try { if (_device != null && Microphone.IsRecording(_device)) Microphone.End(_device); } catch { }
+            try { if (Microphone.IsRecording(_device)) Microphone.End(_device); } catch { }
             _mic = null;
             _device = null;
+            _deviceLabel = null;
             _micBuf = null;
+            _micSamples = 0;
+            _micChannels = 1;
+            _micFreq = Rate;
+            _resampleAcc = 0.0;
+            _lastRms = 0f;
             Capture.Clear();
             _testNext = 0f;
         }
@@ -463,7 +522,8 @@ namespace DelusionMP.Sync
             {
                 try
                 {
-                    _outClip.SetData(new float[Rate], 0);
+                    _outClip.SetData(new Il2CppStructArray<float>(Rate), 0);
+                    _outFrame = new Il2CppStructArray<float>(Frame);
                     _writePos = 0;
                     _source.timeSamples = 0;
                     _source.Play();
@@ -565,16 +625,20 @@ namespace DelusionMP.Sync
             {
                 if (_writePos + data.Length <= Rate)
                 {
-                    _outClip.SetData(data, _writePos);
+                    if (_outFrame == null || _outFrame.Length != data.Length)
+                        _outFrame = new Il2CppStructArray<float>(data.Length);
+                    for (int i = 0; i < data.Length; i++) _outFrame[i] = data[i];
+                    _outClip.SetData(_outFrame, _writePos);
                 }
                 else
                 {
                     int a = Rate - _writePos;
-                    var first = new float[a];
-                    Array.Copy(data, 0, first, 0, a);
+                    var first = new Il2CppStructArray<float>(a);
+                    for (int i = 0; i < a; i++) first[i] = data[i];
                     _outClip.SetData(first, _writePos);
-                    var second = new float[data.Length - a];
-                    Array.Copy(data, a, second, 0, second.Length);
+                    int b = data.Length - a;
+                    var second = new Il2CppStructArray<float>(b);
+                    for (int i = 0; i < b; i++) second[i] = data[a + i];
                     _outClip.SetData(second, 0);
                 }
                 _writePos = (_writePos + data.Length) % Rate;
@@ -826,10 +890,10 @@ namespace DelusionMP.Sync
         }
     }
 
-    /// <summary>On-screen chat (IMGUI) and the talking indicator.</summary>
+    /// <summary>On-screen chat (IMGUI), talking indicator, and partner location HUD marker.</summary>
     public sealed class VoiceGuiBehaviour : MonoBehaviour
     {
-        private GUIStyle _line, _box;
+        private GUIStyle _line, _box, _marker, _markerShadow;
         private static float _bsNext;
 
         private void Update()
@@ -871,7 +935,14 @@ namespace DelusionMP.Sync
                     _line = new GUIStyle(); _line.fontSize = 16; _line.wordWrap = true;
                     _line.normal.textColor = Color.white;
                     _box = GUI.skin.box;
+                    _marker = new GUIStyle(); _marker.fontSize = 14; _marker.fontStyle = FontStyle.Bold;
+                    _marker.alignment = TextAnchor.MiddleCenter;
+                    _marker.normal.textColor = new Color(0.95f, 0.82f, 0.45f, 0.95f);
+                    _markerShadow = new GUIStyle(); _markerShadow.fontSize = 14; _markerShadow.fontStyle = FontStyle.Bold;
+                    _markerShadow.alignment = TextAnchor.MiddleCenter;
+                    _markerShadow.normal.textColor = new Color(0f, 0f, 0f, 0.85f);
                 }
+                DrawPartnerIndicator();
                 if (VoiceConfig.ChatEnabled)
                 {
                     bool show = VoiceSync.ChatOpen || Time.realtimeSinceStartup < VoiceSync.ChatHideAt;
@@ -909,6 +980,86 @@ namespace DelusionMP.Sync
                 }
             }
             catch { }
+        }
+
+        private void DrawPartnerIndicator()
+        {
+            var s = Session.Instance;
+            if (s == null || !s.Connected || !GameRefs_InWorld()) return;
+            if (UI.NativeCoopMenu.IsOpen || DialogueSync.Spectating) return;
+            try
+            {
+                var mgr = Game.GameRefs.Manager;
+                if (mgr != null && mgr.CurrentGameState != global::DelusionManager.GameState.RUNNING) return;
+                var player = Game.GameRefs.Player;
+                if (player == null || !PlayerSync.TryPeerPose(out var peerPos, out _)) return;
+                var cam = Game.GameRefs.PlayerCamera ?? Camera.main;
+                if (cam == null) return;
+
+                float dist = Vector3.Distance(player.transform.position, peerPos);
+                string name = PlayerSync.PartnerName;
+                if (string.IsNullOrWhiteSpace(name) || name == "Partner")
+                {
+                    var steamName = CoopManager.ActiveSteam?.PartnerName;
+                    if (!string.IsNullOrWhiteSpace(steamName)) name = steamName;
+                }
+                string distText = $"{Mathf.RoundToInt(dist)}m";
+
+                Vector3 world = peerPos + Vector3.up * 2.15f;
+                Vector3 sp = cam.WorldToScreenPoint(world);
+                float sw = Screen.width, sh = Screen.height;
+                bool inFront = sp.z > 0.01f;
+                float gx = sp.x;
+                float gy = sh - sp.y;
+
+                const float margin = 44f;
+                bool onScreen = inFront && gx >= margin && gx <= sw - margin && gy >= margin && gy <= sh - margin;
+
+                string label;
+                if (onScreen)
+                {
+                    if (dist < 3.5f) return; // standing right next to each other
+                    label = $"◆ {name} ({distText})";
+                }
+                else
+                {
+                    // Project direction onto screen edge so player always knows where partner is.
+                    float cx = sw * 0.5f, cy = sh * 0.5f;
+                    float dx = gx - cx, dy = gy - cy;
+                    if (!inFront) { dx = -dx; dy = -dy; }
+                    if (Mathf.Abs(dx) < 0.001f && Mathf.Abs(dy) < 0.001f) dy = 1f;
+
+                    float maxX = cx - margin, maxY = cy - margin;
+                    float scale = Mathf.Min(
+                        Mathf.Abs(dx) > 0.001f ? maxX / Mathf.Abs(dx) : 9999f,
+                        Mathf.Abs(dy) > 0.001f ? maxY / Mathf.Abs(dy) : 9999f);
+                    gx = Mathf.Clamp(cx + dx * scale, margin, sw - margin);
+                    gy = Mathf.Clamp(cy + dy * scale, margin, sh - margin);
+
+                    string arrow = EdgeArrow(dx, dy);
+                    label = $"{arrow} {name} ({distText})";
+                }
+
+                float w = 190f, h = 24f;
+                float rx = Mathf.Clamp(gx - w * 0.5f, 6f, sw - w - 6f);
+                float ry = Mathf.Clamp(gy - h * 0.5f, 6f, sh - h - 6f);
+                GUI.Label(new Rect(rx + 1f, ry + 1f, w, h), label, _markerShadow);
+                GUI.Label(new Rect(rx, ry, w, h), label, _marker);
+            }
+            catch { }
+        }
+
+        private static string EdgeArrow(float dx, float dy)
+        {
+            float ang = Mathf.Atan2(dy, dx) * Mathf.Rad2Deg;
+            if (ang >= -22.5f && ang < 22.5f) return "►";
+            if (ang >= 22.5f && ang < 67.5f) return "◢";
+            if (ang >= 67.5f && ang < 112.5f) return "▼";
+            if (ang >= 112.5f && ang < 157.5f) return "◣";
+            if (ang >= 157.5f || ang < -157.5f) return "◄";
+            if (ang >= -157.5f && ang < -112.5f) return "◤";
+            if (ang >= -112.5f && ang < -67.5f) return "▲";
+            return "◥";
         }
     }
 }

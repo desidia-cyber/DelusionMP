@@ -161,6 +161,7 @@ namespace DelusionMP.Core
             if (!_ready) return;
             float now = Time.realtimeSinceStartup;
             HoldTick(now);
+            Choreo.Tick();
             ScanTick();
             for (int i = _delayed.Count - 1; i >= 0; i--)
             {
@@ -453,6 +454,27 @@ namespace DelusionMP.Core
                     try { if (File.Exists(path)) File.Delete(path); } catch { }
                     ScreenCapture.CaptureScreenshot(path);
                     Emit($"SHOT {path} {Screen.width}x{Screen.height}");
+                    break;
+                }
+                case "toast":
+                {
+                    string kindStr = parts.Length > 1 ? parts[1].ToLowerInvariant() : "info";
+                    var kind = kindStr switch
+                    {
+                        "ok" or "success" => UI.ToastKind.Success,
+                        "warn" or "warning" => UI.ToastKind.Warning,
+                        "err" or "error" => UI.ToastKind.Error,
+                        _ => UI.ToastKind.Info,
+                    };
+                    string msg = parts.Length > 2 ? string.Join(" ", parts, 2, parts.Length - 2) : "Co-op: Test notification";
+                    UI.CoopNotifications.Show(msg, kind, 10f);
+                    Emit($"TOAST {kind} {msg}");
+                    break;
+                }
+                case "bugmark":
+                {
+                    BugMarker.MarkNow();
+                    Emit("BUGMARK ok");
                     break;
                 }
                 case "hud":
@@ -1884,7 +1906,8 @@ namespace DelusionMP.Core
                     Emit("QUIT");
                     break;
                 default:
-                    Emit("ERR unknown command: " + cmd);
+                    if (!Choreo.Handle(cmd, parts, Emit))
+                        Emit("ERR unknown command: " + cmd);
                     break;
             }
         }

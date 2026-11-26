@@ -19,7 +19,28 @@ namespace DelusionMP.UI
     /// </summary>
     public static class NativeCoopMenu
     {
+        internal static Font NativeFont => _nativeFont;
+        internal static Image NativePlateImage =>
+            (_tplWidePlate != null ? _tplWidePlate.GetComponent<Image>() : null)
+            ?? (_tplLabelPlate != null ? _tplLabelPlate.GetComponent<Image>() : null)
+            ?? (_tplButton != null ? _tplButton.GetComponent<Image>() : null);
+
         public static bool IsOpen => _coopPanel != null && _coopPanel.activeSelf;
+
+        public static bool IsInputFocused
+        {
+            get
+            {
+                if (!IsOpen) return false;
+                try
+                {
+                    var sel = EventSystem.current?.currentSelectedGameObject;
+                    var input = sel != null ? sel.GetComponentInParent<InputField>() : null;
+                    return input != null && input.isFocused;
+                }
+                catch { return false; }
+            }
+        }
 
         private static DelusionMenu _boundMenu;
         private static GameObject _titleCoopBtn;
@@ -83,6 +104,7 @@ namespace DelusionMP.UI
         private static Text _lblAvatarModel;
         private static Text _lblAvatarOutfit;
         private static Text _lblTeleportKey;
+        private static Text _lblBugMarkKey;
         private static Toggle _togChatEnabled;
         private static Text _lblChatKey;
         private static Toggle _togVoiceChat;
@@ -103,6 +125,7 @@ namespace DelusionMP.UI
 
         private static float _nextStatusRefresh;
         private static float _nextInjectRetry;
+        private static string _lastShownSteamErr = "";
 
         public static void Tick()
         {
@@ -361,7 +384,7 @@ namespace DelusionMP.UI
             foreach (var bs in btnGo.GetComponentsInChildren<global::ButtonSelector>(true))
                 UnityEngine.Object.Destroy(bs);
 
-            SetLabel(btnGo, "Co-op");
+            SetLabel(btnGo, "[Co-op]");
             var btn = btnGo.GetComponent<Button>();
             btn.onClick = new Button.ButtonClickedEvent();
             btn.onClick.AddListener((UnityAction)(() => Open(fromPause: true)));
@@ -448,13 +471,35 @@ namespace DelusionMP.UI
                 _panelTitleText.text = "Co-op";
                 _panelTitleText.transform.parent.SetAsLastSibling();
             }
+            else
+            {
+                // Ensure a clean native "Co-op" header sits above the version/build line
+                var hdrRow = MakeRect("DelusionMP_Header", contentHost, new Vector2(0.05f, 0.900f), new Vector2(0.95f, 0.962f));
+                _panelTitleText = CreateText(hdrRow, "HeaderText", "Co-op", 34, _nativeTextColor, TextAnchor.MiddleCenter);
+                _panelTitleText.raycastTarget = false;
+                Stretch(_panelTitleText.rectTransform, 4f, 0f);
+                var hdrShadow = _panelTitleText.gameObject.AddComponent<Shadow>();
+                hdrShadow.effectColor = new Color(0f, 0f, 0f, 0.90f);
+                hdrShadow.effectDistance = new Vector2(2f, -2f);
+            }
 
-            // Create our clean layout container inside the stone frame (leaving room for the top title ribbon)
+            // Mod version & build subtitle directly beneath the top "Co-op" heading, matching native styling
+            var verRow = MakeRect("DelusionMP_VersionSubtitle", contentHost, new Vector2(0.05f, 0.858f), new Vector2(0.95f, 0.898f));
+            var verTxt = CreateText(verRow, "VersionText",
+                $"DelusionMP v{PluginInfo.Version} — build {BuildInfo.ModBuildId}",
+                18, _mutedColor, TextAnchor.MiddleCenter);
+            verTxt.raycastTarget = false;
+            Stretch(verTxt.rectTransform, 4f, 0f);
+            var verShadow = verTxt.gameObject.AddComponent<Shadow>();
+            verShadow.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            verShadow.effectDistance = new Vector2(1.2f, -1.2f);
+
+            // Create our clean layout container inside the stone frame (leaving room for the top title ribbon + version subtitle)
             var body = new GameObject("CoopBody");
             body.transform.SetParent(contentHost, false);
             var bodyRt = body.AddComponent<RectTransform>();
             bodyRt.anchorMin = new Vector2(0.05f, 0.05f);
-            bodyRt.anchorMax = new Vector2(0.95f, 0.87f);
+            bodyRt.anchorMax = new Vector2(0.95f, 0.855f);
             bodyRt.offsetMin = Vector2.zero;
             bodyRt.offsetMax = Vector2.zero;
 
@@ -712,8 +757,8 @@ namespace DelusionMP.UI
             var left = MakeRect("PlayerLeft", page, new Vector2(0.008f, 0.02f), new Vector2(0.49f, 0.98f));
             var right = MakeRect("PlayerRight", page, new Vector2(0.51f, 0.02f), new Vector2(0.992f, 0.98f));
 
-            // Left column (6 rows): Avatar & Keys
-            _lblAvatarModel = AddCycleRow(left, 0, 6, "Avatar Model", ModelLabelOf(CoopConfig.AvatarModel.Value), () =>
+            // Left column (7 rows): Avatar & Keys
+            _lblAvatarModel = AddCycleRow(left, 0, 7, "Avatar Model", ModelLabelOf(CoopConfig.AvatarModel.Value), () =>
             {
                 int i = (Array.FindIndex(CoopConfig.ModelValues, x => x.Equals(CoopConfig.AvatarModel.Value, StringComparison.OrdinalIgnoreCase)) + 1) % CoopConfig.ModelValues.Length;
                 CoopConfig.AvatarModel.Value = CoopConfig.ModelValues[i];
@@ -721,7 +766,7 @@ namespace DelusionMP.UI
                 _lblAvatarModel.text = CoopConfig.ModelLabels[i];
             });
 
-            _lblAvatarOutfit = AddCycleRow(left, 1, 6, "Avatar Outfit", OutfitLabelOf(CoopConfig.AvatarOutfit.Value), () =>
+            _lblAvatarOutfit = AddCycleRow(left, 1, 7, "Avatar Outfit", OutfitLabelOf(CoopConfig.AvatarOutfit.Value), () =>
             {
                 int i = (Array.FindIndex(CoopConfig.OutfitValues, x => x.Equals(CoopConfig.AvatarOutfit.Value, StringComparison.OrdinalIgnoreCase)) + 1) % CoopConfig.OutfitValues.Length;
                 CoopConfig.AvatarOutfit.Value = CoopConfig.OutfitValues[i];
@@ -729,27 +774,34 @@ namespace DelusionMP.UI
                 _lblAvatarOutfit.text = CoopConfig.OutfitLabels[i];
             });
 
-            _lblTeleportKey = AddCycleRow(left, 2, 6, "Teleport Key", CoopConfig.TeleportKey.Value, () =>
+            _lblTeleportKey = AddCycleRow(left, 2, 7, "Teleport Key", CoopConfig.TeleportKey.Value, () =>
             {
                 CoopConfig.TeleportKey.Value = NextKey(CoopConfig.TeleportKey.Value);
                 CoopConfig.ApplyAll(true);
                 _lblTeleportKey.text = CoopConfig.TeleportKey.Value;
             });
 
-            _togChatEnabled = AddToggleRow(left, 3, 6, "Text Chat", CoopConfig.ChatEnabled.Value, v =>
+            _lblBugMarkKey = AddCycleRow(left, 3, 7, "Bug Mark Key", CoopConfig.BugMarkKey.Value, () =>
+            {
+                CoopConfig.BugMarkKey.Value = NextKey(CoopConfig.BugMarkKey.Value);
+                CoopConfig.ApplyAll(true);
+                _lblBugMarkKey.text = CoopConfig.BugMarkKey.Value;
+            });
+
+            _togChatEnabled = AddToggleRow(left, 4, 7, "Text Chat", CoopConfig.ChatEnabled.Value, v =>
             {
                 CoopConfig.ChatEnabled.Value = v;
                 CoopConfig.ApplyAll(true);
             });
 
-            _lblChatKey = AddCycleRow(left, 4, 6, "Chat Key", CoopConfig.ChatKey.Value, () =>
+            _lblChatKey = AddCycleRow(left, 5, 7, "Chat Key", CoopConfig.ChatKey.Value, () =>
             {
                 CoopConfig.ChatKey.Value = NextKey(CoopConfig.ChatKey.Value);
                 CoopConfig.ApplyAll(true);
                 _lblChatKey.text = CoopConfig.ChatKey.Value;
             });
 
-            _lblVoiceKey = AddCycleRow(left, 5, 6, "Push-to-Talk Key", CoopConfig.VoiceKey.Value, () =>
+            _lblVoiceKey = AddCycleRow(left, 6, 7, "Push-to-Talk Key", CoopConfig.VoiceKey.Value, () =>
             {
                 CoopConfig.VoiceKey.Value = NextKey(CoopConfig.VoiceKey.Value);
                 CoopConfig.ApplyAll(true);
@@ -1044,6 +1096,17 @@ namespace DelusionMP.UI
 
             if (_statusBannerText != null)
                 _statusBannerText.text = summary;
+
+            string steamErr = CoopManager.ActiveSteam?.LastError ?? "";
+            if (!string.IsNullOrEmpty(steamErr) && steamErr != _lastShownSteamErr)
+            {
+                _lastShownSteamErr = steamErr;
+                SetNote(steamErr);
+            }
+            else if (string.IsNullOrEmpty(steamErr))
+            {
+                _lastShownSteamErr = "";
+            }
 
             if (_titleStatusText != null)
                 _titleStatusText.text = active ? "Co-op: " + summary : "";
@@ -1455,35 +1518,51 @@ namespace DelusionMP.UI
     [HarmonyPatch(typeof(global::DelusionMenu), nameof(global::DelusionMenu.CancelMenuInput))]
     internal static class Patch_DelusionMenu_Cancel
     {
+        private static bool IsBackspacePressed()
+        {
+            // Dread Delusion uses Unity's new Input System (legacy Input.GetKey throws
+            // InvalidOperationException!). Always check Keyboard.current first.
+            try
+            {
+                var kb = UnityEngine.InputSystem.Keyboard.current;
+                if (kb != null)
+                    return kb.backspaceKey.isPressed || kb.backspaceKey.wasPressedThisFrame;
+            }
+            catch { }
+
+            try
+            {
+                return Input.GetKey(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.Backspace);
+            }
+            catch { }
+
+            return false;
+        }
+
         private static bool Prefix()
         {
             if (!NativeCoopMenu.IsOpen) return true;
+
             // Dread Delusion binds both Escape and Backspace to CancelMenuInput.
-            // While typing in an InputField, swallow Backspace without unfocusing so it edits text;
-            // only Escape/gamepad-cancel unfocuses the field (and a second press closes the menu).
+            // Never let Backspace close the Co-op menu or unfocus an InputField so players
+            // can freely delete typed characters in Player Name / Password / IP / Port fields.
+            if (IsBackspacePressed())
+                return false;
+
+            // For Escape / gamepad Cancel: if typing inside an InputField, unfocus it first
+            // (and a second press closes the menu).
             try
             {
                 var sel = EventSystem.current?.currentSelectedGameObject;
                 var input = sel != null ? sel.GetComponentInParent<InputField>() : null;
                 if (input != null && input.isFocused)
                 {
-                    bool backspace = Input.GetKey(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.Backspace);
-                    if (!backspace)
-                    {
-                        try
-                        {
-                            var kb = UnityEngine.InputSystem.Keyboard.current;
-                            if (kb != null && (kb.backspaceKey.isPressed || kb.backspaceKey.wasPressedThisFrame))
-                                backspace = true;
-                        }
-                        catch { }
-                    }
-                    if (backspace) return false;
                     EventSystem.current.SetSelectedGameObject(null);
                     return false;
                 }
             }
             catch { }
+
             NativeCoopMenu.Close();
             return false;
         }

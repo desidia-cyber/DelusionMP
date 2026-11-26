@@ -61,6 +61,7 @@ namespace DelusionMP.Core
                     info.AppendLine("DelusionMP log bundle");
                     info.AppendLine("time (UTC): " + stamp);
                     info.AppendLine("mod version: " + PluginInfo.Version);
+                    info.AppendLine("mod build: " + BuildInfo.ModBuildId);
                     info.AppendLine("GameAssembly SHA-256: " + BuildInfo.GameAssemblyHash);
                     info.AppendLine("role: " + Session.Instance.Role + "  connected: " + Session.Instance.Connected);
                     info.AppendLine("OS: " + Environment.OSVersion);
@@ -118,6 +119,90 @@ namespace DelusionMP.Core
             var e = zip.CreateEntry(entryName, CompressionLevel.Optimal);
             using var sw = new StreamWriter(e.Open(), Encoding.UTF8);
             sw.Write(content);
+        }
+    }
+
+    /// <summary>
+    /// Press F8 (configurable via [Player] BugMarkKey) at any time to stamp a clearly visible
+    /// bug marker with live state (scene, coordinates, partner distance, session, facts) into
+    /// both BepInEx LogOutput.log and ddmp_log.txt.
+    /// </summary>
+    public static class BugMarker
+    {
+        public static string Key = "F8";
+        private static int _count;
+        private static float _nextAllowed;
+
+        public static void Tick()
+        {
+            if (Sync.VoiceSync.ChatOpen || UI.NativeCoopMenu.IsInputFocused) return;
+            if (!Sync.Keys.Pressed(Key)) return;
+
+            float now = UnityEngine.Time.realtimeSinceStartup;
+            if (now < _nextAllowed) return;
+            _nextAllowed = now + 0.5f;
+
+            MarkNow();
+        }
+
+        public static void MarkNow()
+        {
+            int id = ++_count;
+            string utc = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+            string scene = "-";
+            string gameState = "-";
+            string localInfo = "none";
+            string partnerInfo = "none";
+            string factsInfo = "-";
+
+            try { scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name ?? "-"; } catch { }
+            try { gameState = GameRefs.Manager != null ? GameRefs.Manager.CurrentGameState.ToString() : "-"; } catch { }
+
+            try
+            {
+                var p = GameRefs.Player;
+                if (p != null)
+                {
+                    var pos = p.transform.position;
+                    string hp = "";
+                    try
+                    {
+                        var st = GameRefs.Stats;
+                        if (st != null) hp = $" hp={st.currentHealth:F0}";
+                    }
+                    catch { }
+                    localInfo = $"pos=({pos.x:F2}, {pos.y:F2}, {pos.z:F2}){hp}";
+
+                    if (Sync.PlayerSync.TryPeerPose(out var peerPos, out _))
+                    {
+                        float dist = UnityEngine.Vector3.Distance(pos, peerPos);
+                        partnerInfo = $"name=\"{Sync.PlayerSync.PartnerName}\" pos=({peerPos.x:F2}, {peerPos.y:F2}, {peerPos.z:F2}) dist={dist:F1}m";
+                    }
+                }
+            }
+            catch { }
+
+            try
+            {
+                var (b, i) = Sync.FactSync.Capture();
+                factsInfo = $"{b.Count}b/{i.Count}i fp={Sync.FactSync.Fingerprint()} objects={ObjectRegistry.Instance.Count}";
+            }
+            catch { }
+
+            var s = Session.Instance;
+            string role = s != null ? s.Role.ToString() : "None";
+            bool connected = s != null && s.Connected;
+
+            Log.Info($"==================== BUG MARK #{id} ====================");
+            Log.Info($"  time={utc} UTC  mod=v{PluginInfo.Version} build={BuildInfo.ModBuildId}");
+            Log.Info($"  session: role={role} connected={connected} status=\"{CoopManager.StatusSummary}\"");
+            Log.Info($"  world: scene={scene} inWorld={GameRefs.InWorld} state={gameState}");
+            Log.Info($"  local: {localInfo}");
+            Log.Info($"  partner: {partnerInfo}");
+            Log.Info($"  state: {factsInfo}");
+            Log.Info($"========================================================");
+
+            UI.CoopNotifications.Show($"Bug marker #{id} saved to log", UI.ToastKind.Info, 4f);
         }
     }
 }

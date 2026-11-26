@@ -105,4 +105,18 @@ namespace DelusionMP.Game
             Log.Info($"game saved (state={gs})");
         }
     }
+
+    /// <summary>Disable the built-in tilde/backquote (~ / ` / ё) debug console in co-op so
+    /// accidental presses or Russian keyboard typing never pop up the dev debug menu.</summary>
+    [HarmonyPatch(typeof(global::DelusionInput), nameof(global::DelusionInput.OnDebugPublic))]
+    internal static class Patch_Disable_DebugPublic
+    {
+        private static bool Prefix() => false;
+    }
+
+    [HarmonyPatch(typeof(global::DelusionManager), nameof(global::DelusionManager.DebugConsole))]
+    internal static class Patch_Disable_DebugConsole
+    {
+        private static bool Prefix() => false;
+    }
 }
