@@ -138,7 +138,6 @@ bare assembly name (`Assembly-CSharp`, not `.dll`), which is patched in the scri
 - A real playthrough by two people from start to finish (late-game story beats and bosses were
   reached on the rig through quest stages and travel commands; the ending was run through the
   Angel with mixed region outcomes, not every combination of them).
-- Steam mode (needs two Steam accounts on two machines).
 
 ---
 
