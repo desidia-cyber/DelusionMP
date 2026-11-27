@@ -4,7 +4,10 @@ using DelusionMP.Core;
 using DelusionMP.Game;
 using DelusionMP.Net;
 using HarmonyLib;
+using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace DelusionMP.Sync
 {
@@ -38,9 +41,14 @@ namespace DelusionMP.Sync
         private const byte MsgPage = 8;
         private const byte MsgProxTrigger = 9;
         private const float PovDistance = 12f;
+        // Brief beat on the spectator so the partner's highlighted answer choice is
+        // clearly visible before the dialogue advances to the next node or closes.
+        private const float ChoiceHighlightDuration = 0.65f;
 
         private static bool _spectating;
         private static float _spectateStarted;
+        private static float _choiceHoldUntil;
+        private static readonly Queue<byte[]> _deferred = new Queue<byte[]>();
         private static string _treeName = "";
         private static int _lastNodeIdx = int.MinValue;
         private static bool _rootPending;
@@ -255,6 +263,19 @@ namespace DelusionMP.Sync
 
         public static void Apply(byte[] payload)
         {
+            if (payload == null || payload.Length == 0) return;
+            byte peek = payload[0];
+            if (_choiceHoldUntil > 0f)
+            {
+                if (peek == MsgNode || peek == MsgText || peek == MsgPage || peek == MsgCharm || peek == MsgEnd)
+                {
+                    _deferred.Enqueue(payload);
+                    return;
+                }
+                if (peek == MsgStart || peek == MsgChoice)
+                    FlushChoiceHold();
+            }
+
             var r = new Reader(payload);
             byte kind = r.U8();
             try
@@ -509,6 +530,19 @@ namespace DelusionMP.Sync
         {
             if (!_spectating) return;
             Log.Info($"dialogue <- peer chose option {visibleIndex + 1}");
+            if (ChoiceHighlight.Show(Ctrl, visibleIndex))
+                _choiceHoldUntil = Time.realtimeSinceStartup + ChoiceHighlightDuration;
+        }
+
+        private static void FlushChoiceHold()
+        {
+            _choiceHoldUntil = 0f;
+            ChoiceHighlight.Clear();
+            while (_deferred.Count > 0)
+            {
+                var pkt = _deferred.Dequeue();
+                Apply(pkt);
+            }
         }
 
         private static void ApplyCharm(bool success, bool stackable, bool lucky, int needed)
@@ -546,6 +580,9 @@ namespace DelusionMP.Sync
             _spectating = false;
             _speakerNpc = null;
             _rootPending = false;
+            _choiceHoldUntil = 0f;
+            _deferred.Clear();
+            ChoiceHighlight.Clear();
             Pov.End();
         }
 
@@ -556,6 +593,11 @@ namespace DelusionMP.Sync
             if (!_spectating) return;
             var s = Session.Instance;
             bool lost = s == null || !s.Connected;
+            if (!lost && _choiceHoldUntil > 0f && Time.realtimeSinceStartup >= _choiceHoldUntil)
+            {
+                FlushChoiceHold();
+                if (!_spectating) return;
+            }
             if (!lost && Time.realtimeSinceStartup - _spectateStarted > 2f)
             {
                 var c = Ctrl;
@@ -608,6 +650,178 @@ namespace DelusionMP.Sync
                 case 5: return true;    // RefreshHiddenChoices
                 case 3: return a.Name != null && _presentationCalls.Contains(a.Name);   // CallOnSpeaker
                 default: return false;  // SetFact (synced), CallOnPlayer, EndDialogue (driver ends)
+            }
+        }
+
+        // ------------------------------------------------------------------ choice highlight
+
+        /// <summary>
+        /// Highlights the answer option chosen by the speaking partner on the spectator's
+        /// native DialoguePanelController using the dialogue frame's antique-gold palette,
+        /// while softly dimming the unchosen options.
+        /// </summary>
+        private static class ChoiceHighlight
+        {
+            private static readonly Color ChosenFill = new Color(0.84f, 0.67f, 0.32f, 0.24f);
+            private static readonly Color ChosenBorder = new Color(0.88f, 0.73f, 0.38f, 0.95f);
+            private static readonly Color ChosenAccent = new Color(0.96f, 0.82f, 0.46f, 1.0f);
+            private static readonly Color ChosenText = new Color(1.0f, 0.90f, 0.56f, 1.0f);
+
+            private static GameObject _overlay;
+            private static GameObject _selectedBtn;
+            private static readonly TextMeshProUGUI[] _savedTexts = new TextMeshProUGUI[3];
+            private static readonly Color[] _savedColors = new Color[3];
+
+            public static bool Show(global::DelusionDialogueController c, int visibleIndex)
+            {
+                Clear();
+                if (c == null || visibleIndex < 0) return false;
+
+                global::DialoguePanelController panel = null;
+                try { panel = global::DelusionDialogueNEW.Instance?.DialogueControllerPanel; } catch { }
+                if (panel == null) return false;
+
+                try
+                {
+                    // If the spectator's typewriter is still running, reveal the choices first
+                    // so the partner's selection is visible on the answer box.
+                    if (!c.m_textProgressionDone)
+                        LoopGuard.Apply(() => { try { c.SkipTreeTextProgression(); } catch { } });
+
+                    var choices = c.GetCurrentChoicesText();
+                    int total = choices != null ? choices.Count : 0;
+                    if (total <= 0 || visibleIndex >= total) return false;
+
+                    // Scroll the 3-slot window if the spectator scrolled away from the chosen option.
+                    int start = panel.m_startingChoiceIndex;
+                    if (visibleIndex < start || visibleIndex > start + 2)
+                    {
+                        start = Math.Max(0, Math.Min(visibleIndex, Math.Max(0, total - 3)));
+                        panel.m_startingChoiceIndex = start;
+                        panel.UpdateChoices();
+                    }
+
+                    int slot = visibleIndex - start;
+                    if (slot < 0 || slot > 2) return false;
+
+                    bool cinema = panel.DialogueChoicesPanel != null
+                        && panel.DialogueChoicesPanel.activeInHierarchy
+                        && panel.DialogueChoice1_Btn_Cinema != null
+                        && panel.DialogueChoice1_Btn_Cinema.gameObject.activeInHierarchy;
+
+                    var btns = cinema
+                        ? new[] { panel.DialogueChoice1_Btn_Cinema, panel.DialogueChoice2_Btn_Cinema, panel.DialogueChoice3_Btn_Cinema }
+                        : new[] { panel.DialogueChoice1_Btn, panel.DialogueChoice2_Btn, panel.DialogueChoice3_Btn };
+
+                    var txts = cinema
+                        ? new[] { panel.DialogueChoice1_Txt_Cinema, panel.DialogueChoice2_Txt_Cinema, panel.DialogueChoice3_Txt_Cinema }
+                        : new[] { panel.DialogueChoice1_Txt, panel.DialogueChoice2_Txt, panel.DialogueChoice3_Txt };
+
+                    var chosenBtn = btns[slot];
+                    if (chosenBtn == null || !chosenBtn.gameObject.activeInHierarchy) return false;
+
+                    // Style text: warm gold on the chosen option, dimmed slate on the others.
+                    for (int i = 0; i < 3; i++)
+                    {
+                        var t = txts[i];
+                        if (t == null) continue;
+                        _savedTexts[i] = t;
+                        var orig = t.color;
+                        _savedColors[i] = orig;
+                        t.color = i == slot
+                            ? ChosenText
+                            : new Color(orig.r * 0.48f, orig.g * 0.48f, orig.b * 0.48f, orig.a * 0.60f);
+                    }
+
+                    // Build a subtle antique-gold wash + border frame inside the chosen answer box,
+                    // placed at sibling index 0 so it sits over the dark plate and behind the text.
+                    _overlay = BuildOverlay(chosenBtn.transform);
+
+                    var es = EventSystem.current;
+                    if (es != null)
+                    {
+                        _selectedBtn = chosenBtn.gameObject;
+                        es.SetSelectedGameObject(_selectedBtn);
+                    }
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Log.Debug("dialogue choice highlight: " + e.Message);
+                    Clear();
+                    return false;
+                }
+            }
+
+            public static void Clear()
+            {
+                try
+                {
+                    if (_overlay != null)
+                        UnityEngine.Object.Destroy(_overlay);
+                }
+                catch { }
+                _overlay = null;
+
+                for (int i = 0; i < 3; i++)
+                {
+                    try
+                    {
+                        if (_savedTexts[i] != null)
+                            _savedTexts[i].color = _savedColors[i];
+                    }
+                    catch { }
+                    _savedTexts[i] = null;
+                }
+
+                try
+                {
+                    var es = EventSystem.current;
+                    if (es != null && _selectedBtn != null && es.currentSelectedGameObject == _selectedBtn)
+                        es.SetSelectedGameObject(null);
+                }
+                catch { }
+                _selectedBtn = null;
+            }
+
+            private static GameObject BuildOverlay(Transform parent)
+            {
+                var root = new GameObject("DelusionMP_ChoiceHighlight");
+                var rt = root.AddComponent<RectTransform>();
+                rt.SetParent(parent, false);
+                rt.SetSiblingIndex(0);
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+
+                var wash = root.AddComponent<Image>();
+                wash.color = ChosenFill;
+                wash.raycastTarget = false;
+
+                // 2px antique-gold border around the answer bar + 4px left accent bar.
+                AddStrip(rt, "Top", new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, -2f), Vector2.zero, ChosenBorder);
+                AddStrip(rt, "Bottom", new Vector2(0f, 0f), new Vector2(1f, 0f), Vector2.zero, new Vector2(0f, 2f), ChosenBorder);
+                AddStrip(rt, "Right", new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(-2f, 0f), Vector2.zero, ChosenBorder);
+                AddStrip(rt, "LeftAccent", new Vector2(0f, 0f), new Vector2(0f, 1f), Vector2.zero, new Vector2(4f, 0f), ChosenAccent);
+                return root;
+            }
+
+            private static void AddStrip(
+                RectTransform parent, string name,
+                Vector2 anchorMin, Vector2 anchorMax,
+                Vector2 offsetMin, Vector2 offsetMax, Color color)
+            {
+                var go = new GameObject(name);
+                var rt = go.AddComponent<RectTransform>();
+                rt.SetParent(parent, false);
+                rt.anchorMin = anchorMin;
+                rt.anchorMax = anchorMax;
+                rt.offsetMin = offsetMin;
+                rt.offsetMax = offsetMax;
+                var img = go.AddComponent<Image>();
+                img.color = color;
+                img.raycastTarget = false;
             }
         }
 
