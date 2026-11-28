@@ -111,6 +111,25 @@ namespace DelusionMP.Sync
         {
             if (!CanSend() || !IsPlayerPool(pool, out _)) return;
             AimOrigin(out var pos, out var dir);
+            try
+            {
+                if (pool.defaultPosition != null)
+                    pos = pool.defaultPosition.position;
+                else if (pool.explosionPool != null && pool.explosionPool.Length > 0)
+                {
+                    // Pick the most recently activated explosion in the pool if present.
+                    for (int i = 0; i < pool.explosionPool.Length; i++)
+                    {
+                        var ex = pool.explosionPool[i];
+                        if (ex != null && ex.gameObject.activeInHierarchy)
+                        {
+                            pos = ex.transform.position;
+                            break;
+                        }
+                    }
+                }
+            }
+            catch { }
             Send(KindExplosion, 0, pos, dir, 0f);
         }
 

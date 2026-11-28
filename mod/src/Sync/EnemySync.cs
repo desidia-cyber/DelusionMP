@@ -148,6 +148,10 @@ namespace DelusionMP.Sync
             BuffEffect = 17, BuffFX = 18, Helpless = 19,
         }
 
+        // Deduplicate stateful boolean/stance animator hooks so per-frame calls never flood
+        // the reliable channel. Keyed by ((long)instanceId << 8) | (byte)kind.
+        private static readonly Dictionary<long, byte> _lastAnimState = new Dictionary<long, byte>(128);
+
         internal static void OnAnimEvent(global::EnemyAnimator anim, EnemyAnimKind kind, byte arg = 0)
         {
             if (anim == null || LoopGuard.ApplyingRemote) return;
@@ -156,12 +160,26 @@ namespace DelusionMP.Sync
             global::EnemyController c = null;
             try { c = anim.controller ?? anim.GetComponent<global::EnemyController>() ?? anim.GetComponentInParent<global::EnemyController>(); } catch { }
             if (c == null) return;
-            if (SummonSync.IsSummon(c))
+            bool isSummon = SummonSync.IsSummon(c);
+            if (isSummon && !SummonSync.IsLocalSummon(c)) return;
+            if (!isSummon && IsPuppet(c)) return;
+            if (kind == EnemyAnimKind.Block || kind == EnemyAnimKind.BuffFX || kind == EnemyAnimKind.Helpless
+                || kind == EnemyAnimKind.WeaponOut || kind == EnemyAnimKind.WeaponAway)
             {
-                if (SummonSync.IsLocalSummon(c)) SummonSync.OnLocalSummonAnim(c, (byte)kind, arg);
+                byte stateBucket = (kind == EnemyAnimKind.WeaponOut || kind == EnemyAnimKind.WeaponAway)
+                    ? (byte)EnemyAnimKind.WeaponOut : (byte)kind;
+                byte stateVal = kind == EnemyAnimKind.WeaponOut ? (byte)1
+                    : kind == EnemyAnimKind.WeaponAway ? (byte)0 : arg;
+                long skey = ((long)c.GetInstanceID() << 8) | stateBucket;
+                if (_lastAnimState.TryGetValue(skey, out var prev) && prev == stateVal) return;
+                if (_lastAnimState.Count > 1024) _lastAnimState.Clear();
+                _lastAnimState[skey] = stateVal;
+            }
+            if (isSummon)
+            {
+                SummonSync.OnLocalSummonAnim(c, (byte)kind, arg);
                 return;
             }
-            if (IsPuppet(c)) return;
             var key = CachedKey(ObjectRegistry.Instance, c);
             if (string.IsNullOrEmpty(key)) return;
             var w = new Writer();

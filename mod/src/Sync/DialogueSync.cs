@@ -636,9 +636,11 @@ namespace DelusionMP.Sync
         /// <summary>True when a spectator's own input/timer tries to move the conversation.</summary>
         internal static bool BlockLocal => _spectating && !LoopGuard.ApplyingRemote;
 
+        internal static int SuppressNpcAction;
+
         internal static void OnNpcAction(global::NPCBase npc, byte op, string arg = "")
         {
-            if (npc == null || !CanSend()) return;
+            if (npc == null || SuppressNpcAction > 0 || !CanSend()) return;
             try
             {
                 string key = EnemySync.KeyFor(ObjectRegistry.Instance, npc);

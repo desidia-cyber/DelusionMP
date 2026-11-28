@@ -99,7 +99,10 @@ namespace DelusionMP.Sync
         }
 
         // Stateful events remembered for late-join and pending unloaded regions.
+        private static readonly Dictionary<string, (byte state, bool startedAtA)> _skiffLast = new Dictionary<string, (byte, bool)>(StringComparer.Ordinal);
         private static readonly Dictionary<string, byte> _fortressLast = new Dictionary<string, byte>(StringComparer.Ordinal);
+        private static readonly Dictionary<string, (byte op, float at)> _fortressRecent = new Dictionary<string, (byte, float)>(StringComparer.Ordinal);
+        private static readonly Dictionary<string, (bool pull, float at)> _leverRecent = new Dictionary<string, (bool, float)>(StringComparer.Ordinal);
         private static readonly Dictionary<string, byte> _velaDone = new Dictionary<string, byte>(StringComparer.Ordinal);
         private static readonly Dictionary<string, bool> _wyrmState = new Dictionary<string, bool>(StringComparer.Ordinal);
         private static readonly HashSet<string> _skullDoors = new HashSet<string>(StringComparer.Ordinal);
@@ -114,14 +117,20 @@ namespace DelusionMP.Sync
         private static readonly List<byte[]> _pending = new List<byte[]>();
         private static float _nextPendingCheck;
 
-        public static void OnSessionStart()
+        public static void OnSessionStart(bool isHost = false)
         {
-            _fortressLast.Clear();
-            _velaDone.Clear();
-            _wyrmState.Clear();
-            _skullDoors.Clear();
-            _scriptTriggers.Clear();
-            _proxTriggers.Clear();
+            if (!isHost)
+            {
+                _skiffLast.Clear();
+                _fortressLast.Clear();
+                _fortressRecent.Clear();
+                _leverRecent.Clear();
+                _velaDone.Clear();
+                _wyrmState.Clear();
+                _skullDoors.Clear();
+                _scriptTriggers.Clear();
+                _proxTriggers.Clear();
+            }
             _skiffDrivenAt.Clear();
             _pending.Clear();
             _pendingCount = 0;
@@ -130,6 +139,8 @@ namespace DelusionMP.Sync
         public static void SendJoinState()
         {
             if (!Connected || !IsHost) return;
+            foreach (var kv in _skiffLast)
+                Send(new Writer().U8(MsgSkiffState).Str(kv.Key).U8(kv.Value.state).Bool(kv.Value.startedAtA));
             foreach (var kv in _fortressLast)
                 Send(new Writer().U8(MsgFortressLift).Str(kv.Key).U8(kv.Value));
             foreach (var kv in _velaDone)
@@ -150,10 +161,12 @@ namespace DelusionMP.Sync
             float now = Time.realtimeSinceStartup;
             if (now < _nextPendingCheck) return;
             _nextPendingCheck = now + 1.5f;
-            for (int i = _pending.Count - 1; i >= 0; i--)
+            for (int i = 0; i < _pending.Count; )
             {
                 if (TryApply(_pending[i], queueIfMissing: false))
                     _pending.RemoveAt(i);
+                else
+                    i++;
             }
             _pendingCount = _pending.Count;
         }
@@ -198,11 +211,27 @@ namespace DelusionMP.Sync
                     case MsgSkiffDepart:
                     {
                         string key = r.Str();
-                        if (!IsHost) return true;
                         var sk = Find<global::SkiffManager>(key);
-                        if (sk == null) return true;
-                        try { sk.Depart(); _applied++; _last = "skiff depart"; }
-                        catch (Exception e) { Log.Debug("apply skiff depart: " + e.Message); }
+                        if (IsHost)
+                        {
+                            if (sk == null)
+                            {
+                                // Host doesn't have this skiff loaded; let the client depart locally.
+                                Send(new Writer().U8(MsgSkiffDepart).Str(key));
+                                return true;
+                            }
+                            try { sk.Depart(); _applied++; _last = "skiff depart"; }
+                            catch (Exception e) { Log.Debug("apply skiff depart: " + e.Message); }
+                            return true;
+                        }
+                        if (IsClient && sk != null)
+                        {
+                            LoopGuard.Apply(() =>
+                            {
+                                try { sk.Depart(); _applied++; _last = "skiff depart local"; }
+                                catch (Exception e) { Log.Debug("apply skiff depart local: " + e.Message); }
+                            });
+                        }
                         return true;
                     }
                     case MsgFortressLift:
@@ -212,6 +241,10 @@ namespace DelusionMP.Sync
                         _fortressLast[key] = op;
                         var fl = Find<global::VelaFortressLift>(key);
                         if (fl == null) { QueueIf(queueIfMissing, payload); return false; }
+                        float now = Time.realtimeSinceStartup;
+                        if (_fortressRecent.TryGetValue(key, out var rec) && rec.op == op && now - rec.at < 5f)
+                            return true;
+                        _fortressRecent[key] = (op, now);
                         LoopGuard.Apply(() =>
                         {
                             try
@@ -234,9 +267,11 @@ namespace DelusionMP.Sync
                     {
                         string key = r.Str();
                         byte op = r.U8();
-                        _velaDone[key] = op;
+                        bool alreadyDone = _velaDone.TryGetValue(key, out var prevOp) && prevOp >= op;
+                        _velaDone[key] = prevOp > op ? prevOp : op;
                         var vu = Find<global::VelaUnderlandsScene>(key);
                         if (vu == null) { QueueIf(queueIfMissing, payload); return false; }
+                        if (alreadyDone && vu.hasBeenTriggered) return true;
                         LoopGuard.Apply(() =>
                         {
                             try
@@ -309,7 +344,7 @@ namespace DelusionMP.Sync
                                 switch (op)
                                 {
                                     case 0: if (!cm.timerActive) cm.StartTimer(); break;
-                                    case 1: cm.FailTimer(); break;
+                                    case 1: if (cm.timerActive) cm.FailTimer(); break;
                                     case 2: if (!cm.challengeComplete) cm.ChallengeComplete(false); break;
                                 }
                                 _applied++;
@@ -351,6 +386,10 @@ namespace DelusionMP.Sync
                         bool pull = r.Bool();
                         var lv = Find<global::DelusionLever>(key);
                         if (lv == null) return true;
+                        float now = Time.realtimeSinceStartup;
+                        if (_leverRecent.TryGetValue(key, out var rec) && rec.pull == pull && now - rec.at < 3f)
+                            return true;
+                        _leverRecent[key] = (pull, now);
                         LoopGuard.Apply(() =>
                         {
                             try
@@ -487,6 +526,7 @@ namespace DelusionMP.Sync
                     return false;
                 return true;
             }
+            _skiffLast[key] = ((byte)(int)newSt8, sk.startedAtA);
             Send(new Writer().U8(MsgSkiffState).Str(key).U8((byte)(int)newSt8).Bool(sk.startedAtA));
             return true;
         }
@@ -496,7 +536,7 @@ namespace DelusionMP.Sync
             if (LoopGuard.ApplyingRemote || !Connected || sk == null) return true;
             var key = Key(sk);
             if (key == null) return true;
-            if (IsClient && _skiffDrivenAt.TryGetValue(key, out var t) && Time.realtimeSinceStartup - t < SkiffHostTimeout)
+            if (IsClient)
             {
                 Send(new Writer().U8(MsgSkiffDepart).Str(key));
                 return false;
@@ -511,6 +551,10 @@ namespace DelusionMP.Sync
             if (key == null) return;
             _fortressLast[key] = op;
             if (!CanSend) return;
+            float now = Time.realtimeSinceStartup;
+            if (_fortressRecent.TryGetValue(key, out var rec) && rec.op == op && now - rec.at < 5f)
+                return;
+            _fortressRecent[key] = (op, now);
             Send(new Writer().U8(MsgFortressLift).Str(key).U8(op));
         }
 
@@ -585,6 +629,10 @@ namespace DelusionMP.Sync
             if (!CanSend || lv == null) return;
             var key = Key(lv);
             if (key == null) return;
+            float now = Time.realtimeSinceStartup;
+            if (_leverRecent.TryGetValue(key, out var rec) && rec.pull == pull && now - rec.at < 3f)
+                return;
+            _leverRecent[key] = (pull, now);
             Send(new Writer().U8(MsgLever).Str(key).Bool(pull));
         }
 
@@ -794,6 +842,8 @@ namespace DelusionMP.Sync
     [HarmonyPatch(typeof(global::TriggerSendMessage), "CheckParamsAndSend")]
     internal static class Patch_TriggerSendMessage_Send
     {
+        [HarmonyPrefix] static void Prefix() => DialogueSync.SuppressNpcAction++;
+        [HarmonyFinalizer] static void Finalizer() { if (DialogueSync.SuppressNpcAction > 0) DialogueSync.SuppressNpcAction--; }
         [HarmonyPostfix] static void Postfix(global::TriggerSendMessage __instance)
             => ScriptedScenesSync.OnSendMessage(__instance);
     }

@@ -172,9 +172,9 @@ namespace DelusionMP.Net
                 _handshakeComplete = true;
                 _lastHeardAt = UnityEngine.Time.realtimeSinceStartup;
                 Log.Info($"client joined (epoch {nonce:X8})");
-                WorldEventsSync.OnSessionStart();
-                CutsceneSync.OnSessionStart();
-                ScriptedScenesSync.OnSessionStart();
+                WorldEventsSync.OnSessionStart(isHost: true);
+                CutsceneSync.OnSessionStart(isHost: true);
+                ScriptedScenesSync.OnSessionStart(isHost: true);
                 SendWorldSnapshot();
                 WorldMirror.ForceSnapshot();
             }
@@ -672,7 +672,7 @@ namespace DelusionMP.Net
 
     public static class PluginInfo
     {
-        public const string Version = "0.3.4";
+        public const string Version = "0.3.5";
     }
 
     /// <summary>

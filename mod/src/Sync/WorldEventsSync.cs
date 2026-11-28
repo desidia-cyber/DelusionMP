@@ -110,10 +110,13 @@ namespace DelusionMP.Sync
         // ------------------------------------------------------------------ session
 
         /// <summary>A new session (or a restarted client): forget per-session state.</summary>
-        public static void OnSessionStart()
+        public static void OnSessionStart(bool isHost = false)
         {
-            _fired.Clear();
-            _localFired.Clear();
+            if (!isHost)
+            {
+                _fired.Clear();
+                _localFired.Clear();
+            }
             _pendingTriggers.Clear();
             _travelQueue.Clear();
             _deferredShops.Clear();

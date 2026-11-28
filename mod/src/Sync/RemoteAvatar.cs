@@ -119,6 +119,8 @@ namespace DelusionMP.Sync
         private static float _crouchBlend;
         private static float _dodgeTimer;
         private static float _lastReliableShotAt = -10f;
+        private static string _lastPoseShot = "";
+        private static float _lastPoseShotAt = -10f;
 
         public static bool Ready => _model != null && _anim != null;
         public static string Info
@@ -783,7 +785,10 @@ namespace DelusionMP.Sync
                     break;
             }
             if (string.IsNullOrEmpty(shot)) return;
-            _lastReliableShotAt = Time.realtimeSinceStartup;
+            float now = Time.realtimeSinceStartup;
+            // If the pose stream already started this exact one-shot moments ago, don't restart it.
+            if (shot == _lastPoseShot && now - _lastPoseShotAt < 0.25f) return;
+            _lastReliableShotAt = now;
             try
             {
                 _anim.speed = 1f;
@@ -916,6 +921,8 @@ namespace DelusionMP.Sync
 
                 if (shot != null)
                 {
+                    _lastPoseShot = shot;
+                    _lastPoseShotAt = now;
                     _anim.speed = 1f;
                     if (PlayClipDirect(shot)) { _oneShot = ""; shot = null; }
                     else Play(shot, 0.06f);

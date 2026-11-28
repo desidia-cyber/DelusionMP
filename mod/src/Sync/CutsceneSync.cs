@@ -30,6 +30,7 @@ namespace DelusionMP.Sync
         private static readonly HashSet<string> _consumedTriggers = new HashSet<string>(StringComparer.Ordinal);
         private static readonly HashSet<string> _pendingTriggers = new HashSet<string>(StringComparer.Ordinal);
         private static float _nextPendingCheck;
+        private static string _endingDirectorKey;
 
         private static readonly string[] Named = { "fortressScene", "cutterLiftoff", "angelAwaken", "velaKillPlayer" };
 
@@ -121,17 +122,31 @@ namespace DelusionMP.Sync
             Session.Instance.SendReliable(PacketKind.Cutscene, w.ToArray());
         }
 
+        internal static void BeforeWorldCinematicEnded()
+        {
+            _endingDirectorKey = null;
+            try
+            {
+                var m = Manager;
+                var d = m != null ? m.currentlyPlaying : null;
+                if (d != null) _endingDirectorKey = KeyOf(d);
+            }
+            catch { }
+        }
+
         internal static void OnWorldCinematicEnded()
         {
+            string key = _endingDirectorKey ?? "";
+            _endingDirectorKey = null;
             if (!CanSend()) return;
             var w = new Writer();
-            w.U8(MsgEnd);
+            w.U8(MsgEnd).Str(key);
             Session.Instance.SendReliable(PacketKind.Cutscene, w.ToArray());
         }
 
         internal static void OnTriggerConsumed(global::CutsceneTrigger ct)
         {
-            if (ct == null) return;
+            if (ct == null || !ct.triggerOncePerSession) return;
             string key = null;
             try { key = EnemySync.KeyFor(ObjectRegistry.Instance, ct); } catch { }
             if (string.IsNullOrEmpty(key)) return;
@@ -142,9 +157,9 @@ namespace DelusionMP.Sync
             Session.Instance.SendReliable(PacketKind.Cutscene, w.ToArray());
         }
 
-        public static void OnSessionStart()
+        public static void OnSessionStart(bool isHost = false)
         {
-            _consumedTriggers.Clear();
+            if (!isHost) _consumedTriggers.Clear();
             _pendingTriggers.Clear();
         }
 
@@ -165,11 +180,25 @@ namespace DelusionMP.Sync
             if (_pendingTriggers.Count == 0 || !GameRefs.InWorld) return;
             float now = Time.realtimeSinceStartup;
             if (now < _nextPendingCheck) return;
-            _nextPendingCheck = now + 1.5f;
-            List<string> done = null;
-            foreach (var key in _pendingTriggers)
-                if (TryMarkTriggerConsumed(key)) (done ??= new List<string>()).Add(key);
-            if (done != null) foreach (var k in done) _pendingTriggers.Remove(k);
+            _nextPendingCheck = now + 2f;
+            try
+            {
+                var reg = ObjectRegistry.Instance;
+                var all = Resources.FindObjectsOfTypeAll<global::CutsceneTrigger>();
+                if (all == null || all.Length == 0) return;
+                foreach (var ct in all)
+                {
+                    if (ct == null || !ct.gameObject.scene.IsValid()) continue;
+                    string key;
+                    try { key = EnemySync.KeyFor(reg, ct); } catch { continue; }
+                    if (string.IsNullOrEmpty(key) || !_pendingTriggers.Contains(key)) continue;
+                    ct.hasBeenPlayed = true;
+                    _triggersConsumed++;
+                    _pendingTriggers.Remove(key);
+                    if (_pendingTriggers.Count == 0) break;
+                }
+            }
+            catch { }
         }
 
         private static bool TryMarkTriggerConsumed(string key)
@@ -262,13 +291,18 @@ namespace DelusionMP.Sync
             }
             if (kind == MsgEnd)
             {
+                string endKey = r.Remaining > 0 ? r.Str() : "";
                 LoopGuard.Apply(() =>
                 {
                     try
                     {
                         var m = Manager;
-                        if (m != null && m.currentlyPlaying != null && m.currentlyPlaying.state == PlayState.Playing)
-                            global::DelusionCinematics.Instance?.WorldCinematicEnded();
+                        var cur = m != null ? m.currentlyPlaying : null;
+                        if (cur != null && cur.state == PlayState.Playing)
+                        {
+                            if (string.IsNullOrEmpty(endKey) || KeyOf(cur) == endKey)
+                                global::DelusionCinematics.Instance?.WorldCinematicEnded();
+                        }
                     }
                     catch (Exception e) { Log.Debug("cutscene end: " + e.Message); }
                 });
@@ -280,7 +314,7 @@ namespace DelusionMP.Sync
                 if (!string.IsNullOrEmpty(tkey))
                 {
                     _consumedTriggers.Add(tkey);
-                    if (!TryMarkTriggerConsumed(tkey)) _pendingTriggers.Add(tkey);
+                    if (!TryMarkTriggerConsumed(tkey) && _pendingTriggers.Count < 128) _pendingTriggers.Add(tkey);
                 }
                 return;
             }
@@ -331,6 +365,7 @@ namespace DelusionMP.Sync
     [HarmonyPatch(typeof(global::DelusionCinematics), nameof(global::DelusionCinematics.WorldCinematicEnded))]
     internal static class Patch_Cinematics_Ended
     {
+        [HarmonyPrefix] static void Prefix() => CutsceneSync.BeforeWorldCinematicEnded();
         [HarmonyPostfix] static void Postfix() => CutsceneSync.OnWorldCinematicEnded();
     }
 
@@ -356,6 +391,9 @@ namespace DelusionMP.Sync
         }
 
         [HarmonyPostfix]
-        static void Postfix(global::CutsceneTrigger __instance) => CutsceneSync.OnTriggerConsumed(__instance);
+        static void Postfix(global::CutsceneTrigger __instance, bool __runOriginal)
+        {
+            if (__runOriginal) CutsceneSync.OnTriggerConsumed(__instance);
+        }
     }
 }
