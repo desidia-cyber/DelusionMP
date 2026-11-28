@@ -14,9 +14,11 @@ namespace DelusionMP.Sync
         public byte Attack;         // DelusionPlayerWeapons.AttackType
         public byte SpellState;     // DelusionPlayerSpell.SpellState
         public byte SpellType;      // PlayerAnimations.ActiveSpellType
+        public byte PlayerState;    // DelusionPlayerActions.PlayerState
         public bool Grounded;
         public bool Sprinting;
         public bool Crouched;
+        public bool Dodging;
         public int Health;
     }
 
@@ -113,6 +115,10 @@ namespace DelusionMP.Sync
         private static string _oneShot = "";
         private static float _oneShotUntil;
         private static float _oneShotStart;
+        private static float _baseFeetY;
+        private static float _crouchBlend;
+        private static float _dodgeTimer;
+        private static float _lastReliableShotAt = -10f;
 
         public static bool Ready => _model != null && _anim != null;
         public static string Info
@@ -224,6 +230,9 @@ namespace DelusionMP.Sync
                 var t = clone.transform;
                 var worldScale = src.transform.lossyScale;
                 t.SetParent(root, false);
+                _baseFeetY = feet;
+                _crouchBlend = 0f;
+                _dodgeTimer = 0f;
                 t.localPosition = new Vector3(0f, feet, 0f);
                 t.localRotation = Quaternion.identity;
                 t.localScale = worldScale;
@@ -447,7 +456,8 @@ namespace DelusionMP.Sync
         private static bool Drawn(in AvatarState s) =>
             s.WeaponState != 0 && s.WeaponState != 2 && s.WeaponState != 4;
 
-        private static bool Casting(in AvatarState s) => s.SpellState == 1 || s.SpellState == 3;
+        private static bool Casting(in AvatarState s) =>
+            s.SpellState == 1 || s.SpellState == 3 || s.SpellState == 4 || s.SpellState == 5;
 
         private static void Show(string part, bool on)
         {
@@ -745,10 +755,87 @@ namespace DelusionMP.Sync
         /// <summary>Rig testing: force a pose state instead of the streamed one.</summary>
         public static AvatarState? Override;
 
+        /// <summary>Reliable one-shot action from the partner (so fast swings/shots/potions/parries
+        /// are never missed between 20 Hz unreliable pose ticks).</summary>
+        public static void TriggerReliableAction(byte kind, byte arg)
+        {
+            if (!Ready || _dead) return;
+            string shot = null;
+            switch (kind)
+            {
+                case 0: // Melee/Bow attack (arg = AttackType, high nibble = WeaponType)
+                    shot = AttackState((byte)(arg & 0x0F), (byte)((arg >> 4) & 0x0F));
+                    break;
+                case 1: // Bow fire
+                    shot = "RangedFire";
+                    break;
+                case 2: // Spell fire
+                    shot = "SpellFire1";
+                    break;
+                case 3: // Potion / consumable use
+                    shot = "DrinkPotion";
+                    break;
+                case 4: // Parry
+                    shot = "Parry";
+                    break;
+                case 5: // Throwable item
+                    shot = "Attack1a";
+                    break;
+            }
+            if (string.IsNullOrEmpty(shot)) return;
+            _lastReliableShotAt = Time.realtimeSinceStartup;
+            try
+            {
+                _anim.speed = 1f;
+                if (shot == "Parry")
+                {
+                    if (_anim.HasState(0, Animator.StringToHash("Parry"))) Play("Parry", 0.05f);
+                    else { try { _anim.SetTrigger("parry"); } catch { Play("Attack1a", 0.05f); } }
+                }
+                else if (shot == "DrinkPotion")
+                {
+                    if (_anim.HasState(0, Animator.StringToHash("DrinkPotion"))) Play("DrinkPotion", 0.08f);
+                    else { try { _anim.SetTrigger("drinkPotion"); } catch { } }
+                }
+                else if (PlayClipDirect(shot))
+                {
+                    _oneShot = "";
+                    return;
+                }
+                else
+                {
+                    Play(shot, 0.06f);
+                }
+                _oneShot = shot;
+                _oneShotStart = Time.realtimeSinceStartup;
+                _oneShotUntil = _oneShotStart + 1.25f;
+            }
+            catch (Exception e) { Log.Debug("avatar reliable action: " + e.Message); }
+        }
+
         public static void Animate(in AvatarState streamed, float speed, float dt)
         {
             if (!Ready) return;
             var curInput = Override.HasValue ? Override.Value : streamed;
+
+            // Smooth crouch offset and dodge lean on the model root (works even during clips).
+            try
+            {
+                float targetCrouch = curInput.Crouched ? 1f : 0f;
+                _crouchBlend = Mathf.MoveTowards(_crouchBlend, targetCrouch, dt * 7f);
+                if (curInput.Dodging) _dodgeTimer = 0.25f;
+                else if (_dodgeTimer > 0f) _dodgeTimer = Mathf.Max(0f, _dodgeTimer - dt);
+                if (_model != null)
+                {
+                    var lp = _model.transform.localPosition;
+                    lp.y = _baseFeetY - _crouchBlend * 0.34f;
+                    _model.transform.localPosition = lp;
+                    float pitchLean = _dodgeTimer > 0f ? 14f * (_dodgeTimer / 0.25f) : (_crouchBlend * 10f);
+                    _model.transform.localRotation = Quaternion.Euler(pitchLean, 0f, 0f);
+                }
+            }
+            catch { }
+
             if (_clipActive)
             {
                 // Track scaled game time (matching PlayableGraph's DirectorUpdateMode.GameTime)
@@ -800,25 +887,30 @@ namespace DelusionMP.Sync
                 }
 
                 bool drawn = Drawn(s) || Casting(s);
+                bool blocking = s.WeaponState == 7 && Drawn(s);
                 try
                 {
                     _anim.SetBool("weaponOut", drawn);
+                    _anim.SetBool("isBlocking", blocking);
                     _anim.SetLayerWeight(2, drawn ? 0f : 1f);
                     _anim.SetLayerWeight(3, 0f);
                 }
                 catch { }
 
-                float pct = speed < 0.25f ? 0f : (s.Sprinting || speed > 5.5f ? 1f : Mathf.Clamp(speed / 6f, 0.3f, 0.6f));
+                float effectiveSpeed = s.Dodging ? Math.Max(speed, 7f) : (s.Crouched ? Math.Min(speed, 3f) : speed);
+                float pct = effectiveSpeed < 0.25f ? 0f : (s.Sprinting || s.Dodging || effectiveSpeed > 5.5f ? 1f : Mathf.Clamp(effectiveSpeed / 6f, 0.3f, 0.6f));
                 try { _anim.SetFloat("speedPercent", pct, 0.12f, dt); } catch { }
 
                 // One-shots: attacks, bow and spells, on the edge where they start.
+                // Skip if a reliable PlayerAction already triggered the same beat within 0.15 s.
                 string shot = null;
-                bool attackEdge = (s.WeaponState == 9 && (prev.WeaponState != 9 || s.Attack != prev.Attack))
-                                  || (s.Attack == 6 && prev.Attack != 6);
+                bool recentReliable = now - _lastReliableShotAt < 0.15f;
+                bool attackEdge = !recentReliable && ((s.WeaponState == 9 && (prev.WeaponState != 9 || s.Attack != prev.Attack))
+                                  || (s.Attack == 6 && prev.Attack != 6));
                 if (attackEdge) shot = AttackState(s.Attack, s.WeaponType);
-                else if (s.WeaponType == 3 && (s.WeaponState == 6 || s.WeaponState >= 11) && prev.WeaponState != s.WeaponState) shot = "RangedStart";
-                else if (s.SpellState == 1 && prev.SpellState != 1) shot = "SpellStart";
-                else if (s.SpellState == 3 && prev.SpellState != 3) shot = "SpellFire1";
+                else if (s.WeaponType == 3 && (s.WeaponState == 6 || s.WeaponState == 12) && prev.WeaponState != s.WeaponState) shot = "RangedStart";
+                else if ((s.SpellState == 1 || s.SpellState == 4 || s.SpellState == 5) && prev.SpellState != s.SpellState) shot = "SpellStart";
+                else if (!recentReliable && s.SpellState == 3 && prev.SpellState != 3) shot = "SpellFire1";
 
                 if (_clipActive && _clipElapsed >= _clipDuration) StopClip();
 
@@ -836,8 +928,8 @@ namespace DelusionMP.Sync
                 {
                     // Hold a charge/draw pose while the partner holds it; otherwise return to
                     // locomotion once the one-shot clip has really played out.
-                    bool holding = (_oneShot == "SpellStart" && s.SpellState == 1)
-                                   || (_oneShot == "RangedStart" && Drawn(s) && s.WeaponType == 3 && s.Attack != 6);
+                    bool holding = (_oneShot == "SpellStart" && (s.SpellState == 1 || s.SpellState == 4 || s.SpellState == 5))
+                                   || (_oneShot == "RangedStart" && Drawn(s) && s.WeaponType == 3 && (s.WeaponState == 6 || s.WeaponState == 12) && s.Attack != 6);
                     if (!holding && now - _oneShotStart > 0.2f && !_anim.IsInTransition(0))
                     {
                         var info = _anim.GetCurrentAnimatorStateInfo(0);

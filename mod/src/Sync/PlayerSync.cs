@@ -66,6 +66,8 @@ namespace DelusionMP.Sync
                     }
                     var fac = c.GetComponentInParent<global::MovingFactory>();
                     if (fac != null) return fac.moveObjectTransform != null ? fac.moveObjectTransform : fac.transform;
+                    var skiff = c.GetComponentInParent<global::SkiffManager>();
+                    if (skiff != null) return skiff.parentObject != null ? skiff.parentObject.transform : skiff.transform;
                 }
             }
             catch { }
@@ -272,6 +274,7 @@ namespace DelusionMP.Sync
             }
             catch { _pan = null; }
             w.U8(wt).U8(rar).U8(ws).U8(atk).U8(ss).U8(spt);
+            w.U8(actions != null ? (byte)(int)actions.playerState : (byte)0);
 
             Session.Instance.SendUnreliable(PacketKind.PlayerState, w.ToArray());
 
@@ -336,7 +339,9 @@ namespace DelusionMP.Sync
                 s.Av.WeaponType = r.U8(); s.Av.Rarity = r.U8(); s.Av.WeaponState = r.U8();
                 s.Av.Attack = r.U8(); s.Av.SpellState = r.U8(); s.Av.SpellType = r.U8();
             }
-            s.Av.Grounded = s.Grounded; s.Av.Sprinting = s.Sprinting; s.Av.Crouched = s.Crouched; s.Av.Health = hp;
+            if (r.Remaining >= 1) s.Av.PlayerState = r.U8();
+            s.Av.Grounded = s.Grounded; s.Av.Sprinting = s.Sprinting; s.Av.Crouched = s.Crouched;
+            s.Av.Dodging = s.Dodging; s.Av.Health = hp;
             _buffer.Enqueue(s);
             while (_buffer.Count > 24) _buffer.Dequeue();
             _latest = s;
@@ -600,6 +605,69 @@ namespace DelusionMP.Sync
             _tag = null;
             RemoteAvatar.Destroyed();
         }
+
+        // ---------------- reliable one-shot actions ----------------
+
+        private static int _actionsSent, _actionsApplied;
+        public static string ActionStats => $"sent={_actionsSent} applied={_actionsApplied}";
+
+        internal static void SendPlayerAction(byte kind, byte arg = 0)
+        {
+            var s = Session.Instance;
+            if (s == null || !s.Connected || LoopGuard.ApplyingRemote || !GameRefs.InWorld) return;
+            var w = new Writer();
+            w.U8(kind).U8(arg);
+            s.SendReliable(PacketKind.PlayerAction, w.ToArray());
+            _actionsSent++;
+        }
+
+        public static void ApplyAction(byte[] payload)
+        {
+            if (payload == null || payload.Length < 2) return;
+            var r = new Reader(payload);
+            byte kind = r.U8();
+            byte arg = r.U8();
+            _actionsApplied++;
+            RemoteAvatar.TriggerReliableAction(kind, arg);
+        }
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(global::DelusionPlayerWeapons), "SetWeaponActionState")]
+    internal static class Patch_PlayerWeapons_SetState
+    {
+        [HarmonyLib.HarmonyPostfix]
+        static void Postfix(global::DelusionPlayerWeapons __instance, global::DelusionPlayerWeapons.WeaponState newState)
+        {
+            if (newState != global::DelusionPlayerWeapons.WeaponState.Attacking) return;
+            try
+            {
+                byte atk = (byte)(int)__instance.currentAttack;
+                byte wt = (byte)(int)__instance.currentWeaponType;
+                PlayerSync.SendPlayerAction(0, (byte)((atk & 0x0F) | ((wt & 0x0F) << 4)));
+            }
+            catch { }
+        }
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(global::DelusionPlayerWeapons), nameof(global::DelusionPlayerWeapons.BowRelease))]
+    internal static class Patch_PlayerWeapons_BowRelease
+    {
+        [HarmonyLib.HarmonyPostfix]
+        static void Postfix() => PlayerSync.SendPlayerAction(1, 0);
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(global::DelusionPlayerActions), "ParriedEnemy")]
+    internal static class Patch_PlayerActions_Parried
+    {
+        [HarmonyLib.HarmonyPostfix]
+        static void Postfix() => PlayerSync.SendPlayerAction(4, 0);
+    }
+
+    [HarmonyLib.HarmonyPatch(typeof(global::PlayerAnimations), nameof(global::PlayerAnimations.TriggerPotionAnimation))]
+    internal static class Patch_PlayerAnimations_Potion
+    {
+        [HarmonyLib.HarmonyPostfix]
+        static void Postfix() => PlayerSync.SendPlayerAction(3, 0);
     }
 
     /// <summary>

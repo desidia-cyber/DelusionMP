@@ -130,6 +130,9 @@ namespace DelusionMP
             Perf.Run("coopdeath", CoopDeath.Tick);
             Perf.Run("factory", FactorySync.Tick);
             Perf.Run("worldevents", WorldEventsSync.Tick);
+            Perf.Run("cutscene", CutsceneSync.Tick);
+            Perf.Run("scripted", ScriptedScenesSync.Tick);
+            Perf.Run("projectile", ProjectileSync.Tick);
             if (havePlayer) Perf.Run("airship", AirshipSync.Tick);
 
             if (inWorld)

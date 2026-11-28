@@ -1895,6 +1895,69 @@ namespace DelusionMP.Core
                     Emit("RESYNC requested");
                     break;
                 }
+                case "animstats":
+                {
+                    Emit($"ANIMSTATS actions({PlayerSync.ActionStats}) proj({ProjectileSync.Stats}) " +
+                         $"summons({SummonSync.Stats}) enemies({EnemySync.Stats}) " +
+                         $"cutscenes({CutsceneSync.Stats}) scripted({ScriptedScenesSync.Stats}) " +
+                         $"worldevents({WorldEventsSync.Stats})");
+                    break;
+                }
+                case "testaction":
+                {
+                    byte kind = parts.Length > 1 ? byte.Parse(parts[1]) : (byte)0;
+                    byte arg = parts.Length > 2 ? byte.Parse(parts[2]) : (byte)1;
+                    PlayerSync.SendPlayerAction(kind, arg);
+                    Emit($"TESTACTION kind={kind} arg={arg} {PlayerSync.ActionStats}");
+                    break;
+                }
+                case "testproj":
+                {
+                    var p = GameRefs.Player;
+                    var pan = p != null ? p.GetComponentInChildren<global::PlayerAnimations>(true) : null;
+                    if (pan == null) { Emit("ERR no PlayerAnimations"); break; }
+                    string what = parts.Length > 1 ? parts[1] : "arrow";
+                    if (what == "arrow" && pan.arrowPool != null) pan.arrowPool.SelectNextArrow(global::ItemRarity.Common, 1);
+                    else if (what == "missile" && pan.fireballPool != null) pan.fireballPool.SelectNextMissile(1, 0, 0, 0, 0);
+                    else if (what == "throw" && pan.thowablePool != null) pan.thowablePool.Throw(0);
+                    else if (what == "explode" && pan.slowExplosionPool != null) pan.slowExplosionPool.SelectNextExplosion(1, 1f);
+                    else if (what == "enemyarrow" || what == "enemymissile")
+                    {
+                        var pools = Resources.FindObjectsOfTypeAll<global::CombatantRangedPool>();
+                        global::CombatantRangedPool hit = null;
+                        if (pools != null)
+                            foreach (var rp in pools)
+                            {
+                                if (rp == null || !rp.gameObject.scene.IsValid()) continue;
+                                var c = rp.myController;
+                                if (c != null && !SummonSync.IsLocalSummon(c) && EnemySync.IsPuppet(c)) continue;
+                                if (what == "enemyarrow" && rp.arrow != null) { hit = rp; break; }
+                                if (what == "enemymissile" && rp.missile != null) { hit = rp; break; }
+                            }
+                        if (hit == null) { Emit($"ERR no {what} pool"); break; }
+                        if (what == "enemyarrow") hit.ShootArrow(p, global::ItemRarity.Common, 1);
+                        else hit.ShootMissile(p, 1, 0, 0, 0);
+                    }
+                    Emit($"TESTPROJ {what} {ProjectileSync.Stats}");
+                    break;
+                }
+                case "testlever":
+                {
+                    var me = GameRefs.Player;
+                    global::DelusionLever best = null; float bd = float.MaxValue;
+                    var all = Resources.FindObjectsOfTypeAll<global::DelusionLever>();
+                    if (all != null && me != null)
+                        foreach (var l in all)
+                        {
+                            if (l == null || !l.gameObject.scene.IsValid() || !l.gameObject.activeInHierarchy) continue;
+                            float d = Vector3.Distance(l.transform.position, me.transform.position);
+                            if (d < bd) { bd = d; best = l; }
+                        }
+                    if (best == null) { Emit("ERR no lever"); break; }
+                    best.PullLever();
+                    Emit($"TESTLEVER {best.name} d={bd:F1} {ScriptedScenesSync.Stats}");
+                    break;
+                }
                 case "mirror":
                 {
                     WorldMirror.ForceSnapshot();

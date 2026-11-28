@@ -40,6 +40,8 @@ namespace DelusionMP.Sync
         // The spectator's own skip is blocked, so the driver sends each page.
         private const byte MsgPage = 8;
         private const byte MsgProxTrigger = 9;
+        private const byte MsgNpcAction = 10;
+        private const byte NpcSimpleOn = 0, NpcSimpleOff = 1, NpcSendMsg = 2, NpcFollow = 3, NpcStopFollow = 4;
         private const float PovDistance = 12f;
         // Brief beat on the spectator so the partner's highlighted answer choice is
         // clearly visible before the dialogue advances to the next node or closes.
@@ -292,6 +294,7 @@ namespace DelusionMP.Sync
                     case MsgGiftCoin: ApplyGiftCoin(r.I32()); break;
                     case MsgPage: ApplyPage(r.I32(), r.I32(), r.Str()); break;
                     case MsgProxTrigger: ApplyProxTrigger(r.Str()); break;
+                    case MsgNpcAction: ApplyNpcAction(r.Str(), r.U8(), r.Str()); break;
                 }
             }
             catch (Exception e) { Log.Warn($"dialogue apply {kind} failed: {e.Message}"); }
@@ -633,10 +636,47 @@ namespace DelusionMP.Sync
         /// <summary>True when a spectator's own input/timer tries to move the conversation.</summary>
         internal static bool BlockLocal => _spectating && !LoopGuard.ApplyingRemote;
 
+        internal static void OnNpcAction(global::NPCBase npc, byte op, string arg = "")
+        {
+            if (npc == null || !CanSend()) return;
+            try
+            {
+                string key = EnemySync.KeyFor(ObjectRegistry.Instance, npc);
+                if (string.IsNullOrEmpty(key)) return;
+                var w = new Writer();
+                w.U8(MsgNpcAction).Str(key).U8(op).Str(arg ?? "");
+                Session.Instance.SendReliable(PacketKind.Dialogue, w.ToArray());
+            }
+            catch { }
+        }
+
+        private static void ApplyNpcAction(string npcKey, byte op, string arg)
+        {
+            if (string.IsNullOrEmpty(npcKey)) return;
+            var npc = NpcByKey(npcKey);
+            if (npc == null) return;
+            LoopGuard.Apply(() =>
+            {
+                try
+                {
+                    switch (op)
+                    {
+                        case NpcSimpleOn: npc.SimpleActivation(); break;
+                        case NpcSimpleOff: npc.SimpleDeactivation(); break;
+                        case NpcSendMsg: if (!string.IsNullOrEmpty(arg)) npc.SendMsg(arg); break;
+                        case NpcFollow: npc.FollowPlayer(); break;
+                        case NpcStopFollow: npc.StopFollowPlayer(); break;
+                    }
+                }
+                catch (Exception e) { Log.Debug($"npc action {op}: {e.Message}"); }
+            });
+        }
+
         private static readonly HashSet<string> _presentationCalls = new HashSet<string>(StringComparer.Ordinal)
         {
             "TriggerPose", "CancelPose", "LookAtOther", "LookAtSpeaker", "StartCinematic",
             "ContinueCinematic", "EndCinematic", "FlashRed", "FlashWhite", "ShowCoin", "HideCoin",
+            "ChangeSnow", "InfoPrintOne", "InfoPrintTwo", "InfoPrintBoth",
         };
 
         /// <summary>Spectator: which node actions may run locally.</summary>
@@ -1049,5 +1089,35 @@ namespace DelusionMP.Sync
     {
         [HarmonyPostfix]
         static void Postfix(global::ProximityDialogueTrigger __instance) => DialogueSync.OnProxTriggerActivated(__instance);
+    }
+
+    [HarmonyPatch(typeof(global::NPCBase), nameof(global::NPCBase.SimpleActivation))]
+    internal static class Patch_NPC_SimpleActivation
+    {
+        [HarmonyPostfix] static void Postfix(global::NPCBase __instance) => DialogueSync.OnNpcAction(__instance, 0);
+    }
+
+    [HarmonyPatch(typeof(global::NPCBase), nameof(global::NPCBase.SimpleDeactivation))]
+    internal static class Patch_NPC_SimpleDeactivation
+    {
+        [HarmonyPostfix] static void Postfix(global::NPCBase __instance) => DialogueSync.OnNpcAction(__instance, 1);
+    }
+
+    [HarmonyPatch(typeof(global::NPCBase), nameof(global::NPCBase.SendMsg))]
+    internal static class Patch_NPC_SendMsg
+    {
+        [HarmonyPostfix] static void Postfix(global::NPCBase __instance, string msg) => DialogueSync.OnNpcAction(__instance, 2, msg);
+    }
+
+    [HarmonyPatch(typeof(global::NPCBase), nameof(global::NPCBase.FollowPlayer))]
+    internal static class Patch_NPC_FollowPlayer
+    {
+        [HarmonyPostfix] static void Postfix(global::NPCBase __instance) => DialogueSync.OnNpcAction(__instance, 3);
+    }
+
+    [HarmonyPatch(typeof(global::NPCBase), nameof(global::NPCBase.StopFollowPlayer))]
+    internal static class Patch_NPC_StopFollowPlayer
+    {
+        [HarmonyPostfix] static void Postfix(global::NPCBase __instance) => DialogueSync.OnNpcAction(__instance, 4);
     }
 }

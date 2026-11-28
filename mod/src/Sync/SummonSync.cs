@@ -30,19 +30,25 @@ namespace DelusionMP.Sync
         private const float GhostStale = 1.0f;
         private const string GhostPrefix = "DelusionMP_Summon_";
         private static float _nextSend;
-        private static int _sent, _recv, _ghostsMade;
+        private static int _sent, _recv, _ghostsMade, _animSent, _animApplied;
 
         private sealed class Ghost
         {
             public GameObject Root;
             public Transform Body;           // the EnemyController's object (moves inside the root)
             public global::EnemyStats Stats;
-            public Vector3 Pos; public float Yaw; public float At;
+            public global::EnemyAnimator Anim;
+            public Vector3 Pos;
+            public Vector3 LastPos;
+            public float Yaw;
+            public float Speed;
+            public byte CombatMode;
+            public float At;
         }
 
         private static readonly Dictionary<int, Ghost> _ghosts = new Dictionary<int, Ghost>();
 
-        public static string Stats => $"sent={_sent} recv={_recv} ghosts={_ghosts.Count} made={_ghostsMade} local={LocalCount()}";
+        public static string Stats => $"sent={_sent} recv={_recv} ghosts={_ghosts.Count} made={_ghostsMade} local={LocalCount()} animSent={_animSent} animApplied={_animApplied}";
 
         // ------------------------------------------------------------ identity
 
@@ -96,15 +102,34 @@ namespace DelusionMP.Sync
             float now = Time.realtimeSinceStartup;
 
             // Ghosts glide toward the caster's stream; a summon that stopped arriving is gone.
+            float dt = Mathf.Max(Time.deltaTime, 0.001f);
             List<int> drop = null;
             foreach (var kv in _ghosts)
             {
                 var g = kv.Value;
                 if (g.Root == null || now - g.At > GhostStale) { (drop ??= new List<int>()).Add(kv.Key); continue; }
                 var t = g.Body != null ? g.Body : g.Root.transform;
-                t.position = Vector3.Lerp(t.position, g.Pos, 0.35f);
+                var prevPos = t.position;
+                var nextPos = Vector3.Lerp(prevPos, g.Pos, 0.35f);
+                t.position = nextPos;
                 var ea = t.eulerAngles;
                 t.rotation = Quaternion.Euler(ea.x, Mathf.LerpAngle(ea.y, g.Yaw, 0.35f), ea.z);
+                float horiz = new Vector2(nextPos.x - prevPos.x, nextPos.z - prevPos.z).magnitude / dt;
+                g.Speed = Mathf.Lerp(g.Speed, horiz, 0.25f);
+                g.LastPos = nextPos;
+                if (g.Anim != null)
+                {
+                    try
+                    {
+                        var a = g.Anim.animator;
+                        if (a != null)
+                        {
+                            float pct = g.Speed < 0.15f ? 0f : (g.Speed > 3.5f ? 1f : Mathf.Clamp(g.Speed / 4.5f, 0.25f, 0.7f));
+                            a.SetFloat("speedPercent", pct, 0.1f, dt);
+                        }
+                    }
+                    catch { }
+                }
             }
             if (drop != null) foreach (var id in drop) DestroyGhost(id);
 
@@ -127,6 +152,8 @@ namespace DelusionMP.Sync
                     e.Yaw(ec.transform.eulerAngles.y);
                     int hp = 0; try { hp = ec.myStats != null ? ec.myStats.currentHealth : 0; } catch { }
                     e.I32(hp);
+                    byte cm = 0; try { cm = (byte)(int)ec.combatMode; } catch { }
+                    e.U8(cm);
                     entries.Add(e.ToArray());
                 }
             // An empty list is sent too, so the partner's ghosts go at once when ours die.
@@ -162,6 +189,7 @@ namespace DelusionMP.Sync
                 Vector3 pos = r.Position();
                 float yaw = r.Yaw();
                 int hp = r.I32();
+                byte cm = r.Remaining > 0 ? r.U8() : (byte)0;
                 seen.Add(id);
                 if (!_ghosts.TryGetValue(id, out var g) || g.Root == null)
                 {
@@ -170,6 +198,20 @@ namespace DelusionMP.Sync
                     _ghosts[id] = g;
                 }
                 g.Pos = pos; g.Yaw = yaw; g.At = now;
+                if (g.CombatMode != cm)
+                {
+                    g.CombatMode = cm;
+                    if (g.Anim != null)
+                        LoopGuard.Apply(() =>
+                        {
+                            try
+                            {
+                                if (cm == (byte)(int)global::EnemyController.CombatModes.InCombat) g.Anim.WeaponOut();
+                                else g.Anim.WeaponAway();
+                            }
+                            catch { }
+                        });
+                }
                 if (g.Stats != null)
                     LoopGuard.Apply(() => { try { Priv.SetProp(g.Stats, "currentHealth", Math.Max(1, hp)); } catch { } });
             }
@@ -250,7 +292,51 @@ namespace DelusionMP.Sync
 
             _ghostsMade++;
             Log.Info($"summon ghost: partner's {prefabName} shown at {pos.x:F1},{pos.y:F1},{pos.z:F1}");
-            return new Ghost { Root = root, Body = ec != null ? ec.transform : root.transform, Stats = stats, Pos = pos, Yaw = yaw, At = Time.realtimeSinceStartup };
+            return new Ghost
+            {
+                Root = root,
+                Body = ec != null ? ec.transform : root.transform,
+                Stats = stats,
+                Anim = root.GetComponentInChildren<global::EnemyAnimator>(true),
+                Pos = pos,
+                LastPos = pos,
+                Yaw = yaw,
+                At = Time.realtimeSinceStartup,
+            };
+        }
+
+        // ------------------------------------------------------------ summon combat animations
+
+        /// <summary>Called by EnemySync's EnemyAnimator hooks when a local summon plays a combat/action animation.</summary>
+        internal static void OnLocalSummonAnim(global::EnemyController c, byte kind, byte arg)
+        {
+            if (c == null || LoopGuard.ApplyingRemote) return;
+            var s = Session.Instance;
+            if (s == null || !s.Connected) return;
+            int spawnerId = 0;
+            try
+            {
+                var sp = c.mySpawner ?? c.GetComponentInParent<global::EnemySpawner>();
+                if (sp != null) spawnerId = sp.GetInstanceID();
+            }
+            catch { }
+            if (spawnerId == 0) return;
+            var w = new Writer();
+            w.I32(spawnerId).U8(kind).U8(arg);
+            s.SendReliable(PacketKind.SummonAnim, w.ToArray());
+            _animSent++;
+        }
+
+        public static void ApplyAnim(byte[] payload)
+        {
+            if (payload == null || payload.Length < 6) return;
+            var r = new Reader(payload);
+            int id = r.I32();
+            var animKind = (EnemySync.EnemyAnimKind)r.U8();
+            byte arg = r.U8();
+            if (!_ghosts.TryGetValue(id, out var g) || g.Anim == null) return;
+            EnemySync.ReplayAnim(g.Anim, animKind, arg);
+            _animApplied++;
         }
 
         private static void DestroyGhost(int id)

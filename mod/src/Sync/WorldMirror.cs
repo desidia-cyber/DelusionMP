@@ -316,7 +316,7 @@ namespace DelusionMP.Sync
         // those directly as well. The generic mirror still covers everything else.
 
         // LiftMove (3) was the old motion replay; it is retired (ignored on receipt).
-        private enum TypedKind : byte { DoorUltimate = 0, Door = 1, Lift = 2, LiftMove = 3, LiftActivate = 4, DoorVert = 5 }
+        private enum TypedKind : byte { DoorUltimate = 0, Door = 1, Lift = 2, LiftMove = 3, LiftActivate = 4, DoorVert = 5, DoorBridge = 6 }
 
         // Lift typed value: liftPosition (0..3) | LiftMovingBit. liftPosition already uses 2/3
         // for MovingDown/MovingUp, so the moving flag needs its own bit.
@@ -349,6 +349,7 @@ namespace DelusionMP.Sync
         private static (global::DoorsUltimate c, string key)[] _doorsU = new (global::DoorsUltimate, string)[0];
         private static (global::DoorsDelusion c, string key)[] _doorsP = new (global::DoorsDelusion, string)[0];
         private static (global::DoorsDelusionVert c, string key)[] _doorsV = new (global::DoorsDelusionVert, string)[0];
+        private static (global::DoorsDelusionBridge c, string key)[] _doorsB = new (global::DoorsDelusionBridge, string)[0];
         private static (global::DelusionLift c, string key)[] _liftsC = new (global::DelusionLift, string)[0];
         private static float _typedListsAt = -10f;
         private static string _typedListsScene;
@@ -378,6 +379,7 @@ namespace DelusionMP.Sync
             _doorsU = KeyedList<global::DoorsUltimate>(scene);
             _doorsP = KeyedList<global::DoorsDelusion>(scene);
             _doorsV = KeyedList<global::DoorsDelusionVert>(scene);
+            _doorsB = KeyedList<global::DoorsDelusionBridge>(scene);
             _liftsC = KeyedList<global::DelusionLift>(scene);
         }
 
@@ -427,6 +429,22 @@ namespace DelusionMP.Sync
                     if (!TypedChanged(session, key, open)) continue;
                     var w = new Writer();
                     w.U8((byte)TypedKind.DoorVert).Str(key).I32(open);
+                    SendTyped(session, w);
+                }
+
+            foreach (var (d, key) in _doorsB)
+                {
+                    if (d == null) continue;
+                    int open;
+                    try
+                    {
+                        if (IsQuiet(key) && d.isAnimating) continue;
+                        open = d.isOpen ? 1 : 0;
+                    }
+                    catch { continue; }
+                    if (!TypedChanged(session, key, open)) continue;
+                    var w = new Writer();
+                    w.U8((byte)TypedKind.DoorBridge).Str(key).I32(open);
                     SendTyped(session, w);
                 }
 
@@ -507,6 +525,17 @@ namespace DelusionMP.Sync
                             bool wantOpen = value != 0;
                             if (d.isOpen != wantOpen && !d.IsAnimating())
                                 d.SetDoor(wantOpen, false);
+                            break;
+                        }
+                        case TypedKind.DoorBridge:
+                        {
+                            var d = go.GetComponent<global::DoorsDelusionBridge>();
+                            if (d == null || d.isAnimating) break;
+                            if (value != 0 && !d.isOpen)
+                            {
+                                d.UnlockDoor();
+                                d.StartOpen();
+                            }
                             break;
                         }
                         case TypedKind.Lift:

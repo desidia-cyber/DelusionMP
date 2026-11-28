@@ -114,6 +114,7 @@ namespace DelusionMP.Sync
         {
             _fired.Clear();
             _localFired.Clear();
+            _pendingTriggers.Clear();
             _travelQueue.Clear();
             _deferredShops.Clear();
             _pendingBuy = null;
@@ -153,6 +154,7 @@ namespace DelusionMP.Sync
             }
             foreach (var k in _completed) { var w = new Writer(); w.U8(MsgCompletable).Str(k).Bool(true); Send(w); }
             foreach (var k in _disarmed) { var w = new Writer(); w.U8(MsgTrap).Str(k); Send(w); }
+            foreach (var k in _fired) { var w = new Writer(); w.U8(MsgTriggerOn).Str(k); Send(w); }
         }
 
         /// <summary>Per frame (from the plugin tick).</summary>
@@ -162,6 +164,7 @@ namespace DelusionMP.Sync
             try
             {
                 TickWorldState();
+                TickPendingTriggers();
                 TickFactories();
                 TickTravel();
                 TickShops();
@@ -337,6 +340,37 @@ namespace DelusionMP.Sync
 
         private static readonly HashSet<string> _fired = new HashSet<string>(StringComparer.Ordinal);
         private static readonly HashSet<string> _localFired = new HashSet<string>(StringComparer.Ordinal);
+        private static readonly HashSet<string> _pendingTriggers = new HashSet<string>(StringComparer.Ordinal);
+        private static float _nextPendingTriggerCheck;
+
+        private static void TickPendingTriggers()
+        {
+            if (_pendingTriggers.Count == 0 || !GameRefs.InWorld) return;
+            float now = Time.realtimeSinceStartup;
+            if (now < _nextPendingTriggerCheck) return;
+            _nextPendingTriggerCheck = now + 1.5f;
+            List<string> done = null;
+            foreach (var key in _pendingTriggers)
+            {
+                var t = Find<global::TriggerOnPlayerEnter>(key);
+                if (t == null) continue;
+                (done ??= new List<string>()).Add(key);
+                LoopGuard.Apply(() =>
+                {
+                    try
+                    {
+                        var drp = t.deathRespawnPoint;
+                        t.deathRespawnPoint = null;
+                        try { t.Activate(); }
+                        finally { t.deathRespawnPoint = drp; }
+                        _applied++;
+                        _last = "trigger on (pending) " + key;
+                    }
+                    catch (Exception e) { Log.Warn($"apply pending trigger {key}: {e.Message}"); }
+                });
+            }
+            if (done != null) foreach (var k in done) _pendingTriggers.Remove(k);
+        }
 
         /// <summary>Prefix on Activate: false skips it (the trigger already fired in this world).</summary>
         internal static bool OnTriggerActivate(global::TriggerOnPlayerEnter t)
@@ -373,8 +407,13 @@ namespace DelusionMP.Sync
         {
             if (on && _fired.Contains(key)) { _ignored++; return; }
             var t = Find<global::TriggerOnPlayerEnter>(key);
-            if (on) _fired.Add(key); else { _fired.Remove(key); _localFired.Remove(key); }
-            if (t == null) { _ignored++; return; }
+            if (on) _fired.Add(key); else { _fired.Remove(key); _localFired.Remove(key); _pendingTriggers.Remove(key); }
+            if (t == null)
+            {
+                if (on) _pendingTriggers.Add(key);
+                else _ignored++;
+                return;
+            }
             LoopGuard.Apply(() =>
             {
                 try

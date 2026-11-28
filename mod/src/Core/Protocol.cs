@@ -85,6 +85,9 @@ namespace DelusionMP.Core
         Voice = 58,           // 20 ms of 16 kHz mono mu-law, unreliable
         Rules = 59,           // host's session rules, reliable
         SummonState = 60,     // the sender's live summons (pose, health), unreliable
+        PlayerAction = 61,    // partner one-shot animations (attack, bow, spell, parry, potion, throw), reliable
+        SummonAnim = 62,      // partner summon combat/action animations, reliable
+        ScriptedScene = 63,   // scripted scenes, skiff, fortress lift, wyrm, crystal skull, levers, triggers, reliable
     }
 
     public struct Header

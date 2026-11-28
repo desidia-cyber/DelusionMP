@@ -173,6 +173,8 @@ namespace DelusionMP.Net
                 _lastHeardAt = UnityEngine.Time.realtimeSinceStartup;
                 Log.Info($"client joined (epoch {nonce:X8})");
                 WorldEventsSync.OnSessionStart();
+                CutsceneSync.OnSessionStart();
+                ScriptedScenesSync.OnSessionStart();
                 SendWorldSnapshot();
                 WorldMirror.ForceSnapshot();
             }
@@ -192,6 +194,8 @@ namespace DelusionMP.Net
             _lastHeardAt = UnityEngine.Time.realtimeSinceStartup;
             WorldMirror.OnClientConnected();
             WorldEventsSync.OnSessionStart();
+            CutsceneSync.OnSessionStart();
+            ScriptedScenesSync.OnSessionStart();
             WorldEventsSync.SendJoinState();
             Log.Info("connected to host");
         }
@@ -429,9 +433,13 @@ namespace DelusionMP.Net
                 case PacketKind.WorldEventRequest: if (Role == SessionRole.Host) WorldMirror.ApplyTyped(payload); break;
                 case PacketKind.FactRequest: if (Role == SessionRole.Host) FactSync.ApplyRequest(payload); break;
                 case PacketKind.CombatEvent: EnemySync.ApplyCombat(payload); break;
+                case PacketKind.Projectile: ProjectileSync.Apply(payload); break;
                 case PacketKind.EnemyState: EnemySync.Apply(payload); break;
                 case PacketKind.SummonState: SummonSync.Apply(payload); break;
+                case PacketKind.SummonAnim: SummonSync.ApplyAnim(payload); break;
                 case PacketKind.PlayerState: PlayerSync.Apply(payload); break;
+                case PacketKind.PlayerAction: PlayerSync.ApplyAction(payload); break;
+                case PacketKind.ScriptedScene: ScriptedScenesSync.Apply(payload); break;
                 case PacketKind.ClockState: ClockSync.Apply(payload); break;
                 case PacketKind.Snapshot: ApplySnapshot(payload); break;
                 case PacketKind.ResyncRequest: OnResyncRequest(payload); break;
@@ -578,6 +586,8 @@ namespace DelusionMP.Net
 
             SendFragmented(PacketKind.QuestState, QuestSync.CaptureJournal());
             WorldEventsSync.SendJoinState();
+            CutsceneSync.SendJoinState();
+            ScriptedScenesSync.SendJoinState();
             JoinSync.SendHostTruth(this);
             RulesSync.Send(this);
             Log.Info($"world snapshot sent: {bools.Count} bools, {ints.Count} ints ({w.Length} B)");
@@ -662,7 +672,7 @@ namespace DelusionMP.Net
 
     public static class PluginInfo
     {
-        public const string Version = "0.3.0";
+        public const string Version = "0.3.4";
     }
 
     /// <summary>

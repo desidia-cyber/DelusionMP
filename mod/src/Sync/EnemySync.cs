@@ -145,6 +145,7 @@ namespace DelusionMP.Sync
             ReadyBow = 4, FireBow = 5, ReadySpell = 6, FireSpell = 7,
             CancelRanged = 8, DrinkPotion = 9, Damage = 10, Stagger = 11,
             GuardBreak = 12, Parry = 13, Block = 14, WeaponOut = 15, WeaponAway = 16,
+            BuffEffect = 17, BuffFX = 18, Helpless = 19,
         }
 
         internal static void OnAnimEvent(global::EnemyAnimator anim, EnemyAnimKind kind, byte arg = 0)
@@ -154,12 +155,53 @@ namespace DelusionMP.Sync
             if (s == null || !s.Connected) return;
             global::EnemyController c = null;
             try { c = anim.controller ?? anim.GetComponent<global::EnemyController>() ?? anim.GetComponentInParent<global::EnemyController>(); } catch { }
-            if (c == null || SummonSync.IsSummon(c) || IsPuppet(c)) return;
+            if (c == null) return;
+            if (SummonSync.IsSummon(c))
+            {
+                if (SummonSync.IsLocalSummon(c)) SummonSync.OnLocalSummonAnim(c, (byte)kind, arg);
+                return;
+            }
+            if (IsPuppet(c)) return;
             var key = CachedKey(ObjectRegistry.Instance, c);
             if (string.IsNullOrEmpty(key)) return;
             var w = new Writer();
             w.U8(CombatAnim).Str(key).U8((byte)kind).U8(arg);
-            s.SendUnreliable(PacketKind.CombatEvent, w.ToArray());
+            s.SendReliable(PacketKind.CombatEvent, w.ToArray());
+        }
+
+        internal static void ReplayAnim(global::EnemyAnimator anim, EnemyAnimKind animKind, byte arg)
+        {
+            if (anim == null) return;
+            LoopGuard.Apply(() =>
+            {
+                try
+                {
+                    switch (animKind)
+                    {
+                        case EnemyAnimKind.Attack1: anim.OnAttack(); break;
+                        case EnemyAnimKind.Attack2: anim.OnAttackTwo(); break;
+                        case EnemyAnimKind.AttackStrong: anim.OnAttackStrong(); break;
+                        case EnemyAnimKind.Taunt: anim.OnAttackTaunt(); break;
+                        case EnemyAnimKind.ReadyBow: anim.OnReadyBow(); break;
+                        case EnemyAnimKind.FireBow: anim.OnFireBow(); break;
+                        case EnemyAnimKind.ReadySpell: anim.OnReadySpell((global::EnemyCombat.SpellType)arg); break;
+                        case EnemyAnimKind.FireSpell: anim.OnFireSpell(); break;
+                        case EnemyAnimKind.CancelRanged: anim.OnCancelRanged(); break;
+                        case EnemyAnimKind.DrinkPotion: anim.OnDrinkPotion(); break;
+                        case EnemyAnimKind.Damage: anim.OnDamage(); break;
+                        case EnemyAnimKind.Stagger: anim.Stagger(); break;
+                        case EnemyAnimKind.GuardBreak: anim.GuardBreak(); break;
+                        case EnemyAnimKind.Parry: anim.ActivateParry(); break;
+                        case EnemyAnimKind.Block: anim.SetBlocking(arg != 0); break;
+                        case EnemyAnimKind.WeaponOut: anim.WeaponOut(); break;
+                        case EnemyAnimKind.WeaponAway: anim.WeaponAway(); break;
+                        case EnemyAnimKind.BuffEffect: anim.ActivateBuffEffect((global::EnemyCombat.SpellType)arg); break;
+                        case EnemyAnimKind.BuffFX: anim.ActivateBuffFX(arg != 0); break;
+                        case EnemyAnimKind.Helpless: anim.SetHelpless(arg != 0); break;
+                    }
+                }
+                catch (Exception e) { Log.Debug($"puppet anim {animKind}: {e.Message}"); }
+            });
         }
 
         internal static void DrivePuppetAnimator(global::EnemyAnimator anim)
@@ -289,35 +331,7 @@ namespace DelusionMP.Sync
                 var animKind = (EnemyAnimKind)r.U8();
                 byte arg = r.U8();
                 if (!IsPuppet(c) || _dead.Contains(c.GetInstanceID())) return;
-                var anim = c.myAnim;
-                if (anim == null) return;
-                LoopGuard.Apply(() =>
-                {
-                    try
-                    {
-                        switch (animKind)
-                        {
-                            case EnemyAnimKind.Attack1: anim.OnAttack(); break;
-                            case EnemyAnimKind.Attack2: anim.OnAttackTwo(); break;
-                            case EnemyAnimKind.AttackStrong: anim.OnAttackStrong(); break;
-                            case EnemyAnimKind.Taunt: anim.OnAttackTaunt(); break;
-                            case EnemyAnimKind.ReadyBow: anim.OnReadyBow(); break;
-                            case EnemyAnimKind.FireBow: anim.OnFireBow(); break;
-                            case EnemyAnimKind.ReadySpell: anim.OnReadySpell((global::EnemyCombat.SpellType)arg); break;
-                            case EnemyAnimKind.FireSpell: anim.OnFireSpell(); break;
-                            case EnemyAnimKind.CancelRanged: anim.OnCancelRanged(); break;
-                            case EnemyAnimKind.DrinkPotion: anim.OnDrinkPotion(); break;
-                            case EnemyAnimKind.Damage: anim.OnDamage(); break;
-                            case EnemyAnimKind.Stagger: anim.Stagger(); break;
-                            case EnemyAnimKind.GuardBreak: anim.GuardBreak(); break;
-                            case EnemyAnimKind.Parry: anim.ActivateParry(); break;
-                            case EnemyAnimKind.Block: anim.SetBlocking(arg != 0); break;
-                            case EnemyAnimKind.WeaponOut: anim.WeaponOut(); break;
-                            case EnemyAnimKind.WeaponAway: anim.WeaponAway(); break;
-                        }
-                    }
-                    catch (Exception e) { Log.Debug($"puppet anim {animKind}: {e.Message}"); }
-                });
+                ReplayAnim(c.myAnim, animKind, arg);
             }
             else if (kind == CombatDeath)
             {
@@ -1097,4 +1111,14 @@ namespace DelusionMP.Sync
     internal static class Patch_EnemyAnim_Parry { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.Parry); }
     [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.SetBlocking))]
     internal static class Patch_EnemyAnim_Block { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance, bool value) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.Block, value ? (byte)1 : (byte)0); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), "WeaponOut")]
+    internal static class Patch_EnemyAnim_WeaponOut { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.WeaponOut); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), "WeaponAway")]
+    internal static class Patch_EnemyAnim_WeaponAway { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.WeaponAway); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.ActivateBuffEffect))]
+    internal static class Patch_EnemyAnim_BuffEffect { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance, global::EnemyCombat.SpellType spellType) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.BuffEffect, (byte)(int)spellType); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.ActivateBuffFX))]
+    internal static class Patch_EnemyAnim_BuffFX { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance, bool isActive) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.BuffFX, isActive ? (byte)1 : (byte)0); }
+    [HarmonyLib.HarmonyPatch(typeof(global::EnemyAnimator), nameof(global::EnemyAnimator.SetHelpless))]
+    internal static class Patch_EnemyAnim_Helpless { [HarmonyLib.HarmonyPostfix] static void Postfix(global::EnemyAnimator __instance, bool v) => EnemySync.OnAnimEvent(__instance, EnemySync.EnemyAnimKind.Helpless, v ? (byte)1 : (byte)0); }
 }
